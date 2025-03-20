@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@color/background_color"
+    tools:context=".HomeFragment">
+
+    <!-- Title -->
+    <TextView
+        android:id="@+id/tvAgendaTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Your Agenda"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="@color/purple_700"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Task Summary Layout -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+
+        <!-- Tasks for Today -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp"
+            android:padding="16dp"
+            app:cardBackgroundColor="@color/purple_200"
+            android:focusable="false"
+            android:clickable="false">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <!-- Number (e.g., "5") -->
+                <TextView
+                    android:id="@+id/tvTasksTodayNumber"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="5"
+                    android:textSize="100sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/white"/>
+
+                <!-- Description (e.g., "tasks for today") -->
+                <TextView
+                    android:id="@+id/tvTasksTodayText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="tasks for today"
+                    android:textSize="17sp"
+                    android:textColor="@color/white"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_weight="1"
+            android:layout_marginLeft="8dp">
+
+            <!-- Tasks Due Tomorrow -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="90dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                android:padding="16dp"
+                android:layout_marginBottom="8dp"
+                app:cardBackgroundColor="@color/green_200"
+                android:focusable="false"
+                android:clickable="false">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center">
+
+                    <!-- Number (e.g., "3") -->
+                    <TextView
+                        android:id="@+id/tvTasksTomorrowNumber"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="3"
+                        android:textSize="40sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/white"/>
+
+                    <!-- Description (e.g., "tasks due tomorrow") -->
+                    <TextView
+                        android:id="@+id/tvTasksTomorrowText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="tasks due tomorrow"
+                        android:textSize="15sp"
+                        android:textColor="@color/white"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Tasks Due in 7 Days -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="90dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                android:padding="16dp"
+                app:cardBackgroundColor="@color/green_200"
+                android:focusable="false"
+                android:clickable="false">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center">
+
+                    <!-- Number (e.g., "10") -->
+                    <TextView
+                        android:id="@+id/tvTasksWeekNumber"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="10"
+                        android:textSize="40sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/white"/>
+
+                    <!-- Description (e.g., "tasks due in 7 days") -->
+                    <TextView
+                        android:id="@+id/tvTasksWeekText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="tasks due in 7 days"
+                        android:textSize="15sp"
+                        android:textColor="@color/white"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- RecyclerView to display sections -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvSections"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:layout_weight="1"
+        android:layout_marginBottom="16dp"
+        tools:listitem="@layout/item_section" />
+
+
+</LinearLayout>
