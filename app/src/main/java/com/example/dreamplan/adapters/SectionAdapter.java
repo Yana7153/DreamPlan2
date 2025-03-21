@@ -44,8 +44,8 @@ public class SectionAdapter extends RecyclerView.Adapter<SectionAdapter.SectionV
         holder.sectionName.setText(section.getName());
         holder.sectionNotes.setText(section.getNotes());
 
-        // Use a color from your palette
-        holder.itemView.setBackgroundColor(Color.parseColor("#CCE1F2")); // Light blue
+        // Set the background color of the section box
+        holder.itemView.setBackgroundColor(Color.parseColor(section.getColor()));
     }
 
     @Override

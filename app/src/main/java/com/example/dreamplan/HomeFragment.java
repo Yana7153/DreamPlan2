@@ -3,6 +3,9 @@ package com.example.dreamplan;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -136,6 +139,11 @@ import java.util.List;public class HomeFragment extends Fragment {
         Dialog sectionDialog = new Dialog(requireContext());
         sectionDialog.setContentView(R.layout.task_input_dialog);  // Ensure this layout has the correct views
 
+        // Set rounded corners for the dialog
+        if (sectionDialog.getWindow() != null) {
+            sectionDialog.getWindow().setBackgroundDrawableResource(R.drawable.dialog_background);
+        }
+
         // Get references to the dialog elements
         EditText sectionName = sectionDialog.findViewById(R.id.et_section_name);
         EditText notes = sectionDialog.findViewById(R.id.et_notes);
@@ -152,15 +160,33 @@ import java.util.List;public class HomeFragment extends Fragment {
 
         // Default color (can be modified later)
         final String[] selectedColor = new String[]{"#D3D3D3"};  // Default color (light gray)
+        ImageView[] colorCircles = {colorCircle1, colorCircle2, colorCircle3, colorCircle4, colorCircle5, colorCircle6, colorCircle7};
+        String[] colors = {"#CCE1F2", "#C6F8E5", "#FBF7D5", "#F9DED7", "#F5CDDE", "#E2BEF1", "#D3D3D3"};
+
+        // Function to update the selected color indicator
+        Runnable updateSelectedColorIndicator = () -> {
+            for (int i = 0; i < colorCircles.length; i++) {
+                if (selectedColor[0].equals(colors[i])) {
+                    // Add black border to the selected color circle
+                    colorCircles[i].setBackground(getColorCircleDrawable(colors[i], true));
+                } else {
+                    // Remove black border from other circles
+                    colorCircles[i].setBackground(getColorCircleDrawable(colors[i], false));
+                }
+            }
+        };
 
         // Set click listeners for the color circles
-        colorCircle1.setOnClickListener(v -> selectedColor[0] = "#CCE1F2");
-        colorCircle2.setOnClickListener(v -> selectedColor[0] = "#C6F8E5");
-        colorCircle3.setOnClickListener(v -> selectedColor[0] = "#FBF7D5");
-        colorCircle4.setOnClickListener(v -> selectedColor[0] = "#F9DED7");
-        colorCircle5.setOnClickListener(v -> selectedColor[0] = "#F5CDDE");
-        colorCircle6.setOnClickListener(v -> selectedColor[0] = "#E2BEF1");
-        colorCircle7.setOnClickListener(v -> selectedColor[0] = "#D3D3D3");
+        for (int i = 0; i < colorCircles.length; i++) {
+            int finalI = i;
+            colorCircles[i].setOnClickListener(v -> {
+                selectedColor[0] = colors[finalI]; // Update the selected color
+                updateSelectedColorIndicator.run(); // Update the UI
+            });
+        }
+
+        // Initialize the default selected color (light gray)
+        updateSelectedColorIndicator.run();
 
         // Save section button click listener
         saveSectionButton.setOnClickListener(v -> {
@@ -186,6 +212,28 @@ import java.util.List;public class HomeFragment extends Fragment {
 
         // Show the dialog
         sectionDialog.show();
+    }
+
+    // Helper method to get the drawable resource for a color circle
+    private Drawable getColorCircleDrawable(String color, boolean isSelected) {
+        GradientDrawable circle = new GradientDrawable();
+        circle.setShape(GradientDrawable.OVAL);
+        circle.setColor(Color.parseColor(color)); // Set the circle color
+        circle.setSize(40, 40); // Set the size
+
+        if (isSelected) {
+            // Add a black border for the selected color
+            GradientDrawable border = new GradientDrawable();
+            border.setShape(GradientDrawable.OVAL);
+            border.setStroke(4, Color.BLACK); // Thicker black border
+            border.setSize(40, 40);
+
+            LayerDrawable layerDrawable = new LayerDrawable(new Drawable[]{circle, border});
+            return layerDrawable;
+        } else {
+            // No border for unselected colors
+            return circle;
+        }
     }
 
 
