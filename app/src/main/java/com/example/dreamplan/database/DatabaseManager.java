@@ -86,31 +86,39 @@ public class DatabaseManager extends SQLiteOpenHelper {
 
 
     // 🔹 INSERT TASK
+// 🔹 INSERT TASK
     public void insertTask(Task task) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(COLUMN_TASK_TITLE, task.getTitle());
-        values.put(COLUMN_TASK_DESCRIPTION, task.getDescription());
-        values.put(COLUMN_TASK_DUE_DATE, task.getDueDate());
+        values.put(COLUMN_TASK_DESCRIPTION, task.getNotes()); // Use getNotes() instead of getDescription()
+        values.put(COLUMN_TASK_DUE_DATE, task.getDeadline()); // Add deadline
+        values.put("color", task.getColor()); // Add color (ensure this column exists in the table)
         values.put(COLUMN_TASK_SECTION_ID, task.getSectionId());
         db.insert(TABLE_TASKS, null, values);
         db.close();
     }
 
     // 🔹 GET ALL TASKS FOR A SECTION
+// 🔹 GET ALL TASKS FOR A SECTION
     public List<Task> getAllTasksForSection(int sectionId) {
         List<Task> tasks = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_TASKS + " WHERE " + COLUMN_TASK_SECTION_ID + " = ?",
-                new String[]{String.valueOf(sectionId)});
+        Log.d("DatabaseManager", "Fetching tasks for section ID: " + sectionId);
+
+        Cursor cursor = db.rawQuery("SELECT * FROM tasks WHERE section_id = ?", new String[]{String.valueOf(sectionId)});
         if (cursor.moveToFirst()) {
             do {
-                int id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TASK_ID));
-                String title = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_TITLE));
-                String description = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_DESCRIPTION));
-                String dueDate = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_DUE_DATE));
-                tasks.add(new Task(title, description, sectionId));
+                int id = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
+                String title = cursor.getString(cursor.getColumnIndexOrThrow("title"));
+                String description = cursor.getString(cursor.getColumnIndexOrThrow("description"));
+                String dueDate = cursor.getString(cursor.getColumnIndexOrThrow("due_date"));
+                int color = cursor.getInt(cursor.getColumnIndexOrThrow("color")); // Fetch color
+                tasks.add(new Task(title, description, dueDate, color, sectionId));
+                Log.d("DatabaseManager", "Task fetched: " + title);
             } while (cursor.moveToNext());
+        } else {
+            Log.d("DatabaseManager", "No tasks found for section ID: " + sectionId);
         }
         cursor.close();
         db.close();
@@ -130,14 +138,15 @@ public class DatabaseManager extends SQLiteOpenHelper {
     }
 
     // Method to save a task to the database
+// Method to save a task to the database
     public void saveTask(Task task) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(COLUMN_TASK_TITLE, task.getTitle());
-        values.put(COLUMN_TASK_DESCRIPTION, task.getDescription());
+        values.put(COLUMN_TASK_DESCRIPTION, task.getNotes()); // Use getNotes() instead of getDescription()
+        values.put(COLUMN_TASK_DUE_DATE, task.getDeadline()); // Add deadline
+        values.put("color", task.getColor()); // Add color
         values.put(COLUMN_TASK_SECTION_ID, task.getSectionId());
-
-        // Insert the new task into the database
         db.insert(TABLE_TASKS, null, values);
         db.close();
     }
@@ -147,9 +156,9 @@ public class DatabaseManager extends SQLiteOpenHelper {
         List<Section> existingSections = getAllSections();
         if (existingSections.isEmpty()) {
             // Create predefined sections
-            Section section1 = new Section(0, "Personal", "#FF6200EE", "Personal tasks section");
-            Section section2 = new Section(0, "Work", "#4CAF50", "Work-related tasks");
-            Section section3 = new Section(0, "Groceries", "#2196F3", "Items to buy");
+            Section section1 = new Section(0, "Personal", "#C6F8E5", "Personal tasks section");
+            Section section2 = new Section(0, "Work", "#F5CDDE", "Work-related tasks");
+            Section section3 = new Section(0, "Groceries", "#CCE1F2", "Items to buy");
 
             // Insert predefined sections
             insertSection(section1);

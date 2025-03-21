@@ -3,11 +3,13 @@ package com.example.dreamplan.database;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
+import android.util.Log;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "dreamplan.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2; // Incremented version
 
     // Table creation SQL
     private static final String CREATE_TABLE_SECTIONS = "CREATE TABLE sections (" +
@@ -22,6 +24,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "title TEXT NOT NULL, " +
             "description TEXT, " +
             "due_date TEXT, " +
+            "color INTEGER, " + // Add color column
             "is_completed INTEGER DEFAULT 0, " +
             "FOREIGN KEY (section_id) REFERENCES sections(id));";
 
@@ -31,12 +34,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
+        Log.d("DatabaseHelper", "Creating tables...");
         db.execSQL(CREATE_TABLE_SECTIONS);
         db.execSQL(CREATE_TABLE_TASKS);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        Log.d("DatabaseHelper", "Upgrading database from version " + oldVersion + " to " + newVersion);
         db.execSQL("DROP TABLE IF EXISTS sections");
         db.execSQL("DROP TABLE IF EXISTS tasks");
         onCreate(db);
