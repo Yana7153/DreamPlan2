@@ -6,7 +6,8 @@
     android:padding="16dp"
     android:background="@color/lighter_gray"
     android:clickable="true"
-    android:focusable="true">
+    android:focusable="true"
+    android:layout_marginBottom="8dp"> <!-- Add this line to create space between sections -->
 
     <!-- Section Name -->
     <TextView
@@ -34,5 +35,4 @@
         android:visibility="gone"
         android:layout_marginTop="8dp"
         android:backgroundTint="@color/red"/>
-
 </LinearLayout>

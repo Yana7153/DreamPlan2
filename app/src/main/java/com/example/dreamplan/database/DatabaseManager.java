@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,14 +73,15 @@ public class DatabaseManager extends SQLiteOpenHelper {
 
     // 🔹 INSERT SECTION
     public void insertSection(Section section) {
-        // Assuming you have a SQLite database, here's an example of how you'd insert the section with color:
+        SQLiteDatabase db = this.getWritableDatabase(); // Initialize the database
         ContentValues values = new ContentValues();
-        values.put("name", section.getName());
-        values.put("color", section.getColor());  // Store the selected color
-        values.put("notes", section.getNotes());
+        values.put(COLUMN_NAME, section.getName());
+        values.put(COLUMN_COLOR, section.getColor());  // Store the selected color
+        values.put(COLUMN_NOTES, section.getNotes());
 
         // Insert into the database
-        db.insert("sections", null, values);
+        db.insert(TABLE_SECTIONS, null, values);
+        db.close(); // Close the database
     }
 
 
@@ -169,6 +171,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
                 String color = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_COLOR));
                 String notes = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NOTES));
                 sections.add(new Section(id, name, color, notes));
+                Log.d("DatabaseManager", "Section fetched: " + name); // Log each section
             } while (cursor.moveToNext());
         }
         cursor.close();

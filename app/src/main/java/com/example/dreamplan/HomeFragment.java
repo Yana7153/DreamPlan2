@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -77,7 +78,7 @@ import java.util.List;public class HomeFragment extends Fragment {
         EditText sectionName = sectionDialog.findViewById(R.id.et_section_name);
         EditText notes = sectionDialog.findViewById(R.id.et_notes);
         Button saveSectionButton = sectionDialog.findViewById(R.id.btn_save_section);
-        Button colorButton = sectionDialog.findViewById(R.id.btn_select_color);  // Color selection button
+  //      Button colorButton = sectionDialog.findViewById(R.id.btn_select_color);  // Color selection button
 
         // Default color (can be modified later)
         final String[] selectedColor = new String[]{section.getColor()};  // Use the color of the current section
@@ -85,19 +86,19 @@ import java.util.List;public class HomeFragment extends Fragment {
         // Set the initial values in the EditTexts based on the section being edited
         sectionName.setText(section.getName());
         notes.setText(section.getNotes());
-        colorButton.setBackgroundColor(Color.parseColor(selectedColor[0]));
+      //  colorButton.setBackgroundColor(Color.parseColor(selectedColor[0]));
 
         // Show color selection dialog when button is clicked
-        colorButton.setOnClickListener(v -> {
-            final String[] colors = {"#FF6200EE", "#FF5722", "#8BC34A", "#03A9F4", "#9C27B0"};
-            new AlertDialog.Builder(getContext())
-                    .setTitle("Select Color")
-                    .setItems(new String[]{"Purple", "Red", "Green", "Blue", "Pink"}, (dialog, which) -> {
-                        selectedColor[0] = colors[which];
-                        colorButton.setBackgroundColor(Color.parseColor(selectedColor[0])); // Update button color
-                    })
-                    .show();
-        });
+//        colorButton.setOnClickListener(v -> {
+//            final String[] colors = {"#FF6200EE", "#FF5722", "#8BC34A", "#03A9F4", "#9C27B0"};
+//            new AlertDialog.Builder(getContext())
+//                    .setTitle("Select Color")
+//                    .setItems(new String[]{"Purple", "Red", "Green", "Blue", "Pink"}, (dialog, which) -> {
+//                        selectedColor[0] = colors[which];
+//                        colorButton.setBackgroundColor(Color.parseColor(selectedColor[0])); // Update button color
+//                    })
+//                    .show();
+//        });
 
         // Save section button click listener
         saveSectionButton.setOnClickListener(v -> {
@@ -139,28 +140,27 @@ import java.util.List;public class HomeFragment extends Fragment {
         EditText sectionName = sectionDialog.findViewById(R.id.et_section_name);
         EditText notes = sectionDialog.findViewById(R.id.et_notes);
         Button saveSectionButton = sectionDialog.findViewById(R.id.btn_save_section);
-        Button colorButton = sectionDialog.findViewById(R.id.btn_select_color);  // Color selection button
 
-        // Check if saveSectionButton is null
-        if (saveSectionButton == null) {
-            Log.e("HomeFragment", "Save button not found in the dialog layout.");
-            return;
-        }
+        // Get references to the color circles
+        ImageView colorCircle1 = sectionDialog.findViewById(R.id.color_circle_1);
+        ImageView colorCircle2 = sectionDialog.findViewById(R.id.color_circle_2);
+        ImageView colorCircle3 = sectionDialog.findViewById(R.id.color_circle_3);
+        ImageView colorCircle4 = sectionDialog.findViewById(R.id.color_circle_4);
+        ImageView colorCircle5 = sectionDialog.findViewById(R.id.color_circle_5);
+        ImageView colorCircle6 = sectionDialog.findViewById(R.id.color_circle_6);
+        ImageView colorCircle7 = sectionDialog.findViewById(R.id.color_circle_7);
 
         // Default color (can be modified later)
         final String[] selectedColor = new String[]{"#D3D3D3"};  // Default color (light gray)
 
-        // Show color selection dialog when button is clicked
-        colorButton.setOnClickListener(v -> {
-            final String[] colors = {"#FF6200EE", "#FF5722", "#8BC34A", "#03A9F4", "#9C27B0"};
-            new AlertDialog.Builder(getContext())
-                    .setTitle("Select Color")
-                    .setItems(new String[]{"Purple", "Red", "Green", "Blue", "Pink"}, (dialog, which) -> {
-                        selectedColor[0] = colors[which];
-                        colorButton.setBackgroundColor(Color.parseColor(selectedColor[0])); // Update button color
-                    })
-                    .show();
-        });
+        // Set click listeners for the color circles
+        colorCircle1.setOnClickListener(v -> selectedColor[0] = "#CCE1F2");
+        colorCircle2.setOnClickListener(v -> selectedColor[0] = "#C6F8E5");
+        colorCircle3.setOnClickListener(v -> selectedColor[0] = "#FBF7D5");
+        colorCircle4.setOnClickListener(v -> selectedColor[0] = "#F9DED7");
+        colorCircle5.setOnClickListener(v -> selectedColor[0] = "#F5CDDE");
+        colorCircle6.setOnClickListener(v -> selectedColor[0] = "#E2BEF1");
+        colorCircle7.setOnClickListener(v -> selectedColor[0] = "#D3D3D3");
 
         // Save section button click listener
         saveSectionButton.setOnClickListener(v -> {
@@ -176,8 +176,10 @@ import java.util.List;public class HomeFragment extends Fragment {
             Section newSection = new Section(0, name, selectedColor[0], notesText);
             dbManager.insertSection(newSection);
 
-            sectionList = dbManager.getAllSections();  // Re-fetch data from DB
-            sectionAdapter.notifyDataSetChanged();  // Notify the adapter about the new section
+            // Update the RecyclerView
+            sectionList.clear(); // Clear the existing list
+            sectionList.addAll(dbManager.getAllSections()); // Re-fetch all sections from the database
+            sectionAdapter.notifyDataSetChanged(); // Notify the adapter about the data change
 
             sectionDialog.dismiss();  // Dismiss the dialog after saving the section
         });

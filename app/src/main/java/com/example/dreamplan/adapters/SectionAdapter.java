@@ -3,6 +3,7 @@ package com.example.dreamplan.adapters;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Color;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,21 +32,20 @@ public class SectionAdapter extends RecyclerView.Adapter<SectionAdapter.SectionV
     @Override
     public SectionViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(context).inflate(R.layout.item_section, parent, false);
-        return new SectionViewHolder(view);
+        return new SectionViewHolder(view, this); // Pass 'this' (adapter instance)
     }
 
     @Override
     public void onBindViewHolder(SectionViewHolder holder, int position) {
+        if (sectionList == null || sectionList.isEmpty()) {
+            return; // Do nothing if the list is null or empty
+        }
         Section section = sectionList.get(position);
         holder.sectionName.setText(section.getName());
         holder.sectionNotes.setText(section.getNotes());
 
-        // Set the background color of the item based on the section's color
-        if (section.getColor() != null && !section.getColor().isEmpty()) {
-            holder.itemView.setBackgroundColor(Color.parseColor(section.getColor())); // Use the stored color
-        } else {
-            holder.itemView.setBackgroundColor(Color.parseColor("#D3D3D3")); // Default color (light gray)
-        }
+        // Use a color from your palette
+        holder.itemView.setBackgroundColor(Color.parseColor("#CCE1F2")); // Light blue
     }
 
     @Override
@@ -81,14 +81,29 @@ public class SectionAdapter extends RecyclerView.Adapter<SectionAdapter.SectionV
                 .show();
     }
 
-    public static class SectionViewHolder extends RecyclerView.ViewHolder {
+    public static class SectionViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         TextView sectionName;
         TextView sectionNotes;
+        private SectionAdapter adapter;
 
-        public SectionViewHolder(View itemView) {
+        public SectionViewHolder(View itemView, SectionAdapter adapter) {
             super(itemView);
             sectionName = itemView.findViewById(R.id.sectionName);
             sectionNotes = itemView.findViewById(R.id.sectionNotes);
+            this.adapter = adapter; // Initialize the adapter
+            itemView.setOnClickListener(this); // Set click listener
         }
+
+        @Override
+        public void onClick(View v) {
+            int position = getAdapterPosition();
+            if (position != RecyclerView.NO_POSITION) {
+                Section section = adapter.sectionList.get(position);
+                Log.d("SectionAdapter", "Section clicked: " + section.getName());
+                adapter.homeFragment.openSectionDetail(section); // Open SectionDetailFragment
+            }
+        }
+
+
     }
 }
