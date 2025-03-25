@@ -3,6 +3,7 @@ package com.example.dreamplan;
 import android.app.Dialog;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -82,7 +83,7 @@ public class SectionDetailFragment extends Fragment {
         List<Task> tasks = dbManager.getAllTasksForSection(section.getId());
 
         // Set up the adapter
-        TaskAdapter taskAdapter = new TaskAdapter(tasks);
+        TaskAdapter taskAdapter = new TaskAdapter(tasks, requireContext());
         rvTasks.setAdapter(taskAdapter);
 
         // Back button logic
@@ -92,19 +93,11 @@ public class SectionDetailFragment extends Fragment {
         }
 
         // Show add task dialog when the FAB button is clicked
+        // Modify the addTaskButton click listener to use fragment transaction:
         addTaskButton.setOnClickListener(v -> {
-            // 1. Create new fragment
             AddTaskFragment addTaskFragment = AddTaskFragment.newInstance(section);
-
-            // 2. Start transaction
-            requireActivity().getSupportFragmentManager().beginTransaction()
-                    .setCustomAnimations(
-                            R.anim.slide_up,  // Enter animation
-                            R.anim.slide_down, // Exit animation
-                            R.anim.slide_up,   // Pop enter
-                            R.anim.slide_down  // Pop exit
-                    )
-                    .replace(R.id.fragment_container, addTaskFragment) // Use your activity's container ID
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, addTaskFragment)
                     .addToBackStack(null)
                     .commit();
         });
@@ -125,83 +118,97 @@ public class SectionDetailFragment extends Fragment {
         }
     }
 
-    // Show dialog for adding a new task
-    private void showAddTaskDialog() {
-        Dialog taskDialog = new Dialog(getContext());
-        taskDialog.setContentView(R.layout.dialog_add_task);
+//    // Show dialog for adding a new task
+//    private void showAddTaskDialog() {
+//        Dialog taskDialog = new Dialog(getContext());
+//        taskDialog.setContentView(R.layout.dialog_add_task);
+//
+//        // Initialize views
+//        EditText etTaskTitle = taskDialog.findViewById(R.id.et_task_title);
+//        EditText etTaskNotes = taskDialog.findViewById(R.id.et_task_notes);
+//        TextView tvDeadline = taskDialog.findViewById(R.id.tv_deadline);
+//        ImageView ivCalendarArrow = taskDialog.findViewById(R.id.iv_calendar_arrow);
+//        CalendarView calendarView = taskDialog.findViewById(R.id.calendar_view);
+//        Button btnSaveTask = taskDialog.findViewById(R.id.btn_save_task);
+//
+//        // Handle calendar visibility
+//        ivCalendarArrow.setOnClickListener(v -> {
+//            if (calendarView.getVisibility() == View.GONE) {
+//                calendarView.setVisibility(View.VISIBLE);
+//            } else {
+//                calendarView.setVisibility(View.GONE);
+//            }
+//        });
+//
+//        // Handle calendar date selection
+//        calendarView.setOnDateChangeListener((view, year, month, dayOfMonth) -> {
+//            String deadline = dayOfMonth + "/" + (month + 1) + "/" + year;
+//            tvDeadline.setText(deadline);
+//            calendarView.setVisibility(View.GONE);
+//        });
+//
+//        // Handle color selection
+//        ImageView[] colorCircles = {
+//                taskDialog.findViewById(R.id.color_circle_1),
+//                taskDialog.findViewById(R.id.color_circle_2),
+//                taskDialog.findViewById(R.id.color_circle_3),
+//                taskDialog.findViewById(R.id.color_circle_4),
+//                taskDialog.findViewById(R.id.color_circle_5),
+//                taskDialog.findViewById(R.id.color_circle_6),
+//                taskDialog.findViewById(R.id.color_circle_7)
+//        };
+//
+//        int[] colors = {
+//                Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW, Color.CYAN, Color.MAGENTA, Color.GRAY
+//        };
+//
+//        final int[] selectedColor = {colors[0]}; // Default color
+//
+//        for (int i = 0; i < colorCircles.length; i++) {
+//            int index = i;
+//            colorCircles[i].setOnClickListener(v -> {
+//                // Highlight selected color
+//                for (ImageView circle : colorCircles) {
+//                    circle.setBackgroundResource(0); // Remove highlight
+//                }
+//                colorCircles[index].setBackgroundResource(R.drawable.circle_background_selected); // Highlight selected
+//                selectedColor[0] = colors[index]; // Update selected color
+//            });
+//        }
+//
+//        // Save task
+//        btnSaveTask.setOnClickListener(v -> {
+//            String title = etTaskTitle.getText().toString().trim();
+//            String notes = etTaskNotes.getText().toString().trim();
+//            String deadline = tvDeadline.getText().toString();
+//
+//            if (title.isEmpty()) {
+//                Toast.makeText(getContext(), "Task title is required!", Toast.LENGTH_SHORT).show();
+//                return;
+//            }
+//
+//            // Create and save the task
+//            Task newTask = new Task(title, notes, deadline, selectedColor[0], section.getId());
+//            dbManager.saveTask(newTask);
+//
+//            Toast.makeText(getContext(), "Task added!", Toast.LENGTH_SHORT).show();
+//            taskDialog.dismiss();
+//        });
+//
+//        taskDialog.show();
+//    }
 
-        // Initialize views
-        EditText etTaskTitle = taskDialog.findViewById(R.id.et_task_title);
-        EditText etTaskNotes = taskDialog.findViewById(R.id.et_task_notes);
-        TextView tvDeadline = taskDialog.findViewById(R.id.tv_deadline);
-        ImageView ivCalendarArrow = taskDialog.findViewById(R.id.iv_calendar_arrow);
-        CalendarView calendarView = taskDialog.findViewById(R.id.calendar_view);
-        Button btnSaveTask = taskDialog.findViewById(R.id.btn_save_task);
-
-        // Handle calendar visibility
-        ivCalendarArrow.setOnClickListener(v -> {
-            if (calendarView.getVisibility() == View.GONE) {
-                calendarView.setVisibility(View.VISIBLE);
-            } else {
-                calendarView.setVisibility(View.GONE);
+    public void refreshTaskList() {
+        try {
+            List<Task> updatedTasks = new DatabaseManager(getContext()).getAllTasksForSection(section.getId());
+            RecyclerView rvTasks = getView().findViewById(R.id.rv_tasks);
+            TaskAdapter adapter = (TaskAdapter) rvTasks.getAdapter();
+            if (adapter != null) {
+                adapter.updateTasks(updatedTasks);
             }
-        });
-
-        // Handle calendar date selection
-        calendarView.setOnDateChangeListener((view, year, month, dayOfMonth) -> {
-            String deadline = dayOfMonth + "/" + (month + 1) + "/" + year;
-            tvDeadline.setText(deadline);
-            calendarView.setVisibility(View.GONE);
-        });
-
-        // Handle color selection
-        ImageView[] colorCircles = {
-                taskDialog.findViewById(R.id.color_circle_1),
-                taskDialog.findViewById(R.id.color_circle_2),
-                taskDialog.findViewById(R.id.color_circle_3),
-                taskDialog.findViewById(R.id.color_circle_4),
-                taskDialog.findViewById(R.id.color_circle_5),
-                taskDialog.findViewById(R.id.color_circle_6),
-                taskDialog.findViewById(R.id.color_circle_7)
-        };
-
-        int[] colors = {
-                Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW, Color.CYAN, Color.MAGENTA, Color.GRAY
-        };
-
-        final int[] selectedColor = {colors[0]}; // Default color
-
-        for (int i = 0; i < colorCircles.length; i++) {
-            int index = i;
-            colorCircles[i].setOnClickListener(v -> {
-                // Highlight selected color
-                for (ImageView circle : colorCircles) {
-                    circle.setBackgroundResource(0); // Remove highlight
-                }
-                colorCircles[index].setBackgroundResource(R.drawable.circle_background_selected); // Highlight selected
-                selectedColor[0] = colors[index]; // Update selected color
-            });
+        } catch (Exception e) {
+            Toast.makeText(getContext(), "Error loading tasks", Toast.LENGTH_SHORT).show();
+            Log.e("TASK_LOAD", "Error loading tasks", e);
         }
-
-        // Save task
-        btnSaveTask.setOnClickListener(v -> {
-            String title = etTaskTitle.getText().toString().trim();
-            String notes = etTaskNotes.getText().toString().trim();
-            String deadline = tvDeadline.getText().toString();
-
-            if (title.isEmpty()) {
-                Toast.makeText(getContext(), "Task title is required!", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            // Create and save the task
-            Task newTask = new Task(title, notes, deadline, selectedColor[0], section.getId());
-            dbManager.saveTask(newTask);
-
-            Toast.makeText(getContext(), "Task added!", Toast.LENGTH_SHORT).show();
-            taskDialog.dismiss();
-        });
-
-        taskDialog.show();
     }
 }

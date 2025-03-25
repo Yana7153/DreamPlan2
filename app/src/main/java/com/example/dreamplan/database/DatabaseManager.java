@@ -14,7 +14,7 @@ import java.util.List;
 
 public class DatabaseManager extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "dreamplan.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     // Table Names
     private static final String TABLE_SECTIONS = "sections";
@@ -67,9 +67,10 @@ public class DatabaseManager extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_TASKS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_SECTIONS);
-        onCreate(db);
+        if (oldVersion < 2) {
+            // Add the new column if upgrading from version 1
+            db.execSQL("ALTER TABLE " + TABLE_TASKS + " ADD COLUMN color_res_id INTEGER");
+        }
     }
 
     // 🔹 INSERT SECTION
@@ -100,29 +101,40 @@ public class DatabaseManager extends SQLiteOpenHelper {
         db.close();
     }
 
-    // 🔹 GET ALL TASKS FOR A SECTION
-// 🔹 GET ALL TASKS FOR A SECTION
+
     public List<Task> getAllTasksForSection(int sectionId) {
         List<Task> tasks = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
-        Log.d("DatabaseManager", "Fetching tasks for section ID: " + sectionId);
+        SQLiteDatabase db = null;
+        Cursor cursor = null;
 
-        Cursor cursor = db.rawQuery("SELECT * FROM tasks WHERE section_id = ?", new String[]{String.valueOf(sectionId)});
-        if (cursor.moveToFirst()) {
-            do {
-                int id = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
-                String title = cursor.getString(cursor.getColumnIndexOrThrow("title"));
-                String description = cursor.getString(cursor.getColumnIndexOrThrow("description"));
-                String dueDate = cursor.getString(cursor.getColumnIndexOrThrow("due_date"));
-                int color = cursor.getInt(cursor.getColumnIndexOrThrow("color")); // Fetch color
-                tasks.add(new Task(title, description, dueDate, color, sectionId));
-                Log.d("DatabaseManager", "Task fetched: " + title);
-            } while (cursor.moveToNext());
-        } else {
-            Log.d("DatabaseManager", "No tasks found for section ID: " + sectionId);
+        try {
+            db = this.getReadableDatabase();
+            cursor = db.query(TABLE_TASKS,
+                    null,
+                    "section_id=?",
+                    new String[]{String.valueOf(sectionId)},
+                    null, null, null);
+
+            if (cursor.moveToFirst()) {
+                do {
+                    Task task = new Task(
+                            cursor.getString(cursor.getColumnIndexOrThrow("title")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("description")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("due_date")),
+                            cursor.getInt(cursor.getColumnIndexOrThrow("color_res_id")),
+                            sectionId
+                    );
+                    tasks.add(task);
+                } while (cursor.moveToNext());
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            if (db != null && db.isOpen()) {
+                db.close();
+            }
         }
-        cursor.close();
-        db.close();
         return tasks;
     }
 
@@ -141,15 +153,23 @@ public class DatabaseManager extends SQLiteOpenHelper {
     // Method to save a task to the database
 // Method to save a task to the database
     public void saveTask(Task task) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_TASK_TITLE, task.getTitle());
-        values.put(COLUMN_TASK_DESCRIPTION, task.getNotes());
-        values.put(COLUMN_TASK_DUE_DATE, task.getDeadline());
-        values.put("color_res_id", task.getColorResId());  // Changed from "color"
-        values.put(COLUMN_TASK_SECTION_ID, task.getSectionId());
-        db.insert(TABLE_TASKS, null, values);
-        db.close();
+        SQLiteDatabase db = null;
+        try {
+            db = this.getWritableDatabase();
+            ContentValues values = new ContentValues();
+            values.put("title", task.getTitle());
+            values.put("description", task.getNotes());
+            values.put("due_date", task.getDeadline());
+            values.put("color_res_id", task.getColorResId());
+            values.put("section_id", task.getSectionId());
+
+            long id = db.insert(TABLE_TASKS, null, values);
+            Log.d("DB_INSERT", "Inserted task with ID: " + id);
+        } finally {
+            if (db != null && db.isOpen()) {
+                db.close();
+            }
+        }
     }
 
 

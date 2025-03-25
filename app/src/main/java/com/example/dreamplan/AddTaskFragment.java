@@ -1,6 +1,7 @@
 package com.example.dreamplan;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -105,12 +106,23 @@ public class AddTaskFragment extends Fragment {
                 title,
                 description,
                 deadline,
-                selectedColorResId, // Store the drawable resource ID
+                selectedColorResId,
                 section.getId()
         );
 
-        new DatabaseManager(getContext()).saveTask(task);
-        getParentFragmentManager().popBackStack();
+        try {
+            new DatabaseManager(getContext()).saveTask(task);
+
+            // Refresh the task list in parent fragment
+            if (getParentFragment() instanceof SectionDetailFragment) {
+                ((SectionDetailFragment) getParentFragment()).refreshTaskList();
+            }
+
+            getParentFragmentManager().popBackStack();
+        } catch (Exception e) {
+            Toast.makeText(getContext(), "Error saving task", Toast.LENGTH_SHORT).show();
+            Log.e("TASK_SAVE", "Error saving task", e);
+        }
     }
 
     private void setupDatePicker(View view) {

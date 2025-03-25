@@ -9,4 +9,12 @@
     <color name="gray">#686868</color>
     <color name="red">#D70000</color>
     <color name="lighter_gray">#D3D3D3</color>
+
+    <color name="task_bg_1">#FFEBEE</color>  <!-- Light Red -->
+    <color name="task_bg_2">#E3F2FD</color>  <!-- Light Blue -->
+    <color name="task_bg_3">#E8F5E9</color>  <!-- Light Green -->
+    <color name="task_bg_4">#FFF8E1</color>  <!-- Light Yellow -->
+    <color name="task_bg_5">#E0F7FA</color>  <!-- Light Cyan -->
+    <color name="task_bg_6">#F3E5F5</color>  <!-- Light Purple -->
+    <color name="task_bg_7">#EFEBE9</color>  <!-- Light Gray -->
 </resources>
