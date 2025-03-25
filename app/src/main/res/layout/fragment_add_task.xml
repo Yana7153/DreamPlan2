@@ -49,7 +49,6 @@
                 android:contentDescription="Save task"/>
         </RelativeLayout>
 
-        <!-- Color Selection -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -60,35 +59,21 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Choose Task Color"
+                android:text="Choose Task Icon"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="8dp"/>
 
             <ImageView
-                android:id="@+id/selected_color_preview"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:src="@drawable/circle_background_1"
-                android:background="@drawable/circle_with_border"
-                android:contentDescription="Selected color"
-                android:elevation="4dp"
-                android:layout_marginBottom="8dp"/>
-
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:scrollbars="none">
-
-                <LinearLayout
-                    android:id="@+id/color_options"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="4dp">
-                    <!-- Color options added programmatically -->
-                </LinearLayout>
-            </HorizontalScrollView>
+                android:id="@+id/img_task_icon"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:src="@drawable/ic_default_task"
+            android:background="@drawable/circle_with_border"
+            android:contentDescription="Task icon"
+            android:elevation="4dp"
+            android:clickable="true"
+            android:focusable="true"/>
         </LinearLayout>
 
         <!-- Description -->
@@ -100,6 +85,38 @@
             android:inputType="textMultiLine"
             android:layout_marginBottom="16dp"/>
 
+
+        <!-- 💡 Color Selection (moved below description) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Choose Task Color"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"/>
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none">
+
+                <!-- Keep your existing 7 color circles -->
+                <LinearLayout
+                    android:id="@+id/color_options"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="4dp">
+                    <!-- Your 7 color circles -->
+                </LinearLayout>
+            </HorizontalScrollView>
+        </LinearLayout>
         <!-- Recurrence Toggle -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -129,8 +146,9 @@
             android:id="@+id/btn_date"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Today's Date"
-            android:layout_marginBottom="16dp"/>
+            android:text="Tuesday, 25 March 2025"
+        android:layout_marginBottom="16dp"
+        style="@style/DateButtonStyle"/>
 
         <!-- Time Selection (Initially hidden) -->
         <LinearLayout

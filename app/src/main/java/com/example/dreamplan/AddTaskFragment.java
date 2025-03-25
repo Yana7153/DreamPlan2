@@ -1,5 +1,6 @@
 package com.example.dreamplan;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -18,9 +19,14 @@ import com.example.dreamplan.database.Section;
 import com.example.dreamplan.database.Task;
 import com.google.android.material.datepicker.MaterialDatePicker;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 public class AddTaskFragment extends Fragment {
     private Section section;
     private int selectedColorResId = R.drawable.circle_background_1; // Default
+    private View view;
 
     public static AddTaskFragment newInstance(Section section) {
         AddTaskFragment fragment = new AddTaskFragment();
@@ -39,11 +45,11 @@ public class AddTaskFragment extends Fragment {
         }
 
         // Initialize views
-        ImageView colorPreview = view.findViewById(R.id.selected_color_preview);
+        ImageView imgTaskIcon = view.findViewById(R.id.img_task_icon);
         LinearLayout colorOptions = view.findViewById(R.id.color_options);
 
         // Setup color selection
-        setupColorSelection(colorPreview, colorOptions);
+        setupColorSelection(imgTaskIcon, colorOptions);
 
         // Setup back button
         view.findViewById(R.id.btn_back).setOnClickListener(v -> getParentFragmentManager().popBackStack());
@@ -140,6 +146,33 @@ public class AddTaskFragment extends Fragment {
 
             datePicker.show(getParentFragmentManager(), "DATE_PICKER");
         });
+    }
+    // In AddTaskFragment.java
+    private void setupDateButton() {
+        Button btnDate = view.findViewById(R.id.btn_date);
+
+        // Set initial date
+        updateDateButton(new Date());
+
+        btnDate.setOnClickListener(v -> {
+            MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
+                    .setTitleText("Select Date")
+                    .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
+                    .build();
+
+            datePicker.addOnPositiveButtonClickListener(selection -> {
+                Date selectedDate = new Date(selection);
+                updateDateButton(selectedDate);
+            });
+
+            datePicker.show(getParentFragmentManager(), "DATE_PICKER");
+        });
+    }
+
+    private void updateDateButton(Date date) {
+        Button btnDate = view.findViewById(R.id.btn_date);
+        SimpleDateFormat sdf = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
+        btnDate.setText(sdf.format(date));
     }
 
     private String formatDate(long timestamp) {
