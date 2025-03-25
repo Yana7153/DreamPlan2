@@ -38,6 +38,7 @@ dependencies {
     implementation(libs.activity)
     implementation(libs.constraintlayout)
     implementation(libs.room.runtime)
+  //  implementation(com.google.android.material:material:1.6.0)
   //  kapt(libs.room.compiler) // Use kapt for Java projects
   //  implementation(libs.room.ktx) // Optional: For Room's Kotlin extensions
     testImplementation(libs.junit)

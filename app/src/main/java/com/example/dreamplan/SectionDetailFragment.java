@@ -92,7 +92,22 @@ public class SectionDetailFragment extends Fragment {
         }
 
         // Show add task dialog when the FAB button is clicked
-        addTaskButton.setOnClickListener(v -> showAddTaskDialog());
+        addTaskButton.setOnClickListener(v -> {
+            // 1. Create new fragment
+            AddTaskFragment addTaskFragment = AddTaskFragment.newInstance(section);
+
+            // 2. Start transaction
+            requireActivity().getSupportFragmentManager().beginTransaction()
+                    .setCustomAnimations(
+                            R.anim.slide_up,  // Enter animation
+                            R.anim.slide_down, // Exit animation
+                            R.anim.slide_up,   // Pop enter
+                            R.anim.slide_down  // Pop exit
+                    )
+                    .replace(R.id.fragment_container, addTaskFragment) // Use your activity's container ID
+                    .addToBackStack(null)
+                    .commit();
+        });
 
         // Hide the FAB button when entering SectionDetailFragment
         hideFabButton();

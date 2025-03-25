@@ -49,6 +49,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
                     + COLUMN_TASK_TITLE + " TEXT NOT NULL, "
                     + COLUMN_TASK_DESCRIPTION + " TEXT, "
                     + COLUMN_TASK_DUE_DATE + " TEXT, "
+                    + "color_res_id INTEGER, "
                     + COLUMN_TASK_SECTION_ID + " INTEGER, "
                     + "FOREIGN KEY(" + COLUMN_TASK_SECTION_ID + ") REFERENCES " + TABLE_SECTIONS + "(" + COLUMN_ID + ")"
                     + ");";
@@ -93,7 +94,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
         values.put(COLUMN_TASK_TITLE, task.getTitle());
         values.put(COLUMN_TASK_DESCRIPTION, task.getNotes()); // Use getNotes() instead of getDescription()
         values.put(COLUMN_TASK_DUE_DATE, task.getDeadline()); // Add deadline
-        values.put("color", task.getColor()); // Add color (ensure this column exists in the table)
+        values.put("color_res_id", task.getColorResId());  // Add color (ensure this column exists in the table)
         values.put(COLUMN_TASK_SECTION_ID, task.getSectionId());
         db.insert(TABLE_TASKS, null, values);
         db.close();
@@ -143,9 +144,9 @@ public class DatabaseManager extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(COLUMN_TASK_TITLE, task.getTitle());
-        values.put(COLUMN_TASK_DESCRIPTION, task.getNotes()); // Use getNotes() instead of getDescription()
-        values.put(COLUMN_TASK_DUE_DATE, task.getDeadline()); // Add deadline
-        values.put("color", task.getColor()); // Add color
+        values.put(COLUMN_TASK_DESCRIPTION, task.getNotes());
+        values.put(COLUMN_TASK_DUE_DATE, task.getDeadline());
+        values.put("color_res_id", task.getColorResId());  // Changed from "color"
         values.put(COLUMN_TASK_SECTION_ID, task.getSectionId());
         db.insert(TABLE_TASKS, null, values);
         db.close();
