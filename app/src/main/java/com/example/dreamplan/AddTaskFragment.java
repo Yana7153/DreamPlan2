@@ -1,6 +1,8 @@
 package com.example.dreamplan;
 
+import android.content.res.Resources;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +22,7 @@ import com.example.dreamplan.database.Section;
 import com.example.dreamplan.database.Task;
 import com.google.android.material.datepicker.MaterialDatePicker;
 
+import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -42,6 +45,11 @@ public class AddTaskFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_add_task, container, false);
+
+        new Handler().postDelayed(() -> {
+            imgTaskIcon.setImageResource(R.drawable.ic_work);
+            Log.d("ICON_TEST", "Test icon should be visible now");
+        }, 2000);
 
         // Initialize all views first
         imgTaskIcon = rootView.findViewById(R.id.img_task_icon);
@@ -71,25 +79,45 @@ public class AddTaskFragment extends Fragment {
                 btnDate.getText().toString()
         ));
 
+        // Verify the ImageView is properly initialized
+        Log.d("VIEW_CHECK", "imgTaskIcon is " + (imgTaskIcon == null ? "NULL" : "VALID"));
+
+// Test resource availability
+        try {
+            getResources().getDrawable(R.drawable.ic_work);
+            Log.d("RES_CHECK", "ic_work exists");
+        } catch (Resources.NotFoundException e) {
+            Log.e("RES_CHECK", "ic_work missing!", e);
+        }
+
         return rootView;
+
+
     }
 
     private void setupImageSelection() {
         imgTaskIcon.setOnClickListener(v -> {
-            IconSelectionFragment fragment = new IconSelectionFragment();
-            fragment.setIconSelectionListener(iconResId -> {
-                imgTaskIcon.setImageResource(iconResId);
-                imgTaskIcon.setTag(iconResId);  // Store the resource ID
-            });
-            getParentFragmentManager().beginTransaction()
-                    .setCustomAnimations(
-                            R.anim.slide_in_right,
-                            R.anim.slide_out_left,
-                            R.anim.slide_in_left,
-                            R.anim.slide_out_right)
-                    .replace(R.id.fragment_container, fragment)
-                    .addToBackStack(null)
-                    .commit();
+            try {
+                // Clear any previous state
+                imgTaskIcon.setImageResource(0);
+                imgTaskIcon.setBackgroundResource(R.drawable.circle_with_border);
+
+                IconSelectionFragment fragment = new IconSelectionFragment();
+                fragment.setIconSelectionListener(iconResId -> {
+                    imgTaskIcon.setImageResource(iconResId);
+                    imgTaskIcon.setTag(iconResId);
+                });
+
+                // Use this transaction approach instead:
+                getParentFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, fragment)
+                        .addToBackStack("icon_selection")
+                        .commit();
+
+            } catch (Exception e) {
+                Log.e("ICON_SELECT", "Error in icon selection", e);
+                Toast.makeText(getContext(), "Error opening icon selection", Toast.LENGTH_SHORT).show();
+            }
         });
     }
 
@@ -116,7 +144,7 @@ public class AddTaskFragment extends Fragment {
             colorOption.setImageResource(drawableId);
             colorOption.setOnClickListener(v -> {
                 selectedColorResId = drawableId;
-                colorPreview.setImageResource(drawableId);
+          //      colorPreview.setImageResource(drawableId);
             });
 
             colorOptions.addView(colorOption);
@@ -171,17 +199,17 @@ public class AddTaskFragment extends Fragment {
             return;
         }
 
-        int iconResId = R.drawable.ic_default_task;
-        if (imgTaskIcon.getTag() != null) {
-            iconResId = (int) imgTaskIcon.getTag();
-        }
+        // Get the selected icon (default if none selected)
+        int selectedIconResId = imgTaskIcon.getTag() != null ?
+                (int) imgTaskIcon.getTag() :
+                R.drawable.ic_default_task;
 
         Task task = new Task(
                 title,
                 description,
                 deadline,
                 selectedColorResId,
-                iconResId,  // Add the icon
+                selectedIconResId,  // Use the selected icon
                 section.getId()
         );
 

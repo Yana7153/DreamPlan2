@@ -42,17 +42,22 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     public void onBindViewHolder(@NonNull TaskViewHolder holder, int position) {
         Task task = taskList.get(position);
 
+        int iconResId = task.getIconResId() != 0 ?
+                task.getIconResId() :
+                R.drawable.ic_default_task;
+
         // Set icon if available
-        holder.imgTaskIcon.setImageResource(
-                task.getIconResId() != 0 ? task.getIconResId() : R.drawable.ic_default_task
-        );
+        holder.imgTaskIcon.setImageResource(iconResId);
+        holder.imgTaskIcon.setBackgroundResource(android.R.color.transparent);
         // Set task details
         holder.tvTaskTitle.setText(task.getTitle());
         holder.tvTaskDescription.setText(task.getNotes());
-        holder.tvTaskDeadline.setText("Deadline: " +
-                (task.getDeadline() != null ? task.getDeadline() : "Not set"));
 
-        holder.imgTaskIcon.setImageResource(task.getIconResId());
+
+//        holder.tvTaskDeadline.setText("Deadline: " +
+//                (task.getDeadline() != null ? task.getDeadline() : "Not set"));
+
+     //   holder.imgTaskIcon.setImageResource(task.getIconResId());
         // Set color circle
     //    holder.imgTaskColor.setImageResource(task.getColorResId());
 

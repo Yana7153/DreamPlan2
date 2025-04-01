@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="debug_icon_names">
+        <item>@drawable/ic_work</item>
+        <item>@drawable/ic_study</item>
+        <item>@drawable/ic_shopping</item>
+        <!-- Add all your icons here -->
+    </string-array>
+</resources>

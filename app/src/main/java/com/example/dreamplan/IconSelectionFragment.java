@@ -1,6 +1,10 @@
 package com.example.dreamplan;
 
+import android.content.res.Resources;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +23,12 @@ public class IconSelectionFragment extends Fragment {
 
     public void setIconSelectionListener(IconSelectionListener listener) {
         this.listener = listener;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        this.listener = null; // Prevent leaks
     }
 
     @Override
@@ -47,20 +57,33 @@ public class IconSelectionFragment extends Fragment {
         grid.setAdapter(new ArrayAdapter<Integer>(requireContext(), R.layout.item_icon, icons) {
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
-                ImageView imageView = (ImageView) (convertView != null ? convertView :
-                        LayoutInflater.from(getContext()).inflate(R.layout.item_icon, parent, false));
-
+                ImageView imageView = (ImageView) convertView;
+                if (imageView == null) {
+                    imageView = new ImageView(getContext());
+                    imageView.setLayoutParams(new GridView.LayoutParams(200, 200)); // Bigger touch area
+                    imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+                    imageView.setPadding(16, 16, 16, 16);
+                }
                 imageView.setImageResource(icons[position]);
-                imageView.setTag(icons[position]);  // Set tag for identification
                 return imageView;
             }
         });
 
         grid.setOnItemClickListener((parent, view1, position, id) -> {
             if (listener != null) {
-                listener.onIconSelected(icons[position]);
-                // Immediately close the fragment after selection
-                getParentFragmentManager().popBackStack();
+                int selectedIcon = icons[position];
+
+                // 1. Verify the icon exists
+                try {
+                    getResources().getDrawable(selectedIcon);
+                    listener.onIconSelected(selectedIcon);
+                } catch (Resources.NotFoundException e) {
+                    Log.e("ICON_ERROR", "Icon not found: " + selectedIcon, e);
+                    return;
+                }
+
+                // 2. Close immediately
+                getParentFragmentManager().popBackStackImmediate();
             }
         });
 
