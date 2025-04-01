@@ -34,15 +34,15 @@ public class IconSelectionFragment extends Fragment {
                 // Add all your icons
         };
 
-        grid.setAdapter(new ArrayAdapter<Integer>(requireContext(), R.layout.item_icon, icons) {
-            @Override
-            public View getView(int position, View convertView, ViewGroup parent) {
-                ImageView imageView = new ImageView(getContext());
-                imageView.setImageResource(icons[position]);
-                imageView.setLayoutParams(new GridView.LayoutParams(120, 120));
-                return imageView;
-            }
-        });
+//        grid.setAdapter(new ArrayAdapter<Integer>(requireContext(), R.layout.item_icon, icons) {
+//            @Override
+//            public View getView(int position, View convertView, ViewGroup parent) {
+//                ImageView imageView = new ImageView(getContext());
+//                imageView.setImageResource(icons[position]);
+//                imageView.setLayoutParams(new GridView.LayoutParams(120, 120));
+//                return imageView;
+//            }
+//        });
 
         grid.setAdapter(new ArrayAdapter<Integer>(requireContext(), R.layout.item_icon, icons) {
             @Override
@@ -51,7 +51,16 @@ public class IconSelectionFragment extends Fragment {
                         LayoutInflater.from(getContext()).inflate(R.layout.item_icon, parent, false));
 
                 imageView.setImageResource(icons[position]);
+                imageView.setTag(icons[position]);  // Set tag for identification
                 return imageView;
+            }
+        });
+
+        grid.setOnItemClickListener((parent, view1, position, id) -> {
+            if (listener != null) {
+                listener.onIconSelected(icons[position]);
+                // Immediately close the fragment after selection
+                getParentFragmentManager().popBackStack();
             }
         });
 

@@ -42,14 +42,19 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     public void onBindViewHolder(@NonNull TaskViewHolder holder, int position) {
         Task task = taskList.get(position);
 
+        // Set icon if available
+        holder.imgTaskIcon.setImageResource(
+                task.getIconResId() != 0 ? task.getIconResId() : R.drawable.ic_default_task
+        );
         // Set task details
         holder.tvTaskTitle.setText(task.getTitle());
         holder.tvTaskDescription.setText(task.getNotes());
         holder.tvTaskDeadline.setText("Deadline: " +
                 (task.getDeadline() != null ? task.getDeadline() : "Not set"));
 
+        holder.imgTaskIcon.setImageResource(task.getIconResId());
         // Set color circle
-        holder.imgTaskColor.setImageResource(task.getColorResId());
+    //    holder.imgTaskColor.setImageResource(task.getColorResId());
 
         // Set background color
         int backgroundColor = getBackgroundColor(task.getColorResId());
@@ -83,6 +88,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     }
 
     static class TaskViewHolder extends RecyclerView.ViewHolder {
+        ImageView imgTaskIcon;
         LinearLayout taskContainer;
         ImageView imgTaskColor;
         TextView tvTaskTitle, tvTaskDescription, tvTaskDeadline;
@@ -90,7 +96,8 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         public TaskViewHolder(@NonNull View itemView) {
             super(itemView);
             taskContainer = itemView.findViewById(R.id.task_container);
-            imgTaskColor = itemView.findViewById(R.id.img_task_color);
+            imgTaskIcon = itemView.findViewById(R.id.img_task_icon);
+            //     imgTaskColor = itemView.findViewById(R.id.img_task_color);
             tvTaskTitle = itemView.findViewById(R.id.tv_task_title);
             tvTaskDescription = itemView.findViewById(R.id.tv_task_description);
             tvTaskDeadline = itemView.findViewById(R.id.tv_task_deadline);

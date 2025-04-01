@@ -1,18 +1,22 @@
 package com.example.dreamplan.database;
 
+import com.example.dreamplan.R;
+
 public class Task {
     private int id;
     private String title;
     private String notes;
     private String deadline;
     private int colorResId; // Changed from 'color' to store drawable resource ID
+    private int iconResId;
     private int sectionId;
 
-    public Task(String title, String notes, String deadline, int colorResId, int sectionId) {
-        this.title = title;
-        this.notes = notes;
-        this.deadline = deadline;
+    public Task(String title, String notes, String deadline, int colorResId, int iconResId, int sectionId) {
+        this.title = title != null ? title : "";
+        this.notes = notes != null ? notes : "";
+        this.deadline = deadline != null ? deadline : "";
         this.colorResId = colorResId;
+        this.iconResId = iconResId > 0 ? iconResId : R.drawable.ic_default_task;
         this.sectionId = sectionId;
     }
 
@@ -36,4 +40,7 @@ public class Task {
 
     public int getSectionId() { return sectionId; }
     public void setSectionId(int sectionId) { this.sectionId = sectionId; }
+
+    public int getIconResId() { return iconResId; }
+    public void setIconResId(int iconResId) { this.iconResId = iconResId; }
 }

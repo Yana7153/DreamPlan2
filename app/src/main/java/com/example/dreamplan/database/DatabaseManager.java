@@ -50,9 +50,12 @@ public class DatabaseManager extends SQLiteOpenHelper {
                     + COLUMN_TASK_DESCRIPTION + " TEXT, "
                     + COLUMN_TASK_DUE_DATE + " TEXT, "
                     + "color_res_id INTEGER, "
+                    + "icon_res_id INTEGER, "  // New column for icons
                     + COLUMN_TASK_SECTION_ID + " INTEGER, "
-                    + "FOREIGN KEY(" + COLUMN_TASK_SECTION_ID + ") REFERENCES " + TABLE_SECTIONS + "(" + COLUMN_ID + ")"
+                    + "FOREIGN KEY(" + COLUMN_TASK_SECTION_ID + ") REFERENCES "
+                    + TABLE_SECTIONS + "(" + COLUMN_ID + ")"
                     + ");";
+
     private SQLiteDatabase db;
 
     public DatabaseManager(Context context) {
@@ -70,6 +73,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
         if (oldVersion < 2) {
             // Add the new column if upgrading from version 1
             db.execSQL("ALTER TABLE " + TABLE_TASKS + " ADD COLUMN color_res_id INTEGER");
+            db.execSQL("ALTER TABLE " + TABLE_TASKS + " ADD COLUMN icon_res_id INTEGER");
         }
     }
 
@@ -89,54 +93,57 @@ public class DatabaseManager extends SQLiteOpenHelper {
 
     // 🔹 INSERT TASK
 // 🔹 INSERT TASK
+    // 🔹 UPDATED INSERT TASK METHOD
     public void insertTask(Task task) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(COLUMN_TASK_TITLE, task.getTitle());
-        values.put(COLUMN_TASK_DESCRIPTION, task.getNotes()); // Use getNotes() instead of getDescription()
-        values.put(COLUMN_TASK_DUE_DATE, task.getDeadline()); // Add deadline
-        values.put("color_res_id", task.getColorResId());  // Add color (ensure this column exists in the table)
+        values.put(COLUMN_TASK_DESCRIPTION, task.getNotes());
+        values.put(COLUMN_TASK_DUE_DATE, task.getDeadline());
+        values.put("color_res_id", task.getColorResId());
+        values.put("icon_res_id", task.getIconResId());  // Add icon
         values.put(COLUMN_TASK_SECTION_ID, task.getSectionId());
+
         db.insert(TABLE_TASKS, null, values);
         db.close();
     }
 
 
+    // 🔹 UPDATED GET ALL TASKS FOR SECTION
     public List<Task> getAllTasksForSection(int sectionId) {
         List<Task> tasks = new ArrayList<>();
-        SQLiteDatabase db = null;
+        SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = null;
 
         try {
-            db = this.getReadableDatabase();
             cursor = db.query(TABLE_TASKS,
                     null,
-                    "section_id=?",
+                    COLUMN_TASK_SECTION_ID + "=?",
                     new String[]{String.valueOf(sectionId)},
                     null, null, null);
 
             if (cursor.moveToFirst()) {
                 do {
                     Task task = new Task(
-                            cursor.getString(cursor.getColumnIndexOrThrow("title")),
-                            cursor.getString(cursor.getColumnIndexOrThrow("description")),
-                            cursor.getString(cursor.getColumnIndexOrThrow("due_date")),
+                            cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_TITLE)),
+                            cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_DESCRIPTION)),
+                            cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_DUE_DATE)),
                             cursor.getInt(cursor.getColumnIndexOrThrow("color_res_id")),
+                            cursor.getInt(cursor.getColumnIndexOrThrow("icon_res_id")),  // Get icon
                             sectionId
                     );
+                    task.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TASK_ID)));
                     tasks.add(task);
                 } while (cursor.moveToNext());
             }
         } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
-            if (db != null && db.isOpen()) {
-                db.close();
-            }
+            if (cursor != null) cursor.close();
+            if (db != null) db.close();
         }
         return tasks;
     }
+
+
 
     public void updateSection(Section section) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -150,26 +157,28 @@ public class DatabaseManager extends SQLiteOpenHelper {
         db.close();
     }
 
-    // Method to save a task to the database
-// Method to save a task to the database
+    // 🔹 UPDATED SAVE TASK METHOD (handles both insert and update)
     public void saveTask(Task task) {
-        SQLiteDatabase db = null;
-        try {
-            db = this.getWritableDatabase();
-            ContentValues values = new ContentValues();
-            values.put("title", task.getTitle());
-            values.put("description", task.getNotes());
-            values.put("due_date", task.getDeadline());
-            values.put("color_res_id", task.getColorResId());
-            values.put("section_id", task.getSectionId());
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
 
-            long id = db.insert(TABLE_TASKS, null, values);
-            Log.d("DB_INSERT", "Inserted task with ID: " + id);
-        } finally {
-            if (db != null && db.isOpen()) {
-                db.close();
-            }
+        values.put(COLUMN_TASK_TITLE, task.getTitle());
+        values.put(COLUMN_TASK_DESCRIPTION, task.getNotes());
+        values.put(COLUMN_TASK_DUE_DATE, task.getDeadline());
+        values.put("color_res_id", task.getColorResId());
+        values.put("icon_res_id", task.getIconResId());
+        values.put(COLUMN_TASK_SECTION_ID, task.getSectionId());
+
+        if (task.getId() > 0) {
+            // Update existing task
+            db.update(TABLE_TASKS, values,
+                    COLUMN_TASK_ID + "=?",
+                    new String[]{String.valueOf(task.getId())});
+        } else {
+            // Insert new task
+            db.insert(TABLE_TASKS, null, values);
         }
+        db.close();
     }
 
 

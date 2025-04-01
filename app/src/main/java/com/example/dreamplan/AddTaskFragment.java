@@ -79,6 +79,7 @@ public class AddTaskFragment extends Fragment {
             IconSelectionFragment fragment = new IconSelectionFragment();
             fragment.setIconSelectionListener(iconResId -> {
                 imgTaskIcon.setImageResource(iconResId);
+                imgTaskIcon.setTag(iconResId);  // Store the resource ID
             });
             getParentFragmentManager().beginTransaction()
                     .setCustomAnimations(
@@ -170,7 +171,19 @@ public class AddTaskFragment extends Fragment {
             return;
         }
 
-        Task task = new Task(title, description, deadline, selectedColorResId, section.getId());
+        int iconResId = R.drawable.ic_default_task;
+        if (imgTaskIcon.getTag() != null) {
+            iconResId = (int) imgTaskIcon.getTag();
+        }
+
+        Task task = new Task(
+                title,
+                description,
+                deadline,
+                selectedColorResId,
+                iconResId,  // Add the icon
+                section.getId()
+        );
 
         try {
             new DatabaseManager(requireContext()).saveTask(task);

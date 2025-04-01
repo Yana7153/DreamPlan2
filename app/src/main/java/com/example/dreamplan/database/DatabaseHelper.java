@@ -25,6 +25,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "description TEXT, " +
             "due_date TEXT, " +
             "color INTEGER, " + // Add color column
+            "icon INTEGER, " +
             "is_completed INTEGER DEFAULT 0, " +
             "FOREIGN KEY (section_id) REFERENCES sections(id));";
 
