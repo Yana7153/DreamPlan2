@@ -1,6 +1,7 @@
 package com.example.dreamplan;
 
 import android.content.res.Resources;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -11,7 +12,9 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.Toast;
 
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 public class IconSelectionFragment extends Fragment {
@@ -70,21 +73,23 @@ public class IconSelectionFragment extends Fragment {
         });
 
         grid.setOnItemClickListener((parent, view1, position, id) -> {
-            if (listener != null) {
-                int selectedIcon = icons[position];
+                if (listener != null) {
+                    int selectedIcon = icons[position];
 
-                // 1. Verify the icon exists
-                try {
-                    getResources().getDrawable(selectedIcon);
-                    listener.onIconSelected(selectedIcon);
-                } catch (Resources.NotFoundException e) {
-                    Log.e("ICON_ERROR", "Icon not found: " + selectedIcon, e);
-                    return;
+                    // 1. Verify the icon exists
+                    try {
+                        Drawable icon = ContextCompat.getDrawable(requireContext(), selectedIcon);
+                        if (icon != null) {
+                            listener.onIconSelected(selectedIcon);
+                            getParentFragmentManager().popBackStackImmediate();
+                        } else {
+                            throw new Resources.NotFoundException();
+                        }
+                    } catch (Resources.NotFoundException e) {
+                        Log.e("ICON_ERROR", "Icon not found: " + selectedIcon, e);
+                        Toast.makeText(requireContext(), "Icon not found!", Toast.LENGTH_SHORT).show();
+                    }
                 }
-
-                // 2. Close immediately
-                getParentFragmentManager().popBackStackImmediate();
-            }
         });
 
         return view;

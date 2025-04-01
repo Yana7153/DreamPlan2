@@ -3,4 +3,5 @@
     android:layout_height="80dp"
     android:scaleType="centerInside"
     android:background="@drawable/circle_with_border"
-    android:padding="16dp"/>
+    android:padding="20dp"
+    android:contentDescription="Icon option"/>

@@ -72,7 +72,7 @@
                 android:background="@drawable/circle_with_border"
                 android:contentDescription="Task icon"
                 android:scaleType="centerInside"
-                android:padding="16dp"
+                android:padding="12dp"
                 android:elevation="4dp"
                 android:clickable="true"
                 android:focusable="true"/>

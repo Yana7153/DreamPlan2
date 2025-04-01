@@ -3,6 +3,7 @@ package com.example.dreamplan;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -97,26 +98,43 @@ public class AddTaskFragment extends Fragment {
 
     private void setupImageSelection() {
         imgTaskIcon.setOnClickListener(v -> {
-            try {
-                // Clear any previous state
-                imgTaskIcon.setImageResource(0);
-                imgTaskIcon.setBackgroundResource(R.drawable.circle_with_border);
+            // Reset to default state
+            imgTaskIcon.setImageResource(R.drawable.ic_default_task);
+            imgTaskIcon.setBackgroundResource(R.drawable.circle_with_border);
 
-                IconSelectionFragment fragment = new IconSelectionFragment();
-                fragment.setIconSelectionListener(iconResId -> {
-                    imgTaskIcon.setImageResource(iconResId);
-                    imgTaskIcon.setTag(iconResId);
+            IconSelectionFragment fragment = new IconSelectionFragment();
+
+            fragment.setIconSelectionListener(iconResId -> {
+                // Run on UI thread to ensure immediate update
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    try {
+                        // Clear any tint or color filters
+                        imgTaskIcon.clearColorFilter();
+
+                        // Set the new icon with proper scaling
+                        imgTaskIcon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+                        imgTaskIcon.setImageResource(iconResId);
+
+                        // Store the selection
+                        imgTaskIcon.setTag(iconResId);
+
+                        Log.d("ICON_DEBUG", "Icon set to: " + getResources().getResourceName(iconResId));
+                    } catch (Resources.NotFoundException e) {
+                        Log.e("ICON_ERROR", "Icon not found", e);
+                        imgTaskIcon.setImageResource(R.drawable.ic_default_task);
+                    }
                 });
+            });
 
-                // Use this transaction approach instead:
-                getParentFragmentManager().beginTransaction()
+            // Execute transaction safely
+            try {
+                getParentFragmentManager()
+                        .beginTransaction()
                         .replace(R.id.fragment_container, fragment)
                         .addToBackStack("icon_selection")
                         .commit();
-
             } catch (Exception e) {
-                Log.e("ICON_SELECT", "Error in icon selection", e);
-                Toast.makeText(getContext(), "Error opening icon selection", Toast.LENGTH_SHORT).show();
+                Log.e("FRAGMENT", "Transaction failed", e);
             }
         });
     }

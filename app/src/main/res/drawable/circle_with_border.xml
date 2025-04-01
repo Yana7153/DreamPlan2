@@ -1,16 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item>
-        <shape android:shape="oval">
-            <solid android:color="?attr/color"/> <!-- Dynamic color -->
-            <size android:width="40dp" android:height="40dp"/>
-        </shape>
-    </item>
-    <item>
-        <shape android:shape="oval">
-            <solid android:color="@android:color/transparent"/> <!-- Transparent fill -->
-            <stroke android:width="2dp" android:color="@android:color/black"/> <!-- Black border -->
-            <size android:width="40dp" android:height="40dp"/>
-        </shape>
-    </item>
-</layer-list>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <!-- Transparent fill with black border -->
+    <solid android:color="@android:color/transparent"/>
+    <stroke android:width="2dp" android:color="#888888"/>
+    <!-- Remove fixed size, let ImageView control dimensions -->
+</shape>
