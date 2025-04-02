@@ -41,6 +41,7 @@ public class IconSelectionFragment extends Fragment {
 
          //Your icon resources
         Integer[] icons = {
+                R.drawable.star,
                 R.drawable.ic_work,
                 R.drawable.ic_study,
                 R.drawable.ic_shopping,

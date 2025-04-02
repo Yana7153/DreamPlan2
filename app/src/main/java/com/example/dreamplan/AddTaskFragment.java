@@ -47,11 +47,6 @@ public class AddTaskFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_add_task, container, false);
 
-        new Handler().postDelayed(() -> {
-            imgTaskIcon.setImageResource(R.drawable.ic_work);
-            Log.d("ICON_TEST", "Test icon should be visible now");
-        }, 2000);
-
         // Initialize all views first
         imgTaskIcon = rootView.findViewById(R.id.img_task_icon);
         LinearLayout colorOptions = rootView.findViewById(R.id.color_options);
@@ -60,6 +55,12 @@ public class AddTaskFragment extends Fragment {
         Button btnRegular = rootView.findViewById(R.id.btn_regular);
         EditText etTaskTitle = rootView.findViewById(R.id.et_task_title);
         EditText etDescription = rootView.findViewById(R.id.et_description);
+
+        // Set STAR as the default icon
+        imgTaskIcon.setImageResource(R.drawable.star);
+        imgTaskIcon.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        imgTaskIcon.setAdjustViewBounds(true);
+        imgTaskIcon.setTag(R.drawable.star);
 
         // Get section from arguments
         if (getArguments() != null) {
