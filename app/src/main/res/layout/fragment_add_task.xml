@@ -168,13 +168,55 @@
             app:cardElevation="2dp"
             app:cardCornerRadius="8dp">
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Task Type Selection -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Task Type"
+                android:textSize="16sp"
+                android:textColor="?android:attr/textColorPrimary"
+                android:layout_marginBottom="8dp"/>
+
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/toggle_recurrence"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:selectionRequired="true"
+                app:singleSelection="true"
+                app:checkedButton="@+id/btn_one_time">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_one_time"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    style="@style/ToggleButtonStyle"
+                    android:text="One-time"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_regular"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    style="@style/ToggleButtonStyle"
+                    android:text="Recurring"/>
+            </com.google.android.material.button.MaterialButtonToggleGroup>
+
+            <!-- One-time Date Section (Hidden by default) -->
             <LinearLayout
+                android:id="@+id/one_time_section"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:visibility="gone">
 
-                <!-- Due Date -->
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -188,169 +230,134 @@
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
                     android:text="Select date"
-                    style="@style/DateButtonStyle"
-                    android:layout_marginBottom="16dp"/>
+                    style="@style/DateButtonStyle"/>
+            </LinearLayout>
 
-                <!-- Recurrence Toggle -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Recurrence"
-                    android:textSize="16sp"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:layout_marginBottom="8dp"/>
+            <!-- Recurring Options Section (Hidden by default) -->
+            <LinearLayout
+                android:id="@+id/recurring_options"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
 
-                <com.google.android.material.button.MaterialButtonToggleGroup
-                    android:id="@+id/toggle_recurrence"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    app:selectionRequired="true"
-                    app:singleSelection="true"
-                    app:checkedButton="@+id/btn_one_time">
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_one_time"
-                        android:layout_width="0dp"
-                        android:layout_height="48dp"
-                        android:layout_weight="1"
-                        style="@style/ToggleButtonStyle"
-                        android:text="One-time"/>
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_regular"
-                        android:layout_width="0dp"
-                        android:layout_height="48dp"
-                        android:layout_weight="1"
-                        style="@style/ToggleButtonStyle"
-                        android:text="Recurring"/>
-                </com.google.android.material.button.MaterialButtonToggleGroup>
-
-                <!-- Recurrence Options (Hidden by default) -->
+                <!-- Start Date -->
                 <LinearLayout
-                    android:id="@+id/recurring_options"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Starts:"
+                        android:textSize="14sp"/>
+
+                    <Button
+                        android:id="@+id/btn_start_date"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="16dp"
+                        android:text="Select start date"
+                        style="@style/DateButtonStyle"/>
+                </LinearLayout>
+
+                <!-- Frequency -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Repeats:"
+                        android:textSize="14sp"/>
+
+                    <Spinner
+                        android:id="@+id/spinner_schedule"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="16dp"
+                        style="@style/SpinnerStyle"/>
+                </LinearLayout>
+
+                <!-- Time Options -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Time:"
+                        android:textSize="14sp"/>
+
+                    <Switch
+                        android:id="@+id/switch_time"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"/>
+                </LinearLayout>
+
+                <!-- Time Sub-options (Hidden by default) -->
+                <LinearLayout
+                    android:id="@+id/time_suboptions"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:visibility="gone">
+                    android:visibility="gone"
+                    android:paddingStart="32dp">
 
-                    <!-- Start Date -->
-                    <LinearLayout
+                    <RadioGroup
+                        android:id="@+id/radio_time_options"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="8dp"
-                        android:gravity="center_vertical">
+                        android:orientation="vertical">
 
-                        <TextView
+                        <com.google.android.material.radiobutton.MaterialRadioButton
+                            android:id="@+id/radio_morning"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Starts:"
-                            android:textSize="14sp"/>
+                            android:text="Morning (8-11 AM)"/>
 
-                        <Button
-                            android:id="@+id/btn_start_date"
-                            android:layout_width="0dp"
+                        <com.google.android.material.radiobutton.MaterialRadioButton
+                            android:id="@+id/radio_noon"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginStart="16dp"
-                            android:text="Select start date"
-                            style="@style/DateButtonStyle"/>
-                    </LinearLayout>
+                            android:text="Noon (12-2 PM)"/>
 
-                    <!-- Frequency -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
+                        <com.google.android.material.radiobutton.MaterialRadioButton
+                            android:id="@+id/radio_evening"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Evening (5-8 PM)"/>
+
+                        <com.google.android.material.radiobutton.MaterialRadioButton
+                            android:id="@+id/radio_custom"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Custom time"/>
+                    </RadioGroup>
+
+                    <TimePicker
+                        android:id="@+id/time_picker"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="8dp"
-                        android:gravity="center_vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Repeats:"
-                            android:textSize="14sp"/>
-
-                        <Spinner
-                            android:id="@+id/spinner_schedule"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginStart="16dp"
-                            style="@style/SpinnerStyle"/>
-                    </LinearLayout>
-
-                    <!-- Time Options -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="8dp"
-                        android:gravity="center_vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Time:"
-                            android:textSize="14sp"/>
-
-                        <Switch
-                            android:id="@+id/switch_time"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="16dp"/>
-                    </LinearLayout>
-
-                    <!-- Time Sub-options -->
-                    <LinearLayout
-                        android:id="@+id/time_suboptions"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
                         android:visibility="gone"
-                        android:paddingStart="32dp">
-
-                        <RadioGroup
-                            android:id="@+id/radio_time_options"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical">
-
-                            <com.google.android.material.radiobutton.MaterialRadioButton
-                                android:id="@+id/radio_morning"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Morning (8-11 AM)"/>
-
-                            <com.google.android.material.radiobutton.MaterialRadioButton
-                                android:id="@+id/radio_noon"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Noon (12-2 PM)"/>
-
-                            <com.google.android.material.radiobutton.MaterialRadioButton
-                                android:id="@+id/radio_evening"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Evening (5-8 PM)"/>
-
-                            <com.google.android.material.radiobutton.MaterialRadioButton
-                                android:id="@+id/radio_custom"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Custom time"/>
-                        </RadioGroup>
-
-                        <TimePicker
-                            android:id="@+id/time_picker"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:visibility="gone"
-                            android:layout_marginTop="8dp"/>
-                    </LinearLayout>
+                        android:layout_marginTop="8dp"/>
                 </LinearLayout>
             </LinearLayout>
+        </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
 </ScrollView>
