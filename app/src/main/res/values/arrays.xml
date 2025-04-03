@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="schedule_options">
+        <item>Every day</item>
+        <item>Weekdays only</item>
+        <item>Weekends only</item>
+        <item>Every N days</item>
+        <item>Custom...</item>
+    </string-array>
+</resources>

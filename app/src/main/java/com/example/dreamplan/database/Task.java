@@ -11,13 +11,23 @@ public class Task {
     private int iconResId;
     private int sectionId;
 
-    public Task(String title, String notes, String deadline, int colorResId, int iconResId, int sectionId) {
+    private boolean isRecurring;
+    private String startDate;
+    private String schedule;
+    private String timePreference;
+
+    public Task(String title, String notes, String deadline, int colorResId, int iconResId, int sectionId,
+                boolean isRecurring, String startDate, String schedule, String timePreference) {
         this.title = title != null ? title : "";
         this.notes = notes != null ? notes : "";
         this.deadline = deadline != null ? deadline : "";
         this.colorResId = colorResId;
-        this.iconResId = iconResId > 0 ? iconResId : R.drawable.ic_default_task;
+        this.iconResId = iconResId != 0 ? iconResId : R.drawable.star;
         this.sectionId = sectionId;
+        this.isRecurring = isRecurring;
+        this.startDate = startDate != null ? startDate : "";
+        this.schedule = schedule != null ? schedule : "";
+        this.timePreference = timePreference != null ? timePreference : "";
     }
 
     // Getters and setters
@@ -43,4 +53,36 @@ public class Task {
 
     public int getIconResId() { return iconResId; }
     public void setIconResId(int iconResId) { this.iconResId = iconResId; }
+
+    public boolean isRecurring() {
+        return isRecurring;
+    }
+
+    public void setRecurring(boolean recurring) {
+        isRecurring = recurring;
+    }
+
+    public String getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(String startDate) {
+        this.startDate = startDate;
+    }
+
+    public String getSchedule() {
+        return schedule;
+    }
+
+    public void setSchedule(String schedule) {
+        this.schedule = schedule;
+    }
+
+    public String getTimePreference() {
+        return timePreference;
+    }
+
+    public void setTimePreference(String timePreference) {
+        this.timePreference = timePreference;
+    }
 }

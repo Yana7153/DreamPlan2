@@ -1,8 +1,11 @@
 package com.example.dreamplan;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,29 +45,41 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     public void onBindViewHolder(@NonNull TaskViewHolder holder, int position) {
         Task task = taskList.get(position);
 
+        // Set icon - use star if none selected (0 or invalid)
         int iconResId = task.getIconResId() != 0 ?
                 task.getIconResId() :
-                R.drawable.ic_default_task;
+                R.drawable.star; // Fallback to star
 
-        // Set icon if available
-        holder.imgTaskIcon.setImageResource(iconResId);
+        try {
+            holder.imgTaskIcon.setImageResource(iconResId);
+        } catch (Resources.NotFoundException e) {
+            holder.imgTaskIcon.setImageResource(R.drawable.star); // Double fallback
+        }
+
         holder.imgTaskIcon.setBackgroundResource(android.R.color.transparent);
         // Set task details
         holder.tvTaskTitle.setText(task.getTitle());
         holder.tvTaskDescription.setText(task.getNotes());
 
 
-//        holder.tvTaskDeadline.setText("Deadline: " +
-//                (task.getDeadline() != null ? task.getDeadline() : "Not set"));
-
-     //   holder.imgTaskIcon.setImageResource(task.getIconResId());
-        // Set color circle
-    //    holder.imgTaskColor.setImageResource(task.getColorResId());
-
         // Set background color
-        int backgroundColor = getBackgroundColor(task.getColorResId());
-        GradientDrawable background = (GradientDrawable)holder.taskContainer.getBackground();
-        background.setColor(backgroundColor);
+        try {
+            int backgroundColor = getBackgroundColor(task.getColorResId());
+            Drawable background = holder.taskContainer.getBackground();
+            if (background instanceof GradientDrawable) {
+                ((GradientDrawable) background).setColor(backgroundColor);
+            } else {
+                // Fallback if background isn't GradientDrawable
+                holder.taskContainer.setBackgroundColor(backgroundColor);
+            }
+        } catch (Exception e) {
+            // Fallback color if something goes wrong
+            holder.taskContainer.setBackgroundColor(Color.WHITE);
+        }
+
+        Log.d("TASK_DEBUG", "Task: " + task.getTitle() +
+                " | Color: " + task.getColorResId() +
+                " | Icon: " + task.getIconResId());
     }
 
     @Override

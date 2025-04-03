@@ -8,14 +8,21 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.Spinner;
+import android.widget.Switch;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.dreamplan.database.DatabaseManager;
@@ -33,6 +40,13 @@ public class AddTaskFragment extends Fragment {
     private int selectedColorResId = R.drawable.circle_background_1;
     private boolean isOneTime = true;
     private ImageView imgTaskIcon; // Store reference to avoid multiple findViewById calls
+    private Spinner scheduleSpinner;
+    private Switch timeSwitch;
+    private RadioGroup timeOptionsGroup;
+    private TimePicker timePicker;
+    private Button btnStartDate;
+    private LinearLayout recurringOptions;
+    private int selectedIconResId = R.drawable.star;
 
     public static AddTaskFragment newInstance(Section section) {
         AddTaskFragment fragment = new AddTaskFragment();
@@ -57,10 +71,11 @@ public class AddTaskFragment extends Fragment {
         EditText etDescription = rootView.findViewById(R.id.et_description);
 
         // Set STAR as the default icon
-        imgTaskIcon.setImageResource(R.drawable.star);
+        imgTaskIcon.setImageResource(selectedIconResId); // Set default star icon
+        imgTaskIcon.setTag(selectedIconResId);
         imgTaskIcon.setScaleType(ImageView.ScaleType.FIT_CENTER);
         imgTaskIcon.setAdjustViewBounds(true);
-        imgTaskIcon.setTag(R.drawable.star);
+
 
         // Get section from arguments
         if (getArguments() != null) {
@@ -80,6 +95,15 @@ public class AddTaskFragment extends Fragment {
                 etDescription.getText().toString(),
                 btnDate.getText().toString()
         ));
+
+        recurringOptions = rootView.findViewById(R.id.recurring_options);
+        btnStartDate = rootView.findViewById(R.id.btn_start_date);
+        scheduleSpinner = rootView.findViewById(R.id.spinner_schedule);
+        timeSwitch = rootView.findViewById(R.id.switch_time);
+        timeOptionsGroup = rootView.findViewById(R.id.radio_time_options);
+        timePicker = rootView.findViewById(R.id.time_picker);
+
+        setupToggleButtons(btnOneTime, btnRegular);
 
         // Verify the ImageView is properly initialized
         Log.d("VIEW_CHECK", "imgTaskIcon is " + (imgTaskIcon == null ? "NULL" : "VALID"));
@@ -106,6 +130,7 @@ public class AddTaskFragment extends Fragment {
             IconSelectionFragment fragment = new IconSelectionFragment();
 
             fragment.setIconSelectionListener(iconResId -> {
+                selectedIconResId = iconResId;
                 // Run on UI thread to ensure immediate update
                 new Handler(Looper.getMainLooper()).post(() -> {
                     try {
@@ -190,6 +215,11 @@ public class AddTaskFragment extends Fragment {
     }
 
     private void setupToggleButtons(Button oneTime, Button regular) {
+        if (oneTime == null || regular == null) {
+            Log.e("AddTaskFragment", "Toggle buttons not found");
+            return;
+        }
+
         updateToggleButtonStates(oneTime, regular);
 
         oneTime.setOnClickListener(v -> {
@@ -206,48 +236,154 @@ public class AddTaskFragment extends Fragment {
     }
 
     private void updateToggleButtonStates(Button oneTime, Button regular) {
-        oneTime.setBackgroundResource(isOneTime ? R.drawable.btn_toggle_selected : R.drawable.btn_toggle_unselected);
-        regular.setBackgroundResource(!isOneTime ? R.drawable.btn_toggle_selected : R.drawable.btn_toggle_unselected);
-        oneTime.setTextColor(getResources().getColor(isOneTime ? android.R.color.white : android.R.color.black));
-        regular.setTextColor(getResources().getColor(!isOneTime ? android.R.color.white : android.R.color.black));
-    }
-
-    private void saveTask(String title, String description, String deadline) {
-        if (title.isEmpty()) {
-            Toast.makeText(getContext(), "Title required", Toast.LENGTH_SHORT).show();
+        if (oneTime == null || regular == null || recurringOptions == null) {
+            Log.e("AddTaskFragment", "Views not properly initialized");
             return;
         }
 
-        // Get the selected icon (default if none selected)
-        int selectedIconResId = imgTaskIcon.getTag() != null ?
-                (int) imgTaskIcon.getTag() :
-                R.drawable.ic_default_task;
+        oneTime.setBackgroundResource(isOneTime ? R.drawable.btn_toggle_selected : R.drawable.btn_toggle_unselected);
+        regular.setBackgroundResource(!isOneTime ? R.drawable.btn_toggle_selected : R.drawable.btn_toggle_unselected);
 
-        Task task = new Task(
-                title,
-                description,
-                deadline,
-                selectedColorResId,
-                selectedIconResId,  // Use the selected icon
-                section.getId()
-        );
+        int selectedTextColor = ContextCompat.getColor(requireContext(), android.R.color.white);
+        int unselectedTextColor = ContextCompat.getColor(requireContext(), android.R.color.black);
 
+        oneTime.setTextColor(getResources().getColor(isOneTime ? android.R.color.white : android.R.color.black));
+        regular.setTextColor(getResources().getColor(!isOneTime ? android.R.color.white : android.R.color.black));
+
+        // Show/hide recurring options
+        if (recurringOptions != null) {
+            recurringOptions.setVisibility(isOneTime ? View.GONE : View.VISIBLE);
+        }
+    }
+
+    private void saveTask(String title, String description, String deadline) {
         try {
+            // Validate required fields
+            if (title == null || title.trim().isEmpty()) {
+                Toast.makeText(getContext(), "Title required", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Safely handle null values
+            String safeDescription = description != null ? description : "";
+            String safeDeadline = deadline != null ? deadline : "";
+
+            // Initialize recurring task fields
+            String startDate = null;
+            String schedule = null;
+            String timePreference = null;
+
+            if (!isOneTime) {
+                // Safely get start date
+                startDate = btnStartDate.getText() != null ?
+                        btnStartDate.getText().toString() : "";
+
+                // Safely get schedule
+                schedule = scheduleSpinner.getSelectedItem() != null ?
+                        scheduleSpinner.getSelectedItem().toString() : "";
+
+                // Get time preference if enabled
+                if (timeSwitch.isChecked() && timeOptionsGroup != null) {
+                    int selectedId = timeOptionsGroup.getCheckedRadioButtonId();
+                    if (selectedId == R.id.radio_custom && timePicker != null) {
+                        timePreference = String.format(Locale.getDefault(),
+                                "%02d:%02d",
+                                timePicker.getHour(),
+                                timePicker.getMinute());
+                    } else if (selectedId != -1) {
+                        RadioButton selected = requireView().findViewById(selectedId);
+                        if (selected != null && selected.getText() != null) {
+                            timePreference = selected.getText().toString();
+                        }
+                    }
+                }
+            }
+
+            // Create and save task
+            Task task = new Task(
+                    title.trim(),
+                    safeDescription,
+                    safeDeadline,
+                    selectedColorResId,
+                    selectedIconResId,
+                    section.getId(),
+                    !isOneTime,
+                    startDate,
+                    schedule,
+                    timePreference
+            );
+
             new DatabaseManager(requireContext()).saveTask(task);
 
-            // Refresh the task list in parent fragment
+            // Refresh parent fragment
             if (getParentFragment() instanceof SectionDetailFragment) {
                 ((SectionDetailFragment) getParentFragment()).refreshTaskList();
             }
 
             getParentFragmentManager().popBackStack();
+
         } catch (Exception e) {
-            Toast.makeText(getContext(), "Error saving task", Toast.LENGTH_SHORT).show();
             Log.e("TASK_SAVE", "Error saving task", e);
+            Toast.makeText(getContext(), "Error saving task", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private String getSelectedTimePreference() {
+        if (!timeSwitch.isChecked()) {
+            return null;
+        }
+
+        int selectedId = timeOptionsGroup.getCheckedRadioButtonId();
+        if (selectedId == R.id.radio_custom) {
+            int hour = timePicker.getHour();
+            int minute = timePicker.getMinute();
+            return String.format(Locale.getDefault(), "%02d:%02d", hour, minute);
+        } else {
+            RadioButton selected = requireView().findViewById(selectedId);
+            return selected.getText().toString();
         }
     }
 
     private int dpToPx(int dp) {
         return Math.round(dp * getResources().getDisplayMetrics().density);
+    }
+
+    private void setupRecurringOptions() {
+        // 1. Start Date Picker
+        btnStartDate.setOnClickListener(v -> showDatePicker(btnStartDate));
+
+        // 2. Schedule Spinner
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
+                requireContext(),
+                R.array.schedule_options,
+                android.R.layout.simple_spinner_item
+        );
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        scheduleSpinner.setAdapter(adapter);
+
+        // 3. Time Switch
+        timeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            timeOptionsGroup.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+        });
+
+        // Time Radio Options
+        timeOptionsGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            timePicker.setVisibility(checkedId == R.id.radio_custom ? View.VISIBLE : View.GONE);
+        });
+    }
+
+    private void showDatePicker(Button targetButton) {
+        MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
+                .setTitleText("Select Date")
+                .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
+                .build();
+
+        datePicker.addOnPositiveButtonClickListener(selection -> {
+            String date = new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
+                    .format(new Date(selection));
+            targetButton.setText(date);
+        });
+
+        datePicker.show(getParentFragmentManager(), "DATE_PICKER");
     }
 }

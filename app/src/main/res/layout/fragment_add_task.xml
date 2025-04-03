@@ -141,7 +141,135 @@
                 android:background="@drawable/square_button_background"/>
         </LinearLayout>
 
+        <!-- Add this below your one_time/regular toggle buttons -->
+        <LinearLayout
+            android:id="@+id/recurring_options"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:paddingTop="16dp">
+
+            <!-- 1. Start Date -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingBottom="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Start Date:"
+                    android:textSize="16sp"/>
+
+                <Button
+                    android:id="@+id/btn_start_date"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="16dp"
+                    android:text="Select date"/>
+            </LinearLayout>
+
+            <!-- 2. Schedule -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingBottom="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Schedule:"
+                    android:textSize="16sp"/>
+
+                <Spinner
+                    android:id="@+id/spinner_schedule"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="16dp"/>
+            </LinearLayout>
+
+            <!-- 3. Time Options -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingBottom="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Time:"
+                    android:textSize="16sp"/>
+
+                <Switch
+                    android:id="@+id/switch_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"/>
+            </LinearLayout>
+
+            <!-- Time Sub-options (hidden by default) -->
+            <LinearLayout
+                android:id="@+id/time_suboptions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:paddingStart="32dp"
+                android:paddingTop="8dp">
+
+                <RadioGroup
+                    android:id="@+id/radio_time_options"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <RadioButton
+                        android:id="@+id/radio_morning"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Morning"/>
+
+                    <RadioButton
+                        android:id="@+id/radio_noon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Noon"/>
+
+                    <RadioButton
+                        android:id="@+id/radio_evening"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Evening"/>
+
+                    <RadioButton
+                        android:id="@+id/radio_custom"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Set custom time"/>
+                </RadioGroup>
+
+                <TimePicker
+                    android:id="@+id/time_picker"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"/>
+            </LinearLayout>
+        </LinearLayout>
+
         <!-- Date Selection -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Choose the date"
+            android:textSize="16sp"
+            android:layout_marginBottom="8dp"/>
+
         <Button
             android:id="@+id/btn_date"
             android:layout_width="match_parent"

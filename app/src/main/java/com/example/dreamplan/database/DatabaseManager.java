@@ -9,12 +9,14 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.util.Log;
 
+import com.example.dreamplan.R;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class DatabaseManager extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "dreamplan.db";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
 
     // Table Names
     private static final String TABLE_SECTIONS = "sections";
@@ -50,8 +52,12 @@ public class DatabaseManager extends SQLiteOpenHelper {
                     + COLUMN_TASK_DESCRIPTION + " TEXT, "
                     + COLUMN_TASK_DUE_DATE + " TEXT, "
                     + "color_res_id INTEGER, "
-                    + "icon_res_id INTEGER, "  // New column for icons
+                    + "icon_res_id INTEGER, "
                     + COLUMN_TASK_SECTION_ID + " INTEGER, "
+                    + "is_recurring INTEGER DEFAULT 0, "
+                    + "start_date TEXT, "
+                    + "schedule TEXT, "
+                    + "time_preference TEXT, "
                     + "FOREIGN KEY(" + COLUMN_TASK_SECTION_ID + ") REFERENCES "
                     + TABLE_SECTIONS + "(" + COLUMN_ID + ")"
                     + ");";
@@ -70,11 +76,22 @@ public class DatabaseManager extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        // Improved upgrade path
         if (oldVersion < 2) {
-            // Add the new column if upgrading from version 1
             db.execSQL("ALTER TABLE " + TABLE_TASKS + " ADD COLUMN color_res_id INTEGER");
             db.execSQL("ALTER TABLE " + TABLE_TASKS + " ADD COLUMN icon_res_id INTEGER");
         }
+        if (oldVersion < 3) {
+            db.execSQL("ALTER TABLE " + TABLE_TASKS + " ADD COLUMN is_recurring INTEGER DEFAULT 0");
+            db.execSQL("ALTER TABLE " + TABLE_TASKS + " ADD COLUMN start_date TEXT");
+            db.execSQL("ALTER TABLE " + TABLE_TASKS + " ADD COLUMN schedule TEXT");
+            db.execSQL("ALTER TABLE " + TABLE_TASKS + " ADD COLUMN time_preference TEXT");
+        }
+    }
+
+    public void initializeDatabase() {
+        SQLiteDatabase db = getWritableDatabase();
+        db.close();
     }
 
     // 🔹 INSERT SECTION
@@ -104,6 +121,11 @@ public class DatabaseManager extends SQLiteOpenHelper {
         values.put("icon_res_id", task.getIconResId());  // Add icon
         values.put(COLUMN_TASK_SECTION_ID, task.getSectionId());
 
+        values.put("is_recurring", task.isRecurring() ? 1 : 0);
+        values.put("start_date", task.getStartDate());
+        values.put("schedule", task.getSchedule());
+        values.put("time_preference", task.getTimePreference());
+
         db.insert(TABLE_TASKS, null, values);
         db.close();
     }
@@ -113,33 +135,45 @@ public class DatabaseManager extends SQLiteOpenHelper {
     public List<Task> getAllTasksForSection(int sectionId) {
         List<Task> tasks = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = null;
 
-        try {
-            cursor = db.query(TABLE_TASKS,
-                    null,
-                    COLUMN_TASK_SECTION_ID + "=?",
-                    new String[]{String.valueOf(sectionId)},
-                    null, null, null);
+        Cursor cursor = db.query(TABLE_TASKS,
+                new String[] {
+                        COLUMN_TASK_ID,
+                        COLUMN_TASK_TITLE,
+                        COLUMN_TASK_DESCRIPTION,
+                        COLUMN_TASK_DUE_DATE,
+                        "color_res_id",
+                        "icon_res_id",
+                        COLUMN_TASK_SECTION_ID,
+                        "is_recurring",
+                        "start_date",
+                        "schedule",
+                        "time_preference"
+                },
+                COLUMN_TASK_SECTION_ID + "=?",
+                new String[]{String.valueOf(sectionId)},
+                null, null, null);
 
-            if (cursor.moveToFirst()) {
-                do {
-                    Task task = new Task(
-                            cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_TITLE)),
-                            cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_DESCRIPTION)),
-                            cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_DUE_DATE)),
-                            cursor.getInt(cursor.getColumnIndexOrThrow("color_res_id")),
-                            cursor.getInt(cursor.getColumnIndexOrThrow("icon_res_id")),  // Get icon
-                            sectionId
-                    );
-                    task.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TASK_ID)));
-                    tasks.add(task);
-                } while (cursor.moveToNext());
-            }
-        } finally {
-            if (cursor != null) cursor.close();
-            if (db != null) db.close();
+        if (cursor.moveToFirst()) {
+            do {
+                Task task = new Task(
+                        cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_TITLE)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_DESCRIPTION)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_DUE_DATE)),
+                        cursor.getInt(cursor.getColumnIndexOrThrow("color_res_id")),
+                        cursor.getInt(cursor.getColumnIndexOrThrow("icon_res_id")),
+                        cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TASK_SECTION_ID)),
+                        cursor.getInt(cursor.getColumnIndexOrThrow("is_recurring")) == 1,
+                        cursor.getString(cursor.getColumnIndexOrThrow("start_date")),
+                        cursor.getString(cursor.getColumnIndexOrThrow("schedule")),
+                        cursor.getString(cursor.getColumnIndexOrThrow("time_preference"))
+                );
+                task.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TASK_ID)));
+                tasks.add(task);
+            } while (cursor.moveToNext());
         }
+        cursor.close();
+        db.close();
         return tasks;
     }
 
@@ -222,6 +256,18 @@ public class DatabaseManager extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         // Correct table name: TABLE_SECTIONS
         db.delete(TABLE_SECTIONS, COLUMN_ID + " = ?", new String[]{String.valueOf(sectionId)});
+        db.close();
+    }
+
+    public void migrateOldTasks() {
+        SQLiteDatabase db = getWritableDatabase();
+        // Set default values for any tasks missing color/icon
+        ContentValues values = new ContentValues();
+        values.put("color_res_id", R.drawable.circle_background_1);
+        values.put("icon_res_id", R.drawable.ic_default_task);
+        db.update(TABLE_TASKS, values,
+                "color_res_id IS NULL OR icon_res_id IS NULL",
+                null);
         db.close();
     }
 }

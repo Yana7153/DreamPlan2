@@ -48,15 +48,6 @@ public class IconSelectionFragment extends Fragment {
                 // Add all your icons
         };
 
-//        grid.setAdapter(new ArrayAdapter<Integer>(requireContext(), R.layout.item_icon, icons) {
-//            @Override
-//            public View getView(int position, View convertView, ViewGroup parent) {
-//                ImageView imageView = new ImageView(getContext());
-//                imageView.setImageResource(icons[position]);
-//                imageView.setLayoutParams(new GridView.LayoutParams(120, 120));
-//                return imageView;
-//            }
-//        });
 
         grid.setAdapter(new ArrayAdapter<Integer>(requireContext(), R.layout.item_icon, icons) {
             @Override
