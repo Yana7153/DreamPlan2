@@ -1,16 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- res/values/styles.xml -->
 <resources>
-    <!-- Base application theme -->
-    <style name="AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
-        <!-- Customize your theme here -->
+    <!-- For the title input -->
+    <style name="TitleInputLayoutStyle" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/purple_500</item>
+        <item name="hintTextColor">@color/purple_500</item>
+        <item name="boxCornerRadiusTopStart">8dp</item>
+        <item name="boxCornerRadiusTopEnd">8dp</item>
+        <item name="boxCornerRadiusBottomStart">8dp</item>
+        <item name="boxCornerRadiusBottomEnd">8dp</item>
     </style>
 
-    <!-- Dialog animation style -->
-    <style name="DialogAnimation">
-        <item name="android:windowEnterAnimation">@anim/slide_up</item>
-        <item name="android:windowExitAnimation">@anim/slide_down</item>
+    <!-- For the description input -->
+    <style name="DescriptionInputLayoutStyle" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/purple_200</item>
+        <item name="hintTextColor">@color/purple_200</item>
     </style>
 
-    <style name="DateButtonStyle"></style>
+    <!-- For date buttons -->
+    <style name="DateButtonStyle" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="strokeColor">@color/purple_500</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cornerRadius">8dp</item>
+        <item name="android:textColor">@color/purple_500</item>
+    </style>
+
+    <!-- For recurrence toggle buttons -->
+    <style name="RecurrenceButtonStyle" parent="Widget.MaterialComponents.Button">
+        <item name="cornerRadius">4dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+    </style>
+
+    <!-- For spinners -->
+    <style name="SpinnerStyle" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+        <item name="boxStrokeColor">@color/purple_200</item>
+    </style>
+
+    <!-- Add this to your styles.xml -->
+    <style name="ToggleButtonStyle" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="cornerRadius">4dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="strokeColor">@color/purple_500</item>
+        <item name="strokeWidth">1dp</item>
+        <!-- For selected state -->
+        <item name="backgroundTint">@color/purple_500</item>
+        <item name="android:textColor">@color/white</item>
+        <!-- For unselected state -->
+        <item name="materialThemeOverlay">@style/ThemeOverlay.ToggleButton</item>
+    </style>
+
+    <style name="ThemeOverlay.ToggleButton" parent="">
+        <item name="colorPrimary">@color/purple_500</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnSurface">@color/purple_500</item>
+    </style>
 </resources>

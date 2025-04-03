@@ -28,6 +28,8 @@ import androidx.fragment.app.Fragment;
 import com.example.dreamplan.database.DatabaseManager;
 import com.example.dreamplan.database.Section;
 import com.example.dreamplan.database.Task;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.datepicker.MaterialDatePicker;
 
 import java.lang.ref.WeakReference;
@@ -61,32 +63,51 @@ public class AddTaskFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_add_task, container, false);
 
-        // Initialize all views first
+        // Initialize all views
         imgTaskIcon = rootView.findViewById(R.id.img_task_icon);
         LinearLayout colorOptions = rootView.findViewById(R.id.color_options);
         Button btnDate = rootView.findViewById(R.id.btn_date);
-        Button btnOneTime = rootView.findViewById(R.id.btn_one_time);
-        Button btnRegular = rootView.findViewById(R.id.btn_regular);
+        MaterialButton btnOneTime = rootView.findViewById(R.id.btn_one_time);
+        MaterialButton btnRegular = rootView.findViewById(R.id.btn_regular);
         EditText etTaskTitle = rootView.findViewById(R.id.et_task_title);
         EditText etDescription = rootView.findViewById(R.id.et_description);
 
-        // Set STAR as the default icon
-        imgTaskIcon.setImageResource(selectedIconResId); // Set default star icon
+        // Initialize recurring options views
+        recurringOptions = rootView.findViewById(R.id.recurring_options);
+        btnStartDate = rootView.findViewById(R.id.btn_start_date);
+        scheduleSpinner = rootView.findViewById(R.id.spinner_schedule);
+        timeSwitch = rootView.findViewById(R.id.switch_time);
+        timeOptionsGroup = rootView.findViewById(R.id.radio_time_options);
+        timePicker = rootView.findViewById(R.id.time_picker);
+
+        // Set default icon
+        imgTaskIcon.setImageResource(selectedIconResId);
         imgTaskIcon.setTag(selectedIconResId);
         imgTaskIcon.setScaleType(ImageView.ScaleType.FIT_CENTER);
         imgTaskIcon.setAdjustViewBounds(true);
-
 
         // Get section from arguments
         if (getArguments() != null) {
             section = (Section) getArguments().getSerializable("section");
         }
 
-        // Setup all components
+        // Setup components
         setupImageSelection();
         setupColorSelection(imgTaskIcon, colorOptions);
         setupDatePicker(btnDate);
-        setupToggleButtons(btnOneTime, btnRegular);
+        setupRecurringOptions(); // Initialize recurring options
+
+        // Setup toggle group
+        MaterialButtonToggleGroup toggleGroup = rootView.findViewById(R.id.toggle_recurrence);
+        toggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+            if (isChecked) {
+                isOneTime = checkedId == R.id.btn_one_time;
+                recurringOptions.setVisibility(isOneTime ? View.GONE : View.VISIBLE);
+            }
+        });
+
+        // Set initial toggle state
+        toggleGroup.check(isOneTime ? R.id.btn_one_time : R.id.btn_regular);
 
         // Set click listeners
         rootView.findViewById(R.id.btn_back).setOnClickListener(v -> getParentFragmentManager().popBackStack());
@@ -96,29 +117,7 @@ public class AddTaskFragment extends Fragment {
                 btnDate.getText().toString()
         ));
 
-        recurringOptions = rootView.findViewById(R.id.recurring_options);
-        btnStartDate = rootView.findViewById(R.id.btn_start_date);
-        scheduleSpinner = rootView.findViewById(R.id.spinner_schedule);
-        timeSwitch = rootView.findViewById(R.id.switch_time);
-        timeOptionsGroup = rootView.findViewById(R.id.radio_time_options);
-        timePicker = rootView.findViewById(R.id.time_picker);
-
-        setupToggleButtons(btnOneTime, btnRegular);
-
-        // Verify the ImageView is properly initialized
-        Log.d("VIEW_CHECK", "imgTaskIcon is " + (imgTaskIcon == null ? "NULL" : "VALID"));
-
-// Test resource availability
-        try {
-            getResources().getDrawable(R.drawable.ic_work);
-            Log.d("RES_CHECK", "ic_work exists");
-        } catch (Resources.NotFoundException e) {
-            Log.e("RES_CHECK", "ic_work missing!", e);
-        }
-
         return rootView;
-
-
     }
 
     private void setupImageSelection() {
@@ -214,47 +213,58 @@ public class AddTaskFragment extends Fragment {
         });
     }
 
-    private void setupToggleButtons(Button oneTime, Button regular) {
-        if (oneTime == null || regular == null) {
-            Log.e("AddTaskFragment", "Toggle buttons not found");
-            return;
-        }
+//    private void setupToggleButtons(Button oneTime, Button regular) {
+//        if (oneTime == null || regular == null) {
+//            Log.e("AddTaskFragment", "Toggle buttons not found");
+//            return;
+//        }
+//
+//        MaterialButtonToggleGroup toggleGroup = requireView().findViewById(R.id.toggle_recurrence);
+//        toggleGroup.check(isOneTime ? R.id.btn_one_time : R.id.btn_regular);
+//        recurringOptions.setVisibility(isOneTime ? View.GONE : View.VISIBLE);
+//
+//        toggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+//            if (isChecked) {
+//                isOneTime = checkedId == R.id.btn_one_time;
+//                recurringOptions.setVisibility(isOneTime ? View.GONE : View.VISIBLE);
+//            }
+//        });
 
-        updateToggleButtonStates(oneTime, regular);
+//        updateToggleButtonStates(oneTime, regular);
+//
+//        oneTime.setOnClickListener(v -> {
+//            isOneTime = true;
+//            updateToggleButtonStates(oneTime, regular);
+//            recurringOptions.setVisibility(View.GONE); // Hide recurring options
+//        });
+//
+//        regular.setOnClickListener(v -> {
+//            isOneTime = false;
+//            updateToggleButtonStates(oneTime, regular);
+//            recurringOptions.setVisibility(View.VISIBLE); // Show recurring options
+//        });
+ //   }
 
-        oneTime.setOnClickListener(v -> {
-            isOneTime = true;
-            updateToggleButtonStates(oneTime, regular);
-            requireView().findViewById(R.id.time_selection).setVisibility(View.GONE);
-        });
-
-        regular.setOnClickListener(v -> {
-            isOneTime = false;
-            updateToggleButtonStates(oneTime, regular);
-            requireView().findViewById(R.id.time_selection).setVisibility(View.VISIBLE);
-        });
-    }
-
-    private void updateToggleButtonStates(Button oneTime, Button regular) {
-        if (oneTime == null || regular == null || recurringOptions == null) {
-            Log.e("AddTaskFragment", "Views not properly initialized");
-            return;
-        }
-
-        oneTime.setBackgroundResource(isOneTime ? R.drawable.btn_toggle_selected : R.drawable.btn_toggle_unselected);
-        regular.setBackgroundResource(!isOneTime ? R.drawable.btn_toggle_selected : R.drawable.btn_toggle_unselected);
-
-        int selectedTextColor = ContextCompat.getColor(requireContext(), android.R.color.white);
-        int unselectedTextColor = ContextCompat.getColor(requireContext(), android.R.color.black);
-
-        oneTime.setTextColor(getResources().getColor(isOneTime ? android.R.color.white : android.R.color.black));
-        regular.setTextColor(getResources().getColor(!isOneTime ? android.R.color.white : android.R.color.black));
-
-        // Show/hide recurring options
-        if (recurringOptions != null) {
-            recurringOptions.setVisibility(isOneTime ? View.GONE : View.VISIBLE);
-        }
-    }
+//    private void updateToggleButtonStates(Button oneTime, Button regular) {
+//        if (oneTime == null || regular == null || recurringOptions == null) {
+//            Log.e("AddTaskFragment", "Views not properly initialized");
+//            return;
+//        }
+//
+//        oneTime.setBackgroundResource(isOneTime ? R.drawable.btn_toggle_selected : R.drawable.btn_toggle_unselected);
+//        regular.setBackgroundResource(!isOneTime ? R.drawable.btn_toggle_selected : R.drawable.btn_toggle_unselected);
+//
+//        int selectedTextColor = ContextCompat.getColor(requireContext(), android.R.color.white);
+//        int unselectedTextColor = ContextCompat.getColor(requireContext(), android.R.color.black);
+//
+//        oneTime.setTextColor(getResources().getColor(isOneTime ? android.R.color.white : android.R.color.black));
+//        regular.setTextColor(getResources().getColor(!isOneTime ? android.R.color.white : android.R.color.black));
+//
+//        // Show/hide recurring options
+//        if (recurringOptions != null) {
+//            recurringOptions.setVisibility(isOneTime ? View.GONE : View.VISIBLE);
+//        }
+//    }
 
     private void saveTask(String title, String description, String deadline) {
         try {

@@ -8,298 +8,349 @@
     android:fillViewport="true"
     android:background="@drawable/dialog_background">
 
-    <!-- Single root container - required for ScrollView -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Header with Back + Title + Save -->
+        <!-- Improved Header with Better Spacing -->
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="24dp">
 
-            <ImageView
+            <ImageButton
                 android:id="@+id/btn_back"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/ic_arrow_back"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:layout_alignParentStart="true"
+                android:contentDescription="Back"
+                android:padding="12dp"/>
+
+            <Button
+                android:id="@+id/btn_save"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/ic_arrow_back"
-                android:layout_alignParentStart="true"
-                android:contentDescription="Back button"/>
+                android:text="Save"
+                android:textColor="@color/purple_500"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:textAllCaps="false"
+                android:textStyle="bold"/>
 
-            <EditText
-                android:id="@+id/et_task_title"
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_toEndOf="@id/btn_back"
                 android:layout_toStartOf="@id/btn_save"
-                android:hint="Task title"
-                android:inputType="text"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"/>
+                style="@style/TitleInputLayoutStyle"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp">
 
-            <ImageView
-                android:id="@+id/btn_save"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_add_black_24dp"
-                android:layout_alignParentEnd="true"
-                android:contentDescription="Save task"/>
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_task_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Task title"
+                    android:inputType="textCapSentences"
+                    android:maxLines="1"
+                    android:textSize="18sp"/>
+            </com.google.android.material.textfield.TextInputLayout>
         </RelativeLayout>
 
-        <LinearLayout
+        <!-- Icon Selection Card -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="16dp"
+            app:cardElevation="2dp"
+            app:cardCornerRadius="8dp">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Choose Task Icon"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="8dp"/>
-
-            <ImageView
-                android:id="@+id/img_task_icon"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:src="@drawable/star"
-                android:background="@drawable/circle_with_border"
-                android:scaleType="centerCrop"
-                android:padding="2dp"
-                android:contentDescription="Task icon"/>
-
-        </LinearLayout>
-
-        <!-- Description -->
-        <EditText
-            android:id="@+id/et_description"
-            android:layout_width="match_parent"
-            android:layout_height="120dp"
-            android:hint="Description"
-            android:inputType="textMultiLine"
-            android:layout_marginBottom="16dp"/>
-
-
-        <!-- 💡 Color Selection (moved below description) -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginBottom="16dp">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Choose Task Color"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="8dp"/>
-
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:scrollbars="none">
-
-                <!-- Keep your existing 7 color circles -->
-                <LinearLayout
-                    android:id="@+id/color_options"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="4dp">
-                    <!-- Your 7 color circles -->
-                </LinearLayout>
-            </HorizontalScrollView>
-        </LinearLayout>
-        <!-- Recurrence Toggle -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="16dp">
-
-            <Button
-                android:id="@+id/btn_one_time"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="One Time"
-                android:background="@drawable/square_button_background"/>
-
-            <Button
-                android:id="@+id/btn_regular"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Regular"
-                android:background="@drawable/square_button_background"/>
-        </LinearLayout>
-
-        <!-- Add this below your one_time/regular toggle buttons -->
-        <LinearLayout
-            android:id="@+id/recurring_options"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone"
-            android:paddingTop="16dp">
-
-            <!-- 1. Start Date -->
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingBottom="8dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Start Date:"
-                    android:textSize="16sp"/>
-
-                <Button
-                    android:id="@+id/btn_start_date"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="16dp"
-                    android:text="Select date"/>
-            </LinearLayout>
-
-            <!-- 2. Schedule -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingBottom="8dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Schedule:"
-                    android:textSize="16sp"/>
-
-                <Spinner
-                    android:id="@+id/spinner_schedule"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="16dp"/>
-            </LinearLayout>
-
-            <!-- 3. Time Options -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingBottom="8dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Time:"
-                    android:textSize="16sp"/>
-
-                <Switch
-                    android:id="@+id/switch_time"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"/>
-            </LinearLayout>
-
-            <!-- Time Sub-options (hidden by default) -->
-            <LinearLayout
-                android:id="@+id/time_suboptions"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:visibility="gone"
-                android:paddingStart="32dp"
-                android:paddingTop="8dp">
+                android:padding="16dp">
 
-                <RadioGroup
-                    android:id="@+id/radio_time_options"
+                <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:text="Task Icon"
+                    android:textSize="16sp"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:layout_marginBottom="12dp"/>
 
-                    <RadioButton
-                        android:id="@+id/radio_morning"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Morning"/>
-
-                    <RadioButton
-                        android:id="@+id/radio_noon"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Noon"/>
-
-                    <RadioButton
-                        android:id="@+id/radio_evening"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Evening"/>
-
-                    <RadioButton
-                        android:id="@+id/radio_custom"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Set custom time"/>
-                </RadioGroup>
-
-                <TimePicker
-                    android:id="@+id/time_picker"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:visibility="gone"/>
+                <ImageView
+                    android:id="@+id/img_task_icon"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:src="@drawable/star"
+                    android:background="@drawable/circle_with_border"
+                    android:scaleType="centerInside"
+                    android:padding="16dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="Task icon"/>
             </LinearLayout>
-        </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-        <!-- Date Selection -->
-        <TextView
+        <!-- Description Card -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Choose the date"
-            android:textSize="16sp"
-            android:layout_marginBottom="8dp"/>
+            android:layout_marginBottom="16dp"
+            app:cardElevation="2dp"
+            app:cardCornerRadius="8dp">
 
-        <Button
-            android:id="@+id/btn_date"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Tuesday, 25 March 2025"
-        android:layout_marginBottom="16dp"
-        style="@style/DateButtonStyle"/>
-
-        <!-- Time Selection (Initially hidden) -->
-        <LinearLayout
-            android:id="@+id/time_selection"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone"
-            android:layout_marginBottom="16dp">
-
-            <TextView
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Time Options"
-                android:layout_marginBottom="8dp"/>
+                style="@style/DescriptionInputLayoutStyle"
+                android:hint="Description">
 
-            <Button
-                android:id="@+id/btn_morning"
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_description"
+                    android:layout_width="match_parent"
+                    android:layout_height="120dp"
+                    android:gravity="top"
+                    android:inputType="textMultiLine"
+                    android:maxLines="5"/>
+            </com.google.android.material.textfield.TextInputLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Color Selection Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardElevation="2dp"
+            app:cardCornerRadius="8dp">
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Morning"
-                android:layout_marginBottom="8dp"/>
-            <!-- Add other time options here -->
-        </LinearLayout>
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Task Color"
+                    android:textSize="16sp"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:layout_marginBottom="12dp"/>
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/color_options"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="4dp">
+                        <!-- Your 7 color circles will be added programmatically -->
+                    </LinearLayout>
+                </HorizontalScrollView>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Date & Recurrence Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardElevation="2dp"
+            app:cardCornerRadius="8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Due Date -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Due Date"
+                    android:textSize="16sp"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:layout_marginBottom="8dp"/>
+
+                <Button
+                    android:id="@+id/btn_date"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:text="Select date"
+                    style="@style/DateButtonStyle"
+                    android:layout_marginBottom="16dp"/>
+
+                <!-- Recurrence Toggle -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Recurrence"
+                    android:textSize="16sp"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:layout_marginBottom="8dp"/>
+
+                <com.google.android.material.button.MaterialButtonToggleGroup
+                    android:id="@+id/toggle_recurrence"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    app:selectionRequired="true"
+                    app:singleSelection="true"
+                    app:checkedButton="@+id/btn_one_time">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_one_time"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        style="@style/ToggleButtonStyle"
+                        android:text="One-time"/>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_regular"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        style="@style/ToggleButtonStyle"
+                        android:text="Recurring"/>
+                </com.google.android.material.button.MaterialButtonToggleGroup>
+
+                <!-- Recurrence Options (Hidden by default) -->
+                <LinearLayout
+                    android:id="@+id/recurring_options"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <!-- Start Date -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Starts:"
+                            android:textSize="14sp"/>
+
+                        <Button
+                            android:id="@+id/btn_start_date"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="16dp"
+                            android:text="Select start date"
+                            style="@style/DateButtonStyle"/>
+                    </LinearLayout>
+
+                    <!-- Frequency -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Repeats:"
+                            android:textSize="14sp"/>
+
+                        <Spinner
+                            android:id="@+id/spinner_schedule"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="16dp"
+                            style="@style/SpinnerStyle"/>
+                    </LinearLayout>
+
+                    <!-- Time Options -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Time:"
+                            android:textSize="14sp"/>
+
+                        <Switch
+                            android:id="@+id/switch_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"/>
+                    </LinearLayout>
+
+                    <!-- Time Sub-options -->
+                    <LinearLayout
+                        android:id="@+id/time_suboptions"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone"
+                        android:paddingStart="32dp">
+
+                        <RadioGroup
+                            android:id="@+id/radio_time_options"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <com.google.android.material.radiobutton.MaterialRadioButton
+                                android:id="@+id/radio_morning"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Morning (8-11 AM)"/>
+
+                            <com.google.android.material.radiobutton.MaterialRadioButton
+                                android:id="@+id/radio_noon"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Noon (12-2 PM)"/>
+
+                            <com.google.android.material.radiobutton.MaterialRadioButton
+                                android:id="@+id/radio_evening"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Evening (5-8 PM)"/>
+
+                            <com.google.android.material.radiobutton.MaterialRadioButton
+                                android:id="@+id/radio_custom"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Custom time"/>
+                        </RadioGroup>
+
+                        <TimePicker
+                            android:id="@+id/time_picker"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:visibility="gone"
+                            android:layout_marginTop="8dp"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
 </ScrollView>
