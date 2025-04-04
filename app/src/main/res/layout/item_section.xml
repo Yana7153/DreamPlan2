@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="16dp"
-    android:background="@color/lighter_gray"
-    android:clickable="true"
-    android:focusable="true"
-    android:layout_marginBottom="8dp"> <!-- Add this line to create space between sections -->
+    android:background="@drawable/section_background"
+    android:clipToPadding="true"
+    android:clipChildren="true"
+    android:outlineProvider="background"
+    android:layout_margin="8dp"
+    android:foreground="?android:attr/selectableItemBackground">
 
     <!-- Section Name -->
     <TextView
@@ -15,8 +18,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Section Name"
-        android:textSize="18sp"
-        android:textStyle="bold"/>
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"/>
 
     <!-- Section Notes -->
     <TextView
@@ -24,7 +28,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Section Notes"
-        android:textSize="14sp"/>
+        android:textSize="18sp"
+        android:textColor="@android:color/darker_gray"
+        android:layout_marginTop="4dp"/>
 
     <!-- Delete Button (Initially hidden) -->
     <Button
@@ -34,5 +40,6 @@
         android:text="Delete"
         android:visibility="gone"
         android:layout_marginTop="8dp"
+        style="@style/Widget.AppCompat.Button.Colored"
         android:backgroundTint="@color/red"/>
 </LinearLayout>

@@ -57,4 +57,10 @@
         <item name="colorSurface">@color/white</item>
         <item name="colorOnSurface">@color/purple_500</item>
     </style>
+
+    <style name="SectionStyle" parent="Widget.MaterialComponents.CardView">
+        <item name="cornerRadius">12dp</item>
+        <item name="cardElevation">2dp</item>
+        <item name="cardBackgroundColor">@color/lighter_gray</item>
+    </style>
 </resources>

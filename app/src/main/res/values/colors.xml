@@ -96,7 +96,10 @@
     <!-- Special task indicator variants -->
     <color name="task_indicator_default">#FF4081</color>    <!-- Default pink -->
     <color name="task_indicator_completed">#4CAF50</color>  <!-- Green for completed -->
-    <color name="task_indicator_urgent">#F44336</color>     <!-- Red for urgent -->
+    <color name="task_indicator_urgent">#F44336</color>
+    <color name="dark_gray">#616161</color>
+    <color name="light_gray">#E0E0E0</color>
+    <!-- Red for urgent -->
 
 
 </resources>

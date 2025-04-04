@@ -3,12 +3,17 @@ package com.example.dreamplan.adapters;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import androidx.core.content.ContextCompat;
+import androidx.core.view.ViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.dreamplan.HomeFragment;
@@ -37,15 +42,22 @@ public class SectionAdapter extends RecyclerView.Adapter<SectionAdapter.SectionV
 
     @Override
     public void onBindViewHolder(SectionViewHolder holder, int position) {
-        if (sectionList == null || sectionList.isEmpty()) {
-            return; // Do nothing if the list is null or empty
-        }
+        if (sectionList == null || sectionList.isEmpty()) return;
+
         Section section = sectionList.get(position);
         holder.sectionName.setText(section.getName());
         holder.sectionNotes.setText(section.getNotes());
 
-        // Set the background color of the section box
-        holder.itemView.setBackgroundColor(Color.parseColor(section.getColor()));
+        // Get the existing background drawable
+        GradientDrawable background = (GradientDrawable) holder.itemView.getBackground();
+        if (background == null) {
+            // Create new if doesn't exist
+            background = (GradientDrawable) ContextCompat.getDrawable(context, R.drawable.section_background);
+        }
+
+        // Set the color while preserving rounded corners
+        background.setColor(Color.parseColor(section.getColor()));
+        ViewCompat.setBackground(holder.itemView, background);
     }
 
     @Override
