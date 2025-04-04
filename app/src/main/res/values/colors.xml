@@ -17,4 +17,15 @@
     <color name="task_bg_5">#E0F7FA</color>  <!-- Light Cyan -->
     <color name="task_bg_6">#F3E5F5</color>  <!-- Light Purple -->
     <color name="task_bg_7">#EFEBE9</color>  <!-- Light Gray -->
+
+<!--    <color name="recurring_text_color">#FF6200EE</color>  &lt;!&ndash; Purple &ndash;&gt;-->
+<!--    <color name="one_time_text_color">#03DAC5</color>     &lt;!&ndash; Teal &ndash;&gt;-->
+
+    <color name="recurring_text_color">#D32F2F</color>  <!-- Dark red -->
+    <color name="recurring_bg_color">#FFEBEE</color>    <!-- Light red -->
+    <color name="one_time_text_color">#1976D2</color>    <!-- Dark blue -->
+    <color name="one_time_bg_color">#E3F2FD</color>     <!-- Light blue -->
+
+    <color name="recurring_task_color">#1976D2</color> <!-- Blue -->
+    <color name="one_time_task_color">#388E3C</color> <!-- Green -->
 </resources>

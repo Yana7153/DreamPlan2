@@ -116,21 +116,23 @@ public class AddTaskFragment extends Fragment {
         setupRecurringOptions();
         setupTimeOptions();
 
-        // Setup toggle group
         MaterialButtonToggleGroup toggleGroup = view.findViewById(R.id.toggle_recurrence);
+
+        // Set initial visibility states
+        oneTimeSection.setVisibility(View.VISIBLE);  // Show one-time by default
+        recurringOptions.setVisibility(View.GONE);   // Hide recurring by default
+
         toggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
             if (isChecked) {
                 isOneTime = checkedId == R.id.btn_one_time;
                 oneTimeSection.setVisibility(isOneTime ? View.VISIBLE : View.GONE);
                 recurringOptions.setVisibility(isOneTime ? View.GONE : View.VISIBLE);
 
-                // Set default date when one-time is selected
-                if (isOneTime && TextUtils.isEmpty(btnDate.getText())) {
-                    SimpleDateFormat sdf = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
-                    btnDate.setText(sdf.format(new Date()));
-                }
+                // Debug log
+                Log.d("TASK_TYPE", "Task type changed to: " + (isOneTime ? "One-time" : "Recurring"));
             }
         });
+        toggleGroup.check(R.id.btn_one_time);
 
         // Set initial toggle state
         toggleGroup.check(isOneTime ? R.id.btn_one_time : R.id.btn_regular);
@@ -155,28 +157,28 @@ public class AddTaskFragment extends Fragment {
         });
     }
 
-    private void setupToggleGroup() {
-        MaterialButtonToggleGroup toggleGroup = requireView().findViewById(R.id.toggle_recurrence);
-
-        toggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
-            if (isChecked) {
-                boolean isOneTime = checkedId == R.id.btn_one_time;
-                oneTimeSection.setVisibility(isOneTime ? View.VISIBLE : View.GONE);
-                recurringOptions.setVisibility(isOneTime ? View.GONE : View.VISIBLE);
-
-                // Set default date when section becomes visible
-                if (isOneTime && btnDate.getText().toString().isEmpty()) {
-                    SimpleDateFormat sdf = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
-                    btnDate.setText(sdf.format(new Date()));
-                }
-
-
-            }
-        });
-
-        // Set initial state
-        toggleGroup.check(R.id.btn_one_time);
-    }
+//    private void setupToggleGroup() {
+//        MaterialButtonToggleGroup toggleGroup = requireView().findViewById(R.id.toggle_recurrence);
+//
+//        toggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+//            if (isChecked) {
+//                boolean isOneTime = checkedId == R.id.btn_one_time;
+//                oneTimeSection.setVisibility(isOneTime ? View.VISIBLE : View.GONE);
+//                recurringOptions.setVisibility(isOneTime ? View.GONE : View.VISIBLE);
+//
+//                // Set default date when section becomes visible
+//                if (isOneTime && btnDate.getText().toString().isEmpty()) {
+//                    SimpleDateFormat sdf = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
+//                    btnDate.setText(sdf.format(new Date()));
+//                }
+//
+//
+//            }
+//        });
+//
+//        // Set initial state
+//        toggleGroup.check(R.id.btn_one_time);
+//    }
 
     private void setupTimeOptions() {
         timeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -263,108 +265,125 @@ public class AddTaskFragment extends Fragment {
     }
 
     private void setupDatePicker(Button btnDate) {
-        SimpleDateFormat sdf = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
-        btnDate.setText(sdf.format(new Date()));
+        try {
+            // Initialize date format
+            SimpleDateFormat sdf = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
 
-        btnDate.setOnClickListener(v -> {
-            MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
-                    .setTitleText("Select Date")
-                    .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
-                    .build();
+            // Set initial date only if the button has no text
+            if (TextUtils.isEmpty(btnDate.getText().toString())) {
+                btnDate.setText(sdf.format(new Date()));
+            }
 
-            datePicker.addOnPositiveButtonClickListener(selection -> {
-                Date selectedDate = new Date(selection);
-                btnDate.setText(sdf.format(selectedDate));
+            btnDate.setOnClickListener(v -> {
+                try {
+                    // Create date picker with current selection
+                    MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
+                            .setTitleText("Select Date")
+                            .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
+                            .build();
+
+                    // Handle date selection
+                    datePicker.addOnPositiveButtonClickListener(selection -> {
+                        try {
+                            if (selection != null) {
+                                Date selectedDate = new Date(selection);
+                                btnDate.setText(sdf.format(selectedDate));
+                            }
+                        } catch (Exception e) {
+                            Log.e("DatePicker", "Error formatting selected date", e);
+                            btnDate.setText(sdf.format(new Date())); // Fallback to current date
+                        }
+                    });
+
+                    // Show the date picker safely
+                    if (getParentFragmentManager() != null && !isRemoving()) {
+                        datePicker.show(getParentFragmentManager(), "DATE_PICKER");
+                    }
+                } catch (Exception e) {
+                    Log.e("DatePicker", "Error showing date picker", e);
+                    Toast.makeText(getContext(), "Error showing date picker", Toast.LENGTH_SHORT).show();
+                }
             });
-
-            datePicker.show(getParentFragmentManager(), "DATE_PICKER");
-        });
+        } catch (Exception e) {
+            Log.e("DatePicker", "Error initializing date picker", e);
+        }
     }
 
 
     private void saveTask(String title, String description) {
         try {
-            // Validate required fields
             if (TextUtils.isEmpty(title)) {
                 Toast.makeText(getContext(), "Title is required", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            // Initialize task fields
-            String dueDate = "";
-            String startDate = "";
-            String schedule = "";
-            String timePreference = "";
-            boolean isRecurring = !isOneTime;
+            // FOR RECURRING TASKS ONLY
+            if (!isOneTime) {
+                String startDate = btnStartDate.getText().toString();
+                String schedule = scheduleSpinner.getSelectedItem().toString();
+                String timePreference = "";
 
-            // Handle task type specific fields
-            if (isOneTime) {
-                // For one-time tasks, get the due date
-                dueDate = btnDate.getText() != null ? btnDate.getText().toString() : "";
-
-                // Validate due date for one-time tasks
-                if (TextUtils.isEmpty(dueDate)) {
-                    Toast.makeText(getContext(), "Please select a due date", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-            } else {
-                // For recurring tasks, get the recurring options
-                startDate = btnStartDate.getText() != null ? btnStartDate.getText().toString() : "";
-                schedule = scheduleSpinner.getSelectedItem() != null ?
-                        scheduleSpinner.getSelectedItem().toString() : "";
-
-                // Validate recurring task fields
+                // Validate recurring fields
                 if (TextUtils.isEmpty(startDate)) {
-                    Toast.makeText(getContext(), "Please select a start date", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Please select start date", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                if (TextUtils.isEmpty(schedule)) {
-                    Toast.makeText(getContext(), "Please select a schedule", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                // Handle time preferences if enabled
-                if (timeSwitch.isChecked() && timeOptionsGroup != null) {
+                // Get time preference if set
+                if (timeSwitch.isChecked()) {
                     int selectedId = timeOptionsGroup.getCheckedRadioButtonId();
-                    if (selectedId == -1) {
-                        Toast.makeText(getContext(), "Please select a time option", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
                     if (selectedId == R.id.radio_custom) {
-                        if (timePicker != null) {
-                            timePreference = String.format(Locale.getDefault(),
-                                    "%02d:%02d",
-                                    timePicker.getHour(),
-                                    timePicker.getMinute());
-                        }
-                    } else {
+                        timePreference = String.format("%02d:%02d",
+                                timePicker.getHour(),
+                                timePicker.getMinute());
+                    } else if (selectedId != -1) {
                         RadioButton selected = requireView().findViewById(selectedId);
-                        if (selected != null) {
-                            timePreference = selected.getText().toString();
-                        }
+                        timePreference = selected.getText().toString();
                     }
                 }
+
+                // Create RECURRING task (ignore one-time fields completely)
+// When creating a RECURRING task:
+                Task task = new Task(
+                        title.trim(),
+                        description,
+                        "", // Empty deadline for recurring
+                        selectedColorResId,
+                        selectedIconResId,
+                        section.getId(),
+                        true, // THIS MUST BE TRUE FOR RECURRING TASKS
+                        startDate,
+                        schedule,
+                        timePreference
+                );
+
+                new DatabaseManager(requireContext()).saveTask(task);
+            }
+            // FOR ONE-TIME TASKS (original code)
+            else {
+                String dueDate = btnDate.getText().toString();
+                if (TextUtils.isEmpty(dueDate)) {
+                    Toast.makeText(getContext(), "Please select due date", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                Task task = new Task(
+                        title.trim(),
+                        description,
+                        dueDate,
+                        selectedColorResId,
+                        selectedIconResId,
+                        section.getId(),
+                        false, // Not recurring
+                        "", // Empty start date
+                        "", // Empty schedule
+                        ""  // Empty time preference
+                );
+
+                new DatabaseManager(requireContext()).saveTask(task);
             }
 
-            // Create and save task
-            Task task = new Task(
-                    title.trim(),
-                    description != null ? description : "",
-                    dueDate,
-                    selectedColorResId,
-                    selectedIconResId,
-                    section.getId(),
-                    isRecurring,
-                    startDate,
-                    schedule,
-                    timePreference
-            );
-
-            new DatabaseManager(requireContext()).saveTask(task);
-
-            // Refresh parent fragment
+            // Refresh UI
             requireActivity().runOnUiThread(() -> {
                 if (getParentFragment() instanceof SectionDetailFragment) {
                     ((SectionDetailFragment) getParentFragment()).refreshTaskList();
@@ -401,10 +420,14 @@ public class AddTaskFragment extends Fragment {
     }
 
     private void setupRecurringOptions() {
-        // 1. Start Date Picker
-        btnStartDate.setOnClickListener(v -> showDatePicker(btnStartDate));
+        // 1. Initialize Start Date Picker with default if empty
+        if (TextUtils.isEmpty(btnStartDate.getText())) {
+            SimpleDateFormat sdf = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
+            btnStartDate.setText(sdf.format(new Date()));
+            btnStartDate.setTag(MaterialDatePicker.todayInUtcMilliseconds());
+        }
 
-        // 2. Schedule Spinner
+        // 2. Set up schedule spinner with validation
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
                 requireContext(),
                 R.array.schedule_options,
@@ -412,30 +435,45 @@ public class AddTaskFragment extends Fragment {
         );
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         scheduleSpinner.setAdapter(adapter);
+        scheduleSpinner.setSelection(1); // Default to first real option (skip hint if exists)
 
-        // 3. Time Switch
+        // 3. Time selection setup
         timeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            timeOptionsGroup.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+            timeSuboptions.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+            if (!isChecked) timePicker.setVisibility(View.GONE);
         });
 
-        // Time Radio Options
         timeOptionsGroup.setOnCheckedChangeListener((group, checkedId) -> {
             timePicker.setVisibility(checkedId == R.id.radio_custom ? View.VISIBLE : View.GONE);
         });
+
+        // Set initial click listener
+        btnStartDate.setOnClickListener(v -> showDatePicker(btnStartDate));
     }
 
     private void showDatePicker(Button targetButton) {
+        SimpleDateFormat displayFormat = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
+
         MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
                 .setTitleText("Select Date")
                 .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
                 .build();
 
         datePicker.addOnPositiveButtonClickListener(selection -> {
-            String date = new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
-                    .format(new Date(selection));
-            targetButton.setText(date);
+            try {
+                Date selectedDate = new Date(selection);
+                targetButton.setText(displayFormat.format(selectedDate));
+                targetButton.setTag(selection); // Store the timestamp for validation
+            } catch (Exception e) {
+                Log.e("DatePicker", "Error formatting date", e);
+                targetButton.setText("Select Date");
+                targetButton.setTag(null);
+            }
         });
 
-        datePicker.show(getParentFragmentManager(), "DATE_PICKER");
+        // Show safely
+        if (getParentFragmentManager() != null && !isRemoving()) {
+            datePicker.show(getParentFragmentManager(), "DATE_PICKER");
+        }
     }
 }

@@ -202,6 +202,9 @@ public class DatabaseManager extends SQLiteOpenHelper {
         values.put("color_res_id", task.getColorResId());
         values.put("icon_res_id", task.getIconResId());
         values.put(COLUMN_TASK_SECTION_ID, task.getSectionId());
+        values.put("is_recurring", task.isRecurring() ? 1 : 0); // THIS IS CRUCIAL
+        values.put("start_date", task.getStartDate());
+        values.put("schedule", task.getSchedule());
 
         if (task.getId() > 0) {
             // Update existing task

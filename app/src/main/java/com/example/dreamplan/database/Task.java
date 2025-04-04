@@ -1,5 +1,7 @@
 package com.example.dreamplan.database;
 
+import android.text.TextUtils;
+
 import com.example.dreamplan.R;
 
 public class Task {
@@ -16,11 +18,13 @@ public class Task {
     private String schedule;
     private String timePreference;
 
-    public Task(String title, String notes, String deadline, int colorResId, int iconResId, int sectionId,
+    private String taskTypeDisplay;
+
+    public Task(String title, String notes, String dueDate, int colorResId, int iconResId, int sectionId,
                 boolean isRecurring, String startDate, String schedule, String timePreference) {
         this.title = title != null ? title : "";
         this.notes = notes != null ? notes : "";
-        this.deadline = deadline != null ? deadline : "";
+        this.deadline = dueDate != null ? dueDate : "";  // Fixed: Set deadline from dueDate parameter
         this.colorResId = colorResId;
         this.iconResId = iconResId != 0 ? iconResId : R.drawable.star;
         this.sectionId = sectionId;
@@ -28,6 +32,26 @@ public class Task {
         this.startDate = startDate != null ? startDate : "";
         this.schedule = schedule != null ? schedule : "";
         this.timePreference = timePreference != null ? timePreference : "";
+
+        if (isRecurring) {
+            this.taskTypeDisplay = "🔄 Recurring • " +
+                    (TextUtils.isEmpty(schedule) ? "" : schedule) +
+                    (TextUtils.isEmpty(timePreference) ? "" : " • " + timePreference);
+        } else {
+            this.taskTypeDisplay = "📅 One-time • " +
+                    (TextUtils.isEmpty(dueDate) ? "Not set" : dueDate);
+        }
+    }
+
+
+    public String getTaskTypeDisplay() {
+        if (isRecurring) {
+            // For recurring tasks, ALWAYS show at least "Recurring"
+            return "🔄 Recurring";
+        } else {
+            // For one-time tasks, show the deadline
+            return "📅 " + (TextUtils.isEmpty(deadline) ? "No deadline" : deadline);
+        }
     }
 
     // Getters and setters
