@@ -11,8 +11,11 @@ import android.util.Log;
 
 import com.example.dreamplan.R;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class DatabaseManager extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "dreamplan.db";
@@ -66,6 +69,14 @@ public class DatabaseManager extends SQLiteOpenHelper {
 
     public DatabaseManager(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        this.db = getWritableDatabase();
+    }
+
+
+    @Override
+    public void onOpen(SQLiteDatabase db) {
+        super.onOpen(db);
+        this.db = db; // Keep reference to the opened database
     }
 
     @Override
@@ -272,5 +283,68 @@ public class DatabaseManager extends SQLiteOpenHelper {
                 "color_res_id IS NULL OR icon_res_id IS NULL",
                 null);
         db.close();
+    }
+
+    // In your DatabaseManager class
+    public boolean hasTasksForDate(Date date) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String dateStr = sdf.format(date);
+
+        String query = "SELECT COUNT(*) FROM tasks WHERE " +
+                "(is_recurring = 0 AND due_date = ?) OR " +
+                "(is_recurring = 1 AND ? >= start_date)";
+
+        Cursor cursor = db.rawQuery(query, new String[]{dateStr, dateStr});
+        cursor.moveToFirst();
+        int count = cursor.getInt(0);
+        cursor.close();
+        return count > 0;
+    }
+
+    public List<Task> getTasksForDate(Date date) {
+        if (db == null || !db.isOpen()) {
+            db = getReadableDatabase(); // Ensure db is valid
+        }
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String dateStr = sdf.format(date);
+
+        List<Task> tasks = new ArrayList<>();
+        try {
+            String query = "SELECT * FROM tasks WHERE " +
+                    "(is_recurring = 0 AND due_date = ?) OR " +
+                    "(is_recurring = 1 AND ? >= start_date)";
+
+            Cursor cursor = db.rawQuery(query, new String[]{dateStr, dateStr});
+            while (cursor.moveToNext()) {
+                tasks.add(cursorToTask(cursor));
+            }
+            cursor.close();
+        } catch (Exception e) {
+            Log.e("Database", "Error getting tasks", e);
+        }
+        return tasks;
+    }
+
+    private Task cursorToTask(Cursor cursor) {
+        try {
+            Task task = new Task(
+                    cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_TITLE)),
+                    cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_DESCRIPTION)),
+                    cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_DUE_DATE)),
+                    cursor.getInt(cursor.getColumnIndexOrThrow("color_res_id")),
+                    cursor.getInt(cursor.getColumnIndexOrThrow("icon_res_id")),
+                    cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TASK_SECTION_ID)),
+                    cursor.getInt(cursor.getColumnIndexOrThrow("is_recurring")) == 1,
+                    cursor.getString(cursor.getColumnIndexOrThrow("start_date")),
+                    cursor.getString(cursor.getColumnIndexOrThrow("schedule")),
+                    cursor.getString(cursor.getColumnIndexOrThrow("time_preference"))
+            );
+            task.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TASK_ID)));
+            return task;
+        } catch (Exception e) {
+            Log.e("Database", "Error converting cursor to task", e);
+            return null; // or handle appropriately
+        }
     }
 }

@@ -1,7 +1,9 @@
 package com.example.dreamplan;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -9,6 +11,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.example.dreamplan.calendar.CalendarFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 public class MainActivity extends AppCompatActivity {
@@ -67,21 +70,40 @@ public class MainActivity extends AppCompatActivity {
 
     // Helper method to load fragments into the container
     private void loadFragment(@NonNull Fragment fragment) {
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
+        try {
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            FragmentTransaction transaction = fragmentManager.beginTransaction();
 
-        // Replace the current fragment & allow back navigation
-        transaction.replace(R.id.fragment_container, fragment);
-        transaction.addToBackStack(null);  // Allows going back to previous fragments
-        transaction.commit();
+            // Set custom animations
+            transaction.setCustomAnimations(
+                    R.anim.fade_in,  // enter
+                    R.anim.fade_out, // exit
+                    R.anim.fade_in,  // popEnter
+                    R.anim.fade_out  // popExit
+            );
 
-        // Handle FAB visibility on fragment load
-        if (fragment instanceof HomeFragment) {
-            btnAddSection.setVisibility(View.VISIBLE);  // Show FAB when HomeFragment is active
-        } else {
-            btnAddSection.setVisibility(View.GONE);  // Hide FAB on other fragments
+            // Replace the fragment
+            transaction.replace(R.id.fragment_container, fragment);
+
+            // Only add to back stack if not the home fragment
+            if (!(fragment instanceof HomeFragment)) {
+                transaction.addToBackStack(null);
+            }
+
+            transaction.commit();
+
+            // Handle FAB visibility
+            btnAddSection.setVisibility(fragment instanceof HomeFragment ? View.VISIBLE : View.GONE);
+
+        } catch (Exception e) {
+            Log.e("MainActivity", "Fragment load failed", e);
+            if (!isFinishing()) {
+                Toast.makeText(this, "Loading failed, returning home", Toast.LENGTH_SHORT).show();
+                loadFragment(new HomeFragment());
+            }
         }
     }
+
 
     @Override
     protected void onResume() {
@@ -92,4 +114,6 @@ public class MainActivity extends AppCompatActivity {
             btnAddSection.setVisibility(View.VISIBLE);  // Show FAB when HomeFragment is resumed
         }
     }
+
+
 }

@@ -28,4 +28,75 @@
 
     <color name="recurring_task_color">#1976D2</color> <!-- Blue -->
     <color name="one_time_task_color">#388E3C</color> <!-- Green -->
+
+
+    <color name="pastel_pink">#FFD1DC</color>
+    <color name="pastel_pink_light">#FFEEF2</color>
+    <color name="pastel_purple">#D1C4E9</color>
+    <color name="pastel_blue">#B3E5FC</color>
+    <color name="pastel_red">#FFCDD2</color>
+    <color name="soft_white">#FFF9F9</color>
+    <color name="soft_black">#333333</color>
+<!--    <color name="white">#FFFFFF</color>-->
+
+    <!-- Primary Colors -->
+    <color name="primaryColor">#6200EE</color>          <!-- Purple 500 -->
+    <color name="primaryDarkColor">#3700B3</color>      <!-- Purple 700 -->
+    <color name="primaryLightColor">#BB86FC</color>     <!-- Purple 200 -->
+
+    <!-- Secondary Colors -->
+    <color name="secondaryColor">#03DAC6</color>        <!-- Teal 200 -->
+    <color name="secondaryDarkColor">#018786</color>    <!-- Teal 700 -->
+
+    <!-- Background Colors -->
+    <color name="background">#FFFFFF</color>            <!-- White -->
+    <color name="surface">#FFFFFF</color>               <!-- White -->
+    <color name="error">#B00020</color>                 <!-- Error red -->
+
+    <!-- Text Colors -->
+    <color name="onPrimary">#FFFFFF</color>             <!-- White -->
+    <color name="onSecondary">#000000</color>           <!-- Black -->
+    <color name="onBackground">#000000</color>          <!-- Black -->
+    <color name="onSurface">#000000</color>             <!-- Black -->
+    <color name="onError">#FFFFFF</color>               <!-- White -->
+
+    <!-- Calendar Specific Colors -->
+    <color name="calendarToday">#FF4081</color>         <!-- Pink A200 -->
+    <color name="calendarSelected">#6200EE</color>      <!-- Purple 500 -->
+    <color name="calendarWeekend">#E91E63</color>       <!-- Pink 500 -->
+    <color name="calendarOtherMonth">#9E9E9E</color>    <!-- Grey 500 -->
+    <color name="calendarTaskIndicator">#4CAF50</color> <!-- Green 500 -->
+
+    <!-- Task Priority Colors -->
+    <color name="priorityHigh">#F44336</color>          <!-- Red 500 -->
+    <color name="priorityMedium">#FF9800</color>        <!-- Orange 500 -->
+    <color name="priorityLow">#4CAF50</color>           <!-- Green 500 -->
+
+    <!-- Pastel Variants (for cute look) -->
+<!--    <color name="pastel_pink">#FFD1DC</color>          &lt;!&ndash; Baby pink &ndash;&gt;-->
+<!--    <color name="pastel_purple">#D1C4E9</color>        &lt;!&ndash; Lavender &ndash;&gt;-->
+<!--    <color name="pastel_blue">#B3E5FC</color>          &lt;!&ndash; Sky blue &ndash;&gt;-->
+    <color name="pastel_green">#C8E6C9</color>         <!-- Mint green -->
+    <color name="pastel_yellow">#FFF9C4</color>        <!-- Lemon chiffon -->
+
+    <!-- Text Colors -->
+    <color name="textPrimary">#212121</color>          <!-- Dark gray -->
+    <color name="textSecondary">#757575</color>        <!-- Medium gray -->
+    <color name="textHint">#BDBDBD</color>             <!-- Light gray -->
+
+    <!-- Divider Color -->
+    <color name="divider">#E0E0E0</color>
+    <color name="black" />
+
+    <!-- Add these with your existing colors -->
+    <color name="accentColor">#FF4081</color>               <!-- Vibrant pink (A200) -->
+    <color name="accentLight">#FF80AB</color>               <!-- Lighter pink (A100) -->
+    <color name="accentDark">#F50057</color>                <!-- Darker pink (A400) -->
+
+    <!-- Special task indicator variants -->
+    <color name="task_indicator_default">#FF4081</color>    <!-- Default pink -->
+    <color name="task_indicator_completed">#4CAF50</color>  <!-- Green for completed -->
+    <color name="task_indicator_urgent">#F44336</color>     <!-- Red for urgent -->
+
+
 </resources>
