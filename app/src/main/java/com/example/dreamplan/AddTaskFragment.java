@@ -1,5 +1,8 @@
 package com.example.dreamplan;
 
+import android.app.AlertDialog;
+import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.Handler;
@@ -16,6 +19,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TimePicker;
@@ -24,6 +28,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
+import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
 
 import com.example.dreamplan.database.DatabaseManager;
@@ -35,6 +40,7 @@ import com.google.android.material.datepicker.MaterialDatePicker;
 
 import java.lang.ref.WeakReference;
 import java.text.BreakIterator;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -58,6 +64,10 @@ public class AddTaskFragment extends Fragment {
     private EditText etTaskTitle;
     private EditText etDescription;
 
+    private Task taskToEdit;
+    private Button btnDelete;
+    private int dbDate;
+
     public static AddTaskFragment newInstance(Section section) {
         AddTaskFragment fragment = new AddTaskFragment();
         Bundle args = new Bundle();
@@ -66,13 +76,25 @@ public class AddTaskFragment extends Fragment {
         return fragment;
     }
 
-    @Nullable
+
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater,
-                             @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
-        // Just inflate the layout here
-        return inflater.inflate(R.layout.fragment_add_task, container, false);
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            section = (Section) getArguments().getSerializable("section");
+            taskToEdit = (Task) getArguments().getSerializable("task");
+        }
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_add_task, container, false);
+
+        // Add delete button initialization
+        btnDelete = view.findViewById(R.id.btnDeleteTask);
+//        btnDelete.setOnClickListener(v -> deleteTask());
+
+        return view;
     }
 
     @Override
@@ -103,6 +125,11 @@ public class AddTaskFragment extends Fragment {
         imgTaskIcon.setTag(selectedIconResId);
         imgTaskIcon.setScaleType(ImageView.ScaleType.FIT_CENTER);
         imgTaskIcon.setAdjustViewBounds(true);
+
+//        btnDelete = view.findViewById(R.id.btnDeleteTask);
+//        btnDelete.setOnClickListener(v -> deleteTask());
+
+
 
         // Get section from arguments
         if (getArguments() != null) {
@@ -137,6 +164,15 @@ public class AddTaskFragment extends Fragment {
         // Set initial toggle state
         toggleGroup.check(isOneTime ? R.id.btn_one_time : R.id.btn_regular);
 
+
+//        if (taskToEdit != null) {
+//            populateTaskData(taskToEdit);
+//            btnDelete.setVisibility(View.VISIBLE);
+//        } else {
+//            btnDelete.setVisibility(View.GONE);
+//        }
+
+
         // Set click listeners
         view.findViewById(R.id.btn_back).setOnClickListener(v -> getParentFragmentManager().popBackStack());
         view.findViewById(R.id.btn_save).setOnClickListener(v -> {
@@ -155,7 +191,13 @@ public class AddTaskFragment extends Fragment {
                 Toast.makeText(getContext(), "Error saving task", Toast.LENGTH_SHORT).show();
             }
         });
+
+//        if (taskToEdit != null) {
+//            btnDelete.setVisibility(View.VISIBLE);
+//            safeScrollToBottom();
+//        }
     }
+
 
 //    private void setupToggleGroup() {
 //        MaterialButtonToggleGroup toggleGroup = requireView().findViewById(R.id.toggle_recurrence);
@@ -317,19 +359,25 @@ public class AddTaskFragment extends Fragment {
                 return;
             }
 
-            // FOR RECURRING TASKS ONLY
-            if (!isOneTime) {
-                String startDate = btnStartDate.getText().toString();
-                String schedule = scheduleSpinner.getSelectedItem().toString();
-                String timePreference = "";
+            DatabaseManager dbManager = new DatabaseManager(requireContext());
+            Task task;
+            String displayDate = ""; // For logging
+            String dbFormattedDate = ""; // For logging
 
-                // Validate recurring fields
-                if (TextUtils.isEmpty(startDate)) {
+            if (!isOneTime) {
+                // Recurring task handling
+                displayDate = btnStartDate.getText().toString();
+                if (TextUtils.isEmpty(displayDate)) {
                     Toast.makeText(getContext(), "Please select start date", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                // Get time preference if set
+                // Convert displayed date to database format
+                SimpleDateFormat displayFormat = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
+                SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                dbFormattedDate = dbFormat.format(displayFormat.parse(displayDate));
+
+                String timePreference = "";
                 if (timeSwitch.isChecked()) {
                     int selectedId = timeOptionsGroup.getCheckedRadioButtonId();
                     if (selectedId == R.id.radio_custom) {
@@ -342,61 +390,75 @@ public class AddTaskFragment extends Fragment {
                     }
                 }
 
-                // Create RECURRING task (ignore one-time fields completely)
-// When creating a RECURRING task:
-                Task task = new Task(
+                task = new Task(
                         title.trim(),
                         description,
                         "", // Empty deadline for recurring
                         selectedColorResId,
                         selectedIconResId,
                         section.getId(),
-                        true, // THIS MUST BE TRUE FOR RECURRING TASKS
-                        startDate,
-                        schedule,
+                        true,
+                        dbFormattedDate, // Use converted date
+                        scheduleSpinner.getSelectedItem().toString(),
                         timePreference
                 );
-
-                new DatabaseManager(requireContext()).saveTask(task);
-            }
-            // FOR ONE-TIME TASKS (original code)
-            else {
-                String dueDate = btnDate.getText().toString();
-                if (TextUtils.isEmpty(dueDate)) {
+            } else {
+                // One-time task handling
+                displayDate = btnDate.getText().toString();
+                if (TextUtils.isEmpty(displayDate)) {
                     Toast.makeText(getContext(), "Please select due date", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                Task task = new Task(
+                // Convert displayed date to database format
+                SimpleDateFormat displayFormat = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
+                SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                dbFormattedDate = dbFormat.format(displayFormat.parse(displayDate));
+
+                task = new Task(
                         title.trim(),
                         description,
-                        dueDate,
+                        dbFormattedDate, // Use converted date
                         selectedColorResId,
                         selectedIconResId,
                         section.getId(),
-                        false, // Not recurring
-                        "", // Empty start date
-                        "", // Empty schedule
-                        ""  // Empty time preference
+                        false,
+                        "",
+                        "",
+                        ""
                 );
-
-                new DatabaseManager(requireContext()).saveTask(task);
             }
 
-            // Refresh UI
-            requireActivity().runOnUiThread(() -> {
-                if (getParentFragment() instanceof SectionDetailFragment) {
-                    ((SectionDetailFragment) getParentFragment()).refreshTaskList();
-                }
-                getParentFragmentManager().popBackStack();
-            });
+            // DEBUG LOG (now using properly scoped variables)
+            Log.d("DATE_DEBUG", "Saving with date - Display: " + displayDate + " → DB Format: " + dbFormattedDate);
 
+            // Save task
+            dbManager.saveTask(task);
+            Toast.makeText(getContext(), "Task saved! Counts should update...", Toast.LENGTH_SHORT).show();
+
+            // Refresh logic
+            if (getParentFragment() instanceof SectionDetailFragment) {
+                ((SectionDetailFragment) getParentFragment()).refreshTaskList();
+            }
+
+            Fragment homeFragment = getParentFragmentManager().findFragmentByTag("home_fragment");
+            if (homeFragment instanceof HomeFragment) {
+                ((HomeFragment) homeFragment).refreshTaskCounts();
+            }
+
+            requireContext().sendBroadcast(new Intent("TASK_UPDATED"));
+            Log.d("REFRESH", "Sent refresh signals");
+
+            getParentFragmentManager().popBackStack();
+
+        } catch (ParseException e) {
+            Toast.makeText(getContext(), "Invalid date format", Toast.LENGTH_SHORT).show();
+            Log.e("TASK_SAVE", "Date parsing error", e);
         } catch (Exception e) {
-            Log.e("TASK_SAVE", "Error saving task", e);
             Toast.makeText(getContext(), "Error saving task", Toast.LENGTH_SHORT).show();
+            Log.e("TASK_SAVE", "Error saving task", e);
         }
     }
-
 
 
     private String getSelectedTimePreference() {
@@ -476,4 +538,121 @@ public class AddTaskFragment extends Fragment {
             datePicker.show(getParentFragmentManager(), "DATE_PICKER");
         }
     }
+//
+//
+//    public static AddTaskFragment newInstance(Task task) {
+//        AddTaskFragment fragment = new AddTaskFragment();
+//        Bundle args = new Bundle();
+//        args.putParcelable("task", task); // No more warning!
+//        fragment.setArguments(args);
+//        return fragment;
+//    }
+//
+//    private void populateTaskData(Task task) {
+//        try {
+//            etTaskTitle.setText(task.getTitle());
+//            etDescription.setText(task.getNotes());
+//
+//            // Set icon and color
+//            selectedIconResId = task.getIconResId();
+//            selectedColorResId = task.getColorResId();
+//            imgTaskIcon.setImageResource(selectedIconResId);
+//            imgTaskIcon.setBackgroundResource(selectedColorResId);
+//
+//            // Handle task type
+//            if (task.isRecurring()) {
+//                toggleGroup.check(R.id.btn_regular);
+//                btnStartDate.setText(formatDate(task.getStartDate()));
+//                scheduleSpinner.setSelection(getSchedulePosition(task.getSchedule()));
+//            } else {
+//                toggleGroup.check(R.id.btn_one_time);
+//                btnDate.setText(formatDate(task.getDeadline()));
+//            }
+//        } catch (Exception e) {
+//            Log.e("EditTask", "Error loading task data", e);
+//        }
+//    }
+//
+//    private void safeScrollToBottom() {
+//        if (getView() == null || !isAdded()) return;
+//
+//        getView().postDelayed(() -> {
+//            try {
+//                View view = getView();
+//                if (view == null || !isAdded()) return;
+//
+//                View scrollingView = view.findViewById(R.id.scrollView);
+//                if (scrollingView != null) {
+//                    scrollingView.post(() -> {
+//                        if (scrollingView instanceof ScrollView) {
+//                            ((ScrollView) scrollingView).fullScroll(View.FOCUS_DOWN);
+//                        } else if (scrollingView instanceof NestedScrollView) {
+//                            ((NestedScrollView) scrollingView).fullScroll(View.FOCUS_DOWN);
+//                        }
+//                    });
+//                }
+//
+//            } catch (Exception e) {
+//                Log.w("Scroll", "Scroll failed", e);
+//            }
+//        }, 100);
+//    }
+//
+//    private String formatDate(String dateString) {
+//        try {
+//            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+//            SimpleDateFormat outputFormat = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
+//            Date date = inputFormat.parse(dateString);
+//            return outputFormat.format(date);
+//        } catch (Exception e) {
+//            return dateString; // fallback to raw string
+//        }
+//    }
+//
+//    private int getSchedulePosition(String schedule) {
+//        String[] schedules = getResources().getStringArray(R.array.schedule_options);
+//        for (int i = 0; i < schedules.length; i++) {
+//            if (schedules[i].equalsIgnoreCase(schedule)) {
+//                return i;
+//            }
+//        }
+//        return 0;
+//    }
+//
+//    private void deleteTask() {
+//        if (taskToEdit == null || getContext() == null) return;
+//
+//        new AlertDialog.Builder(requireContext())
+//                .setTitle("Delete Task")
+//                .setMessage("Are you sure you want to delete this task?")
+//                .setPositiveButton("Delete", (dialog, which) -> {
+//                    try {
+//                        DatabaseManager dbManager = new DatabaseManager(requireContext());
+//                        int rowsAffected = dbManager.deleteTask(taskToEdit.getId());
+//
+//                        if (rowsAffected > 0) {
+//                            Toast.makeText(getContext(), "Task deleted", Toast.LENGTH_SHORT).show();
+//                            getParentFragmentManager().popBackStack();
+//                        } else {
+//                            Toast.makeText(getContext(), "Failed to delete task", Toast.LENGTH_SHORT).show();
+//                        }
+//                    } catch (Exception e) {
+//                        Log.e("DeleteTask", "Error deleting task", e);
+//                        Toast.makeText(getContext(), "Error deleting task", Toast.LENGTH_SHORT).show();
+//                    }
+//                })
+//                .setNegativeButton("Cancel", null)
+//                .show();
+//    }
+//
+//
+//    private void showDeleteConfirmation() {
+//        new AlertDialog.Builder(requireContext())
+//                .setTitle("Delete Task")
+//                .setMessage("Are you sure? This cannot be undone.")
+//                .setPositiveButton("Delete", (d, w) -> deleteTask())
+//                .setNegativeButton("Cancel", null)
+//                .show();
+//    }
+
 }

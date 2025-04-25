@@ -15,38 +15,44 @@ import com.example.dreamplan.calendar.CalendarFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 public class MainActivity extends AppCompatActivity {
-
     private FloatingActionButton btnAddSection;
+    private BottomNavigationView bottomNavigationView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Initialize FAB (Floating Action Button)
         btnAddSection = findViewById(R.id.btnAddSection);
+        bottomNavigationView = findViewById(R.id.bottom_navigation);
 
-        // Handle FAB click - Add Section logic
+        setupFloatingActionButton();
+        setupBottomNavigation();
+
+        if (savedInstanceState == null) {
+            loadFragment(new HomeFragment(), "home_fragment");
+        }
+    }
+
+    private void setupFloatingActionButton() {
         btnAddSection.setOnClickListener(v -> {
             Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
 
-            // Check if HomeFragment is currently loaded
             if (currentFragment instanceof HomeFragment) {
-                // Open the add section dialog or start an activity to add a section (implement your logic)
-                ((HomeFragment) currentFragment).showAddSectionDialog();  // Fixed line here
+                ((HomeFragment) currentFragment).showAddSectionDialog();
             }
         });
+    }
 
-        // Initialize BottomNavigationView
-        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
-
+    private void setupBottomNavigation() {
         bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
             Fragment selectedFragment = null;
-            int itemId = item.getItemId();
+            String tag = null;
 
+            int itemId = item.getItemId();
             if (itemId == R.id.nav_home) {
                 selectedFragment = new HomeFragment();
+                tag = "home_fragment";
             } else if (itemId == R.id.nav_statistics) {
                 selectedFragment = new StatisticsFragment();
             } else if (itemId == R.id.nav_calendar) {
@@ -56,64 +62,56 @@ public class MainActivity extends AppCompatActivity {
             }
 
             if (selectedFragment != null) {
-                loadFragment(selectedFragment);
+                loadFragment(selectedFragment, tag);
             }
-
             return true;
         });
-
-        // Load HomeFragment by default if no saved state exists
-        if (savedInstanceState == null) {
-            loadFragment(new HomeFragment());
-        }
     }
 
-    // Helper method to load fragments into the container
-    private void loadFragment(@NonNull Fragment fragment) {
+    private void loadFragment(@NonNull Fragment fragment, String tag) {
         try {
             FragmentManager fragmentManager = getSupportFragmentManager();
             FragmentTransaction transaction = fragmentManager.beginTransaction();
 
-            // Set custom animations
             transaction.setCustomAnimations(
-                    R.anim.fade_in,  // enter
-                    R.anim.fade_out, // exit
-                    R.anim.fade_in,  // popEnter
-                    R.anim.fade_out  // popExit
+                    R.anim.fade_in,
+                    R.anim.fade_out,
+                    R.anim.fade_in,
+                    R.anim.fade_out
             );
 
-            // Replace the fragment
-            transaction.replace(R.id.fragment_container, fragment);
+            transaction.replace(R.id.fragment_container, fragment, "home_fragment");
 
-            // Only add to back stack if not the home fragment
             if (!(fragment instanceof HomeFragment)) {
                 transaction.addToBackStack(null);
             }
 
             transaction.commit();
 
-            // Handle FAB visibility
             btnAddSection.setVisibility(fragment instanceof HomeFragment ? View.VISIBLE : View.GONE);
 
         } catch (Exception e) {
             Log.e("MainActivity", "Fragment load failed", e);
             if (!isFinishing()) {
                 Toast.makeText(this, "Loading failed, returning home", Toast.LENGTH_SHORT).show();
-                loadFragment(new HomeFragment());
+                loadFragment(new HomeFragment(), "home_fragment");
             }
         }
     }
 
+    public void refreshHomeTaskCounts() {
+        Fragment home = getSupportFragmentManager().findFragmentByTag("home_fragment");
+        if (home instanceof HomeFragment) {
+            ((HomeFragment) home).refreshTaskCounts();
+        }
+    }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // Check if HomeFragment is showing after returning
         Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
         if (currentFragment instanceof HomeFragment) {
-            btnAddSection.setVisibility(View.VISIBLE);  // Show FAB when HomeFragment is resumed
+            btnAddSection.setVisibility(View.VISIBLE);
         }
     }
-
-
 }

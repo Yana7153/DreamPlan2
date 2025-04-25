@@ -2,6 +2,10 @@ package com.example.dreamplan;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
@@ -14,6 +18,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -28,24 +33,54 @@ import com.example.dreamplan.database.DatabaseManager;
 import com.example.dreamplan.database.Section;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import java.util.List;public class HomeFragment extends Fragment {
+import java.util.List;
+import android.os.Handler;
+
+public class HomeFragment extends Fragment {
 
     private RecyclerView rvSections;
     private SectionAdapter sectionAdapter;
     private List<Section> sectionList;
     private DatabaseManager dbManager;
+    private TextView tvTasksTodayNumber;
+    private TextView  tvTasksTomorrowNumber;
+    private TextView  tvTasksWeekNumber;
+
+    private final BroadcastReceiver updateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if ("TASK_UPDATED".equals(intent.getAction())) {
+                // Refresh task counts when a task is updated
+                refreshTaskCounts();
+            }
+        }
+    };
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
+
+        tvTasksTodayNumber = view.findViewById(R.id.tvTasksTodayNumber);
+        tvTasksTomorrowNumber = view.findViewById(R.id.tvTasksTomorrowNumber);
+        tvTasksWeekNumber = view.findViewById(R.id.tvTasksWeekNumber);
+
+
         // Initialize UI elements
         rvSections = view.findViewById(R.id.rvSections);
         dbManager = new DatabaseManager(getContext());
 
+        // Visual debug button (remove after testing)
+        Button debugBtn = new Button(getContext());
+        debugBtn.setText("TEST REFRESH");
+        debugBtn.setOnClickListener(v -> refreshTaskCounts());
+        ((ViewGroup) view).addView(debugBtn);
+
         // Insert predefined sections if not already inserted
         dbManager.insertMainSectionsIfNotExist();
+
+        refreshTaskCounts();
 
         // Set up RecyclerView
         sectionList = dbManager.getAllSections();
@@ -57,8 +92,29 @@ import java.util.List;public class HomeFragment extends Fragment {
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        // Register the receiver to listen for task updates
+        IntentFilter filter = new IntentFilter("TASK_UPDATED");
+        requireActivity().registerReceiver(updateReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        // Unregister to avoid memory leaks
+        try {
+            requireActivity().unregisterReceiver(updateReceiver);
+        } catch (IllegalArgumentException e) {
+            // Receiver wasn't registered, ignore
+        }
+    }
+
+
+    @Override
     public void onResume() {
         super.onResume();
+        loadTaskCounts();
         // Show FAB again when returning to HomeFragment
         if (getActivity() != null && getActivity() instanceof MainActivity) {
             FloatingActionButton btnAddSection = getActivity().findViewById(R.id.btnAddSection);
@@ -252,5 +308,66 @@ import java.util.List;public class HomeFragment extends Fragment {
         transaction.replace(R.id.fragment_container, fragment);
         transaction.addToBackStack(null);  // Allow going back to previous fragment
         transaction.commit();
+    }
+
+    private void loadTaskCounts() {
+        try {
+            if (dbManager != null && tvTasksTodayNumber != null
+                    && tvTasksTomorrowNumber != null && tvTasksWeekNumber != null) {
+                int todayCount = dbManager.getTasksDueTodayCount();
+                int tomorrowCount = dbManager.getTasksDueTomorrowCount();
+                int weekCount = dbManager.getTasksDueInWeekCount();
+
+                tvTasksTodayNumber.setText(String.valueOf(todayCount));
+                tvTasksTomorrowNumber.setText(String.valueOf(tomorrowCount));
+                tvTasksWeekNumber.setText(String.valueOf(weekCount));
+            }
+        } catch (Exception e) {
+            Log.e("HomeFragment", "Error loading task counts", e);
+        }
+    }
+
+    private void loadSections() {
+        // Your existing section loading code
+        dbManager.insertMainSectionsIfNotExist();
+        sectionList = dbManager.getAllSections();
+        sectionAdapter = new SectionAdapter(sectionList, getContext(), this);
+        rvSections.setLayoutManager(new LinearLayoutManager(getContext()));
+        rvSections.setAdapter(sectionAdapter);
+    }
+
+    public void refreshTaskCounts() {
+        if (getActivity() == null || !isAdded()) return;
+
+        try {
+            DatabaseManager db = new DatabaseManager(requireContext());
+            int todayCount = db.getTasksDueTodayCount();
+            int tomorrowCount = db.getTasksDueTomorrowCount();
+            int weekCount = db.getTasksDueInWeekCount();
+
+            Log.d("TASK_COUNTS", String.format("Today: %d, Tomorrow: %d, Week: %d",
+                    todayCount, tomorrowCount, weekCount));
+
+            // Update UI on main thread
+            getActivity().runOnUiThread(() -> {
+                tvTasksTodayNumber.setText(String.valueOf(todayCount));
+                tvTasksTomorrowNumber.setText(String.valueOf(tomorrowCount));
+                tvTasksWeekNumber.setText(String.valueOf(weekCount));
+
+                // Remove the debug flash (or keep it if you want)
+                tvTasksTodayNumber.setBackgroundColor(Color.YELLOW);
+                new Handler().postDelayed(() ->
+                        tvTasksTodayNumber.setBackgroundColor(Color.TRANSPARENT), 300);
+            });
+        } catch (Exception e) {
+            Log.e("REFRESH", "Failed to refresh", e);
+        }
+    }
+
+
+
+    public void onTestRefreshClick(View view) {
+        refreshTaskCounts();
+        Toast.makeText(getContext(), "Manual refresh triggered", Toast.LENGTH_SHORT).show();
     }
 }

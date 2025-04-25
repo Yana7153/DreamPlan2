@@ -13,6 +13,7 @@ import com.example.dreamplan.R;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -65,6 +66,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
                     + TABLE_SECTIONS + "(" + COLUMN_ID + ")"
                     + ");";
 
+    private static DatabaseManager instance;
     private SQLiteDatabase db;
 
     public DatabaseManager(Context context) {
@@ -207,6 +209,8 @@ public class DatabaseManager extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
 
+
+
         values.put(COLUMN_TASK_TITLE, task.getTitle());
         values.put(COLUMN_TASK_DESCRIPTION, task.getNotes());
         values.put(COLUMN_TASK_DUE_DATE, task.getDeadline());
@@ -345,6 +349,82 @@ public class DatabaseManager extends SQLiteOpenHelper {
         } catch (Exception e) {
             Log.e("Database", "Error converting cursor to task", e);
             return null; // or handle appropriately
+        }
+    }
+//
+//    public int deleteTask(int taskId) {
+//        SQLiteDatabase db = null;
+//        try {
+//            db = this.getWritableDatabase();
+//            return db.delete(TABLE_TASKS,
+//                    COLUMN_TASK_ID + " = ?",
+//                    new String[]{String.valueOf(taskId)});
+//        } catch (Exception e) {
+//            Log.e("Database", "Delete failed", e);
+//            return 0;
+//        } finally {
+//            if (db != null) db.close();
+//        }
+//    }
+
+    public int getTasksDueTodayCount() {
+        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+        return getTaskCountForDate(today);
+    }
+
+    public int getTasksDueTomorrowCount() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.DAY_OF_YEAR, 1);
+        String tomorrow = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                .format(calendar.getTime());
+        return getTaskCountForDate(tomorrow);
+    }
+
+    public int getTasksDueInWeekCount() {
+        try {
+            String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                    .format(new Date());
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.DAY_OF_YEAR, 7);
+            String weekLater = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                    .format(calendar.getTime());
+
+            String query = "SELECT COUNT(*) FROM " + TABLE_TASKS +
+                    " WHERE date(due_date) BETWEEN date(?) AND date(?)";
+            Cursor cursor = db.rawQuery(query, new String[]{today, weekLater});
+
+            int count = 0;
+            if (cursor.moveToFirst()) {
+                count = cursor.getInt(0);
+            }
+            cursor.close();
+            return count;
+        } catch (Exception e) {
+            Log.e("Database", "Error getting week's tasks", e);
+            return 0;
+        }
+    }
+
+    private int getTaskCountForDate(String date) {
+        String query = "SELECT COUNT(*) FROM " + TABLE_TASKS +
+                " WHERE date(due_date) = date(?)";
+        Cursor cursor = db.rawQuery(query, new String[]{date});
+        cursor.moveToFirst();
+        int count = cursor.getInt(0);
+        cursor.close();
+        return count;
+    }
+
+    public static String convertDisplayDateToDatabaseFormat(String displayDate) {
+        try {
+            SimpleDateFormat displayFormat = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
+            SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            Date date = displayFormat.parse(displayDate);
+            return dbFormat.format(date);
+        } catch (Exception e) {
+            Log.e("DateConversion", "Error converting date", e);
+            return ""; // or handle error appropriately
         }
     }
 }

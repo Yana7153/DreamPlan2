@@ -1,5 +1,7 @@
 package com.example.dreamplan;
 
+import static kotlin.text.Typography.section;
+
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Color;
@@ -17,6 +19,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -57,6 +60,8 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         } catch (Resources.NotFoundException e) {
             holder.imgTaskIcon.setImageResource(R.drawable.ic_default_task);
         }
+
+
 
         // Set basic task info
         holder.tvTaskTitle.setText(task.getTitle());

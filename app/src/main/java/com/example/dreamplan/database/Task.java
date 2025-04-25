@@ -1,10 +1,14 @@
 package com.example.dreamplan.database;
 
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.text.TextUtils;
+
+import androidx.annotation.NonNull;
 
 import com.example.dreamplan.R;
 
-public class Task {
+public class Task implements Parcelable {
     private int id;
     private String title;
     private String notes;
@@ -108,5 +112,32 @@ public class Task {
 
     public void setTimePreference(String timePreference) {
         this.timePreference = timePreference;
+    }
+
+
+    protected Task(Parcel in) {
+        // Read all fields from parcel
+    }
+
+    public static final Creator<Task> CREATOR = new Creator<Task>() {
+        @Override
+        public Task createFromParcel(Parcel in) {
+            return new Task(in);
+        }
+
+        @Override
+        public Task[] newArray(int size) {
+            return new Task[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(@NonNull Parcel dest, int flags) {
+
     }
 }
