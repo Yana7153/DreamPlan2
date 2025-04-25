@@ -441,14 +441,13 @@ public class AddTaskFragment extends Fragment {
                 ((SectionDetailFragment) getParentFragment()).refreshTaskList();
             }
 
-            Fragment homeFragment = getParentFragmentManager().findFragmentByTag("home_fragment");
-            if (homeFragment instanceof HomeFragment) {
-                ((HomeFragment) homeFragment).refreshTaskCounts();
-            }
+//            Fragment homeFragment = getParentFragmentManager().findFragmentByTag("home_fragment");
+//            if (homeFragment instanceof HomeFragment) {
+//                ((HomeFragment) homeFragment).refreshTaskCounts();
+//            }
+
 
             requireContext().sendBroadcast(new Intent("TASK_UPDATED"));
-            Log.d("REFRESH", "Sent refresh signals");
-
             getParentFragmentManager().popBackStack();
 
         } catch (ParseException e) {
@@ -513,7 +512,7 @@ public class AddTaskFragment extends Fragment {
         btnStartDate.setOnClickListener(v -> showDatePicker(btnStartDate));
     }
 
-    private void showDatePicker(Button targetButton) {
+    public void showDatePicker(Button targetButton) {
         SimpleDateFormat displayFormat = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
 
         MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()

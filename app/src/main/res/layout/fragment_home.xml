@@ -24,12 +24,6 @@
         android:textColor="@color/purple_700"
         android:layout_marginBottom="16dp"/>
 
-    <Button
-        android:id="@+id/btnTestRefresh"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Test Refresh"
-        android:onClick="onTestRefreshClick"/>
     </LinearLayout>
 
     <!-- Task Summary Layout -->

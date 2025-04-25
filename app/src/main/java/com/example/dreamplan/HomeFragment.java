@@ -46,15 +46,7 @@ public class HomeFragment extends Fragment {
     private TextView  tvTasksTomorrowNumber;
     private TextView  tvTasksWeekNumber;
 
-    private final BroadcastReceiver updateReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if ("TASK_UPDATED".equals(intent.getAction())) {
-                // Refresh task counts when a task is updated
-                refreshTaskCounts();
-            }
-        }
-    };
+
 
     @Nullable
     @Override
@@ -70,12 +62,7 @@ public class HomeFragment extends Fragment {
         // Initialize UI elements
         rvSections = view.findViewById(R.id.rvSections);
         dbManager = new DatabaseManager(getContext());
-
-        // Visual debug button (remove after testing)
-        Button debugBtn = new Button(getContext());
-        debugBtn.setText("TEST REFRESH");
-        debugBtn.setOnClickListener(v -> refreshTaskCounts());
-        ((ViewGroup) view).addView(debugBtn);
+        
 
         // Insert predefined sections if not already inserted
         dbManager.insertMainSectionsIfNotExist();
@@ -94,20 +81,14 @@ public class HomeFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        // Register the receiver to listen for task updates
-        IntentFilter filter = new IntentFilter("TASK_UPDATED");
-        requireActivity().registerReceiver(updateReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+        requireActivity().registerReceiver(updateReceiver,
+                new IntentFilter("TASK_UPDATED"), Context.RECEIVER_NOT_EXPORTED);
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        // Unregister to avoid memory leaks
-        try {
-            requireActivity().unregisterReceiver(updateReceiver);
-        } catch (IllegalArgumentException e) {
-            // Receiver wasn't registered, ignore
-        }
+        requireActivity().unregisterReceiver(updateReceiver);
     }
 
 
@@ -123,7 +104,16 @@ public class HomeFragment extends Fragment {
                 btnAddSection.setOnClickListener(v -> showAddSectionDialog()); // Set up click listener
             }
         }
+        refreshTaskCounts();
     }
+
+    private final BroadcastReceiver updateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Auto-refresh when tasks are modified anywhere in app
+            refreshTaskCounts();
+        }
+    };
 
     // Method to show the Edit Section dialog
     public void showEditSectionDialog(Section section) {
@@ -336,38 +326,31 @@ public class HomeFragment extends Fragment {
         rvSections.setAdapter(sectionAdapter);
     }
 
-    public void refreshTaskCounts() {
+    private void refreshTaskCounts() {
         if (getActivity() == null || !isAdded()) return;
 
-        try {
-            DatabaseManager db = new DatabaseManager(requireContext());
-            int todayCount = db.getTasksDueTodayCount();
-            int tomorrowCount = db.getTasksDueTomorrowCount();
-            int weekCount = db.getTasksDueInWeekCount();
+        new Thread(() -> {
+            try {
+                DatabaseManager db = new DatabaseManager(requireContext());
+                final int todayCount = db.getTasksDueTodayCount();
+                final int tomorrowCount = db.getTasksDueTomorrowCount();
+                final int weekCount = db.getTasksDueInWeekCount();
 
-            Log.d("TASK_COUNTS", String.format("Today: %d, Tomorrow: %d, Week: %d",
-                    todayCount, tomorrowCount, weekCount));
-
-            // Update UI on main thread
-            getActivity().runOnUiThread(() -> {
-                tvTasksTodayNumber.setText(String.valueOf(todayCount));
-                tvTasksTomorrowNumber.setText(String.valueOf(tomorrowCount));
-                tvTasksWeekNumber.setText(String.valueOf(weekCount));
-
-                // Remove the debug flash (or keep it if you want)
-                tvTasksTodayNumber.setBackgroundColor(Color.YELLOW);
-                new Handler().postDelayed(() ->
-                        tvTasksTodayNumber.setBackgroundColor(Color.TRANSPARENT), 300);
-            });
-        } catch (Exception e) {
-            Log.e("REFRESH", "Failed to refresh", e);
-        }
-    }
-
-
-
-    public void onTestRefreshClick(View view) {
-        refreshTaskCounts();
-        Toast.makeText(getContext(), "Manual refresh triggered", Toast.LENGTH_SHORT).show();
+                getActivity().runOnUiThread(() -> {
+                    // Only update if values changed
+                    if (!tvTasksTodayNumber.getText().equals(String.valueOf(todayCount))) {
+                        tvTasksTodayNumber.setText(String.valueOf(todayCount));
+                    }
+                    if (!tvTasksTomorrowNumber.getText().equals(String.valueOf(tomorrowCount))) {
+                        tvTasksTomorrowNumber.setText(String.valueOf(tomorrowCount));
+                    }
+                    if (!tvTasksWeekNumber.getText().equals(String.valueOf(weekCount))) {
+                        tvTasksWeekNumber.setText(String.valueOf(weekCount));
+                    }
+                });
+            } catch (Exception e) {
+                Log.e("REFRESH", "Auto-refresh failed", e);
+            }
+        }).start();
     }
 }
