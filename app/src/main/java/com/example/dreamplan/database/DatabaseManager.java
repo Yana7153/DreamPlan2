@@ -85,6 +85,12 @@ public class DatabaseManager extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(CREATE_TABLE_SECTIONS);
         db.execSQL(CREATE_TABLE_TASKS);
+
+        db.execSQL("CREATE TABLE users (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "email TEXT UNIQUE," +
+                "password TEXT," +
+                "name TEXT)");
     }
 
     @Override
@@ -100,6 +106,9 @@ public class DatabaseManager extends SQLiteOpenHelper {
             db.execSQL("ALTER TABLE " + TABLE_TASKS + " ADD COLUMN schedule TEXT");
             db.execSQL("ALTER TABLE " + TABLE_TASKS + " ADD COLUMN time_preference TEXT");
         }
+
+        db.execSQL("DROP TABLE IF EXISTS users");
+        onCreate(db);
     }
 
     public void initializeDatabase() {

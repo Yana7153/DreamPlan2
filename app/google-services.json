@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "797890555310",
+    "project_id": "dream-plan-e50f3",
+    "storage_bucket": "dream-plan-e50f3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:797890555310:android:e3fb34f57e1fc3ed832c3f",
+        "android_client_info": {
+          "package_name": "com.example.dreamplan"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyADKrsL-AgSarfhU5G-Mer34CnG-fEzdlk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

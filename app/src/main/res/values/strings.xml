@@ -1,3 +1,17 @@
 <resources>
     <string name="app_name">DreamPlan</string>
+    <string name="login">Login</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="full_name">Full Name</string>
+    <string name="dont_have_account">Don\'t have an account? Sign up</string>
+    <string name="already_have_account">Already have an account? Login</string>
+    <string name="invalid_credentials">Invalid credentials</string>
+    <string name="registration_successful">Registration successful!</string>
+    <string name="registration_failed">Registration failed</string>
+    <string name="fill_all_fields">Please fill all fields</string>
+    <string name="passwords_dont_match">Passwords don\'t match</string>
+    <string name="email_taken">Email already registered</string>
 </resources>

@@ -62,7 +62,7 @@ public class HomeFragment extends Fragment {
         // Initialize UI elements
         rvSections = view.findViewById(R.id.rvSections);
         dbManager = new DatabaseManager(getContext());
-        
+
 
         // Insert predefined sections if not already inserted
         dbManager.insertMainSectionsIfNotExist();
