@@ -63,4 +63,9 @@
         <item name="cardElevation">2dp</item>
         <item name="cardBackgroundColor">@color/lighter_gray</item>
     </style>
+
+    <style name="RoundedCorners" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
 </resources>

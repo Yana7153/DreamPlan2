@@ -101,5 +101,13 @@
     <color name="light_gray">#E0E0E0</color>
     <!-- Red for urgent -->
 
+    <color name="white_alpha_70">#B3FFFFFF</color>
+    <color name="white_alpha_30">#4DFFFFFF</color>
+    <color name="white_alpha_20">#33FFFFFF</color>
+
+
+    <!-- Professional color palette -->
+    <color name="primary_color">#6200EE</color>
+    <color name="medium_gray">#757575</color>
 
 </resources>
