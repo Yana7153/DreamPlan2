@@ -109,5 +109,6 @@
     <!-- Professional color palette -->
     <color name="primary_color">#6200EE</color>
     <color name="medium_gray">#757575</color>
+    <color name="primary_light" />
 
 </resources>

@@ -95,6 +95,16 @@
             app:cornerRadius="24dp"
             app:backgroundTint="@color/primary_color"/>
 
+
+        <TextView
+            android:id="@+id/tv_forgot_password"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Forgot Password?"
+            android:textColor="@color/primary_color"
+            android:layout_marginTop="8dp"
+            android:clickable="true"/>
+
         <!-- Sign Up Text -->
         <TextView
             android:layout_width="wrap_content"
@@ -103,6 +113,8 @@
             android:textColor="@color/medium_gray"
             android:layout_marginTop="16dp"/>
 
+
+
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/tv_sign_up"
             android:layout_width="wrap_content"
@@ -110,5 +122,7 @@
             android:text="Sign up"
             android:textColor="@color/primary_color"
             android:textStyle="bold"/>
+
+
     </LinearLayout>
 </ScrollView>

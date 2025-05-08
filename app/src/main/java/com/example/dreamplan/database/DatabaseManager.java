@@ -107,6 +107,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
             db.execSQL("ALTER TABLE " + TABLE_TASKS + " ADD COLUMN time_preference TEXT");
         }
 
+
         db.execSQL("DROP TABLE IF EXISTS users");
         onCreate(db);
     }
