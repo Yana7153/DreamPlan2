@@ -71,7 +71,19 @@ public class HomeFragment extends Fragment {
 
         // Set up RecyclerView
         sectionList = dbManager.getAllSections();
-        sectionAdapter = new SectionAdapter(sectionList, getContext(), this);  // 'this' refers to the HomeFragment
+        sectionAdapter = new SectionAdapter(sectionList, getContext(), this);
+        sectionAdapter.setOnSectionActionListener(new SectionAdapter.OnSectionActionListener() {
+            @Override
+            public void onEditSection(Section section) {
+                showEditSectionDialog(section);
+            }
+
+            @Override
+            public void onDeleteSection(Section section) {
+                showDeleteConfirmationDialog(section);
+            }
+        });
+
         rvSections.setLayoutManager(new LinearLayoutManager(getContext()));
         rvSections.setAdapter(sectionAdapter);
 
@@ -117,66 +129,77 @@ public class HomeFragment extends Fragment {
 
     // Method to show the Edit Section dialog
     public void showEditSectionDialog(Section section) {
-        if (getContext() == null) return;
-
-        // Inflate the dialog view
         Dialog sectionDialog = new Dialog(requireContext());
-        sectionDialog.setContentView(R.layout.task_input_dialog);  // Ensure this layout has the correct views
+        sectionDialog.setContentView(R.layout.task_input_dialog);
 
-        // Get references to the dialog elements
+        // Get views
         EditText sectionName = sectionDialog.findViewById(R.id.et_section_name);
         EditText notes = sectionDialog.findViewById(R.id.et_notes);
-        Button saveSectionButton = sectionDialog.findViewById(R.id.btn_save_section);
-  //      Button colorButton = sectionDialog.findViewById(R.id.btn_select_color);  // Color selection button
+        Button saveButton = sectionDialog.findViewById(R.id.btn_save_section);
+        ImageView[] colorCircles = {
+                sectionDialog.findViewById(R.id.color_circle_1),
+                sectionDialog.findViewById(R.id.color_circle_2),
+                sectionDialog.findViewById(R.id.color_circle_3),
+                sectionDialog.findViewById(R.id.color_circle_4),
+                sectionDialog.findViewById(R.id.color_circle_5),
+                sectionDialog.findViewById(R.id.color_circle_6),
+                sectionDialog.findViewById(R.id.color_circle_7)
+        };
 
-        // Default color (can be modified later)
-        final String[] selectedColor = new String[]{section.getColor()};  // Use the color of the current section
+        String[] colors = {"#CCE1F2", "#C6F8E5", "#FBF7D5", "#F9DED7", "#F5CDDE", "#E2BEF1", "#D3D3D3"};
+        final String[] selectedColor = {section.getColor()};
 
-        // Set the initial values in the EditTexts based on the section being edited
+        // Set initial values
         sectionName.setText(section.getName());
         notes.setText(section.getNotes());
-      //  colorButton.setBackgroundColor(Color.parseColor(selectedColor[0]));
 
-        // Show color selection dialog when button is clicked
-//        colorButton.setOnClickListener(v -> {
-//            final String[] colors = {"#FF6200EE", "#FF5722", "#8BC34A", "#03A9F4", "#9C27B0"};
-//            new AlertDialog.Builder(getContext())
-//                    .setTitle("Select Color")
-//                    .setItems(new String[]{"Purple", "Red", "Green", "Blue", "Pink"}, (dialog, which) -> {
-//                        selectedColor[0] = colors[which];
-//                        colorButton.setBackgroundColor(Color.parseColor(selectedColor[0])); // Update button color
-//                    })
-//                    .show();
-//        });
+        // Highlight current color
+        for (int i = 0; i < colors.length; i++) {
+            if (colors[i].equalsIgnoreCase(section.getColor())) {
+                colorCircles[i].setBackground(getColorCircleDrawable(colors[i], true));
+            } else {
+                colorCircles[i].setBackground(getColorCircleDrawable(colors[i], false));
+            }
 
-        // Save section button click listener
-        saveSectionButton.setOnClickListener(v -> {
+            final int index = i;
+            colorCircles[i].setOnClickListener(v -> {
+                selectedColor[0] = colors[index];
+                // Update UI
+                for (int j = 0; j < colors.length; j++) {
+                    colorCircles[j].setBackground(getColorCircleDrawable(
+                            colors[j],
+                            j == index
+                    ));
+                }
+            });
+        }
+
+        saveButton.setOnClickListener(v -> {
             String name = sectionName.getText().toString().trim();
-            String notesText = notes.getText().toString().trim();
-
             if (name.isEmpty()) {
-                Toast.makeText(getContext(), "Section Name is required!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Name required", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            // Update the section with the new data (edited section)
+            // Update section
             section.setName(name);
-            section.setNotes(notesText);
+            section.setNotes(notes.getText().toString());
             section.setColor(selectedColor[0]);
 
-            dbManager.updateSection(section);  // Update the section in the database
-
-            sectionList = dbManager.getAllSections();  // Re-fetch data from DB
-            sectionAdapter.notifyDataSetChanged();  // Notify the adapter about the updated section
-
-            sectionDialog.dismiss();  // Dismiss the dialog after saving the section
+            if (dbManager.updateSection(section)) {
+                int position = sectionList.indexOf(section);
+                if (position != -1) {
+                    sectionAdapter.notifyItemChanged(position);
+                }
+                sectionDialog.dismiss();
+            } else {
+                Toast.makeText(getContext(), "Update failed", Toast.LENGTH_SHORT).show();
+            }
         });
 
-        // Show the dialog
         sectionDialog.show();
     }
 
-    // Method to show the Add Section dialog
     // Method to show the Add Section dialog
     public void showAddSectionDialog() {
         if (getContext() == null) return;
@@ -352,5 +375,22 @@ public class HomeFragment extends Fragment {
                 Log.e("REFRESH", "Auto-refresh failed", e);
             }
         }).start();
+    }
+
+    private void showDeleteConfirmationDialog(Section section) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Delete Section")
+                .setMessage("Are you sure you want to delete '" + section.getName() + "'?")
+                .setPositiveButton("Delete", (dialog, which) -> {
+                    int position = sectionList.indexOf(section);
+                    if (position != -1) {
+                        dbManager.deleteSection(section.getId());
+                        sectionList.remove(position);
+                        sectionAdapter.notifyItemRemoved(position);
+                        Toast.makeText(getContext(), "Section deleted", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 }

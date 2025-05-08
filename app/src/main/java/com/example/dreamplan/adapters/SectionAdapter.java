@@ -68,14 +68,12 @@ public class SectionAdapter extends RecyclerView.Adapter<SectionAdapter.SectionV
     // Show the Edit/Delete dialog
     private void showEditDeleteDialog(Section section, int position) {
         new AlertDialog.Builder(context)
-                .setTitle("Options")
+                .setTitle("Section Options")
                 .setItems(new String[]{"Edit", "Delete"}, (dialog, which) -> {
-                    if (which == 0) {
-                        // Edit option
-                        homeFragment.showEditSectionDialog(section); // Open edit dialog in HomeFragment
-                    } else if (which == 1) {
-                        // Delete option
-                        showDeleteConfirmationDialog(section, position); // Confirm before deleting
+                    if (which == 0 && actionListener != null) {
+                        actionListener.onEditSection(section);
+                    } else if (which == 1 && actionListener != null) {
+                        actionListener.onDeleteSection(section);
                     }
                 })
                 .show();
@@ -117,5 +115,16 @@ public class SectionAdapter extends RecyclerView.Adapter<SectionAdapter.SectionV
         }
 
 
+    }
+
+    public interface OnSectionActionListener {
+        void onEditSection(Section section);
+        void onDeleteSection(Section section);
+    }
+
+    private OnSectionActionListener actionListener;
+
+    public void setOnSectionActionListener(OnSectionActionListener listener) {
+        this.actionListener = listener;
     }
 }

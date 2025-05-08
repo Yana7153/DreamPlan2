@@ -68,10 +68,16 @@ public class AddTaskFragment extends Fragment {
     private Button btnDelete;
     private int dbDate;
 
-    public static AddTaskFragment newInstance(Section section) {
+    private boolean isEditMode = false;
+    private int taskIdToEdit = -1;
+
+    public static AddTaskFragment newInstance(Section section, Task task) {
         AddTaskFragment fragment = new AddTaskFragment();
         Bundle args = new Bundle();
         args.putSerializable("section", section);
+        if (task != null) {
+            args.putParcelable("task", task);
+        }
         fragment.setArguments(args);
         return fragment;
     }
@@ -90,8 +96,9 @@ public class AddTaskFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_add_task, container, false);
 
-        // Add delete button initialization
         btnDelete = view.findViewById(R.id.btnDeleteTask);
+        btnDelete = view.findViewById(R.id.btnDeleteTask);
+        btnDelete.setOnClickListener(v -> deleteTask());
 //        btnDelete.setOnClickListener(v -> deleteTask());
 
         return view;
@@ -165,12 +172,12 @@ public class AddTaskFragment extends Fragment {
         toggleGroup.check(isOneTime ? R.id.btn_one_time : R.id.btn_regular);
 
 
-//        if (taskToEdit != null) {
-//            populateTaskData(taskToEdit);
-//            btnDelete.setVisibility(View.VISIBLE);
-//        } else {
-//            btnDelete.setVisibility(View.GONE);
-//        }
+        if (getArguments() != null && getArguments().containsKey("task")) {
+            Task taskToEdit = (Task) getArguments().getParcelable("task");
+            if (taskToEdit != null) {
+                populateTaskData(taskToEdit);
+            }
+        }
 
 
         // Set click listeners
@@ -191,36 +198,9 @@ public class AddTaskFragment extends Fragment {
                 Toast.makeText(getContext(), "Error saving task", Toast.LENGTH_SHORT).show();
             }
         });
-
-//        if (taskToEdit != null) {
-//            btnDelete.setVisibility(View.VISIBLE);
-//            safeScrollToBottom();
-//        }
     }
 
 
-//    private void setupToggleGroup() {
-//        MaterialButtonToggleGroup toggleGroup = requireView().findViewById(R.id.toggle_recurrence);
-//
-//        toggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
-//            if (isChecked) {
-//                boolean isOneTime = checkedId == R.id.btn_one_time;
-//                oneTimeSection.setVisibility(isOneTime ? View.VISIBLE : View.GONE);
-//                recurringOptions.setVisibility(isOneTime ? View.GONE : View.VISIBLE);
-//
-//                // Set default date when section becomes visible
-//                if (isOneTime && btnDate.getText().toString().isEmpty()) {
-//                    SimpleDateFormat sdf = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
-//                    btnDate.setText(sdf.format(new Date()));
-//                }
-//
-//
-//            }
-//        });
-//
-//        // Set initial state
-//        toggleGroup.check(R.id.btn_one_time);
-//    }
 
     private void setupTimeOptions() {
         timeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -318,7 +298,7 @@ public class AddTaskFragment extends Fragment {
 
             btnDate.setOnClickListener(v -> {
                 try {
-                    // Create date picker with current selection
+                    // date picker with current selection
                     MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
                             .setTitleText("Select Date")
                             .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
@@ -361,8 +341,8 @@ public class AddTaskFragment extends Fragment {
 
             DatabaseManager dbManager = new DatabaseManager(requireContext());
             Task task;
-            String displayDate = ""; // For logging
-            String dbFormattedDate = ""; // For logging
+            String displayDate = "";
+            String dbFormattedDate = "";
 
             if (!isOneTime) {
                 // Recurring task handling
@@ -372,7 +352,6 @@ public class AddTaskFragment extends Fragment {
                     return;
                 }
 
-                // Convert displayed date to database format
                 SimpleDateFormat displayFormat = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
                 SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
                 dbFormattedDate = dbFormat.format(displayFormat.parse(displayDate));
@@ -381,7 +360,7 @@ public class AddTaskFragment extends Fragment {
                 if (timeSwitch.isChecked()) {
                     int selectedId = timeOptionsGroup.getCheckedRadioButtonId();
                     if (selectedId == R.id.radio_custom) {
-                        timePreference = String.format("%02d:%02d",
+                        timePreference = String.format(Locale.getDefault(), "%02d:%02d",
                                 timePicker.getHour(),
                                 timePicker.getMinute());
                     } else if (selectedId != -1) {
@@ -391,6 +370,7 @@ public class AddTaskFragment extends Fragment {
                 }
 
                 task = new Task(
+                        isEditMode ? taskIdToEdit : 0, // Only use ID for edits
                         title.trim(),
                         description,
                         "", // Empty deadline for recurring
@@ -398,7 +378,7 @@ public class AddTaskFragment extends Fragment {
                         selectedIconResId,
                         section.getId(),
                         true,
-                        dbFormattedDate, // Use converted date
+                        dbFormattedDate,
                         scheduleSpinner.getSelectedItem().toString(),
                         timePreference
                 );
@@ -410,15 +390,15 @@ public class AddTaskFragment extends Fragment {
                     return;
                 }
 
-                // Convert displayed date to database format
                 SimpleDateFormat displayFormat = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
                 SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
                 dbFormattedDate = dbFormat.format(displayFormat.parse(displayDate));
 
                 task = new Task(
+                        isEditMode ? taskIdToEdit : 0, // Only use ID for edits
                         title.trim(),
                         description,
-                        dbFormattedDate, // Use converted date
+                        dbFormattedDate,
                         selectedColorResId,
                         selectedIconResId,
                         section.getId(),
@@ -429,33 +409,30 @@ public class AddTaskFragment extends Fragment {
                 );
             }
 
-            // DEBUG LOG (now using properly scoped variables)
-            Log.d("DATE_DEBUG", "Saving with date - Display: " + displayDate + " → DB Format: " + dbFormattedDate);
+            // Save or update based on mode
+            if (isEditMode) {
+                boolean updated = dbManager.updateTask(task);
+                Toast.makeText(getContext(),
+                        updated ? "Task updated!" : "Update failed",
+                        Toast.LENGTH_SHORT).show();
+            } else {
+                dbManager.saveTask(task);
+                Toast.makeText(getContext(), "Task created!", Toast.LENGTH_SHORT).show();
+            }
 
-            // Save task
-            dbManager.saveTask(task);
-            Toast.makeText(getContext(), "Task saved! Counts should update...", Toast.LENGTH_SHORT).show();
-
-            // Refresh logic
+            // Refresh UI
             if (getParentFragment() instanceof SectionDetailFragment) {
                 ((SectionDetailFragment) getParentFragment()).refreshTaskList();
             }
-
-//            Fragment homeFragment = getParentFragmentManager().findFragmentByTag("home_fragment");
-//            if (homeFragment instanceof HomeFragment) {
-//                ((HomeFragment) homeFragment).refreshTaskCounts();
-//            }
-
-
             requireContext().sendBroadcast(new Intent("TASK_UPDATED"));
             getParentFragmentManager().popBackStack();
 
         } catch (ParseException e) {
             Toast.makeText(getContext(), "Invalid date format", Toast.LENGTH_SHORT).show();
-            Log.e("TASK_SAVE", "Date parsing error", e);
+            Log.e("TASK_SAVE", "Date error", e);
         } catch (Exception e) {
             Toast.makeText(getContext(), "Error saving task", Toast.LENGTH_SHORT).show();
-            Log.e("TASK_SAVE", "Error saving task", e);
+            Log.e("TASK_SAVE", "Error", e);
         }
     }
 
@@ -537,121 +514,87 @@ public class AddTaskFragment extends Fragment {
             datePicker.show(getParentFragmentManager(), "DATE_PICKER");
         }
     }
-//
-//
-//    public static AddTaskFragment newInstance(Task task) {
-//        AddTaskFragment fragment = new AddTaskFragment();
-//        Bundle args = new Bundle();
-//        args.putParcelable("task", task); // No more warning!
-//        fragment.setArguments(args);
-//        return fragment;
-//    }
-//
-//    private void populateTaskData(Task task) {
-//        try {
-//            etTaskTitle.setText(task.getTitle());
-//            etDescription.setText(task.getNotes());
-//
-//            // Set icon and color
-//            selectedIconResId = task.getIconResId();
-//            selectedColorResId = task.getColorResId();
-//            imgTaskIcon.setImageResource(selectedIconResId);
-//            imgTaskIcon.setBackgroundResource(selectedColorResId);
-//
-//            // Handle task type
-//            if (task.isRecurring()) {
-//                toggleGroup.check(R.id.btn_regular);
-//                btnStartDate.setText(formatDate(task.getStartDate()));
-//                scheduleSpinner.setSelection(getSchedulePosition(task.getSchedule()));
-//            } else {
-//                toggleGroup.check(R.id.btn_one_time);
-//                btnDate.setText(formatDate(task.getDeadline()));
-//            }
-//        } catch (Exception e) {
-//            Log.e("EditTask", "Error loading task data", e);
-//        }
-//    }
-//
-//    private void safeScrollToBottom() {
-//        if (getView() == null || !isAdded()) return;
-//
-//        getView().postDelayed(() -> {
-//            try {
-//                View view = getView();
-//                if (view == null || !isAdded()) return;
-//
-//                View scrollingView = view.findViewById(R.id.scrollView);
-//                if (scrollingView != null) {
-//                    scrollingView.post(() -> {
-//                        if (scrollingView instanceof ScrollView) {
-//                            ((ScrollView) scrollingView).fullScroll(View.FOCUS_DOWN);
-//                        } else if (scrollingView instanceof NestedScrollView) {
-//                            ((NestedScrollView) scrollingView).fullScroll(View.FOCUS_DOWN);
-//                        }
-//                    });
-//                }
-//
-//            } catch (Exception e) {
-//                Log.w("Scroll", "Scroll failed", e);
-//            }
-//        }, 100);
-//    }
-//
-//    private String formatDate(String dateString) {
-//        try {
-//            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-//            SimpleDateFormat outputFormat = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
-//            Date date = inputFormat.parse(dateString);
-//            return outputFormat.format(date);
-//        } catch (Exception e) {
-//            return dateString; // fallback to raw string
-//        }
-//    }
-//
-//    private int getSchedulePosition(String schedule) {
-//        String[] schedules = getResources().getStringArray(R.array.schedule_options);
-//        for (int i = 0; i < schedules.length; i++) {
-//            if (schedules[i].equalsIgnoreCase(schedule)) {
-//                return i;
-//            }
-//        }
-//        return 0;
-//    }
-//
-//    private void deleteTask() {
-//        if (taskToEdit == null || getContext() == null) return;
-//
-//        new AlertDialog.Builder(requireContext())
-//                .setTitle("Delete Task")
-//                .setMessage("Are you sure you want to delete this task?")
-//                .setPositiveButton("Delete", (dialog, which) -> {
-//                    try {
-//                        DatabaseManager dbManager = new DatabaseManager(requireContext());
-//                        int rowsAffected = dbManager.deleteTask(taskToEdit.getId());
-//
-//                        if (rowsAffected > 0) {
-//                            Toast.makeText(getContext(), "Task deleted", Toast.LENGTH_SHORT).show();
-//                            getParentFragmentManager().popBackStack();
-//                        } else {
-//                            Toast.makeText(getContext(), "Failed to delete task", Toast.LENGTH_SHORT).show();
-//                        }
-//                    } catch (Exception e) {
-//                        Log.e("DeleteTask", "Error deleting task", e);
-//                        Toast.makeText(getContext(), "Error deleting task", Toast.LENGTH_SHORT).show();
-//                    }
-//                })
-//                .setNegativeButton("Cancel", null)
-//                .show();
-//    }
-//
-//
-//    private void showDeleteConfirmation() {
-//        new AlertDialog.Builder(requireContext())
-//                .setTitle("Delete Task")
-//                .setMessage("Are you sure? This cannot be undone.")
-//                .setPositiveButton("Delete", (d, w) -> deleteTask())
-//                .setNegativeButton("Cancel", null)
-//                .show();
-//    }
+
+    private void populateTaskData(Task task) {
+        try {
+            isEditMode = true;
+            taskIdToEdit = task.getId();
+
+            MaterialButtonToggleGroup toggleGroup = getView().findViewById(R.id.toggle_recurrence);
+            Button btnOneTime = getView().findViewById(R.id.btn_one_time);
+            Button btnRegular = getView().findViewById(R.id.btn_regular);
+            Button btnDate = getView().findViewById(R.id.btn_date);
+            Button btnStartDate = getView().findViewById(R.id.btn_start_date);
+
+            etTaskTitle.setText(task.getTitle());
+            etDescription.setText(task.getNotes());
+            selectedIconResId = task.getIconResId();
+            selectedColorResId = task.getColorResId();
+            imgTaskIcon.setImageResource(selectedIconResId);
+
+            if (task.isRecurring()) {
+                toggleGroup.check(R.id.btn_regular);
+                btnStartDate.setText(formatDate(task.getStartDate()));
+
+                if (scheduleSpinner != null && task.getSchedule() != null) {
+                    ArrayAdapter<CharSequence> adapter = (ArrayAdapter<CharSequence>) scheduleSpinner.getAdapter();
+                    for (int i = 0; i < adapter.getCount(); i++) {
+                        if (adapter.getItem(i).equals(task.getSchedule())) {
+                            scheduleSpinner.setSelection(i);
+                            break;
+                        }
+                    }
+                }
+            } else {
+                toggleGroup.check(R.id.btn_one_time);  // Check one-time button
+                btnDate.setText(formatDate(task.getDeadline()));
+            }
+
+            // Show delete button
+            btnDelete.setVisibility(View.VISIBLE);
+
+            // Ensure proper visibility of options
+            oneTimeSection.setVisibility(task.isRecurring() ? View.GONE : View.VISIBLE);
+            recurringOptions.setVisibility(task.isRecurring() ? View.VISIBLE : View.GONE);
+
+        } catch (Exception e) {
+            Log.e("EditTask", "Error loading task data", e);
+            Toast.makeText(getContext(), "Error loading task", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void deleteTask() {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Delete Task")
+                .setMessage("Are you sure you want to delete this task?")
+                .setPositiveButton("Delete", (dialog, which) -> {
+                    DatabaseManager dbManager = new DatabaseManager(requireContext());
+                    boolean deleted = dbManager.deleteTask(taskIdToEdit);
+                    if (deleted) {
+                        Toast.makeText(getContext(), "Task deleted", Toast.LENGTH_SHORT).show();
+                        getParentFragmentManager().popBackStack();
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    // Helper method for date formatting
+    private String formatDate(String dateString) {
+        try {
+            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            SimpleDateFormat outputFormat = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
+            Date date = inputFormat.parse(dateString);
+            return outputFormat.format(date);
+        } catch (Exception e) {
+            return dateString;
+        }
+    }
+
+    private String formatDateForDb(String displayDate) throws ParseException {
+        SimpleDateFormat displayFormat = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
+        SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        return dbFormat.format(displayFormat.parse(displayDate));
+    }
 
 }

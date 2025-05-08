@@ -110,5 +110,6 @@
     <color name="primary_color">#6200EE</color>
     <color name="medium_gray">#757575</color>
     <color name="primary_light" />
+    <color name="error_color">#F44336</color>
 
 </resources>

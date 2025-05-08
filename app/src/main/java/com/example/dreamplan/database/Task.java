@@ -24,8 +24,9 @@ public class Task implements Parcelable {
 
     private String taskTypeDisplay;
 
-    public Task(String title, String notes, String dueDate, int colorResId, int iconResId, int sectionId,
+    public Task(int id, String title, String notes, String dueDate, int colorResId, int iconResId, int sectionId,
                 boolean isRecurring, String startDate, String schedule, String timePreference) {
+        this.id = id;
         this.title = title != null ? title : "";
         this.notes = notes != null ? notes : "";
         this.deadline = dueDate != null ? dueDate : "";  // Fixed: Set deadline from dueDate parameter

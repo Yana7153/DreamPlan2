@@ -180,16 +180,18 @@ public class DatabaseManager extends SQLiteOpenHelper {
         if (cursor.moveToFirst()) {
             do {
                 Task task = new Task(
-                        cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_TITLE)),
-                        cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_DESCRIPTION)),
-                        cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_DUE_DATE)),
-                        cursor.getInt(cursor.getColumnIndexOrThrow("color_res_id")),
-                        cursor.getInt(cursor.getColumnIndexOrThrow("icon_res_id")),
-                        cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TASK_SECTION_ID)),
-                        cursor.getInt(cursor.getColumnIndexOrThrow("is_recurring")) == 1,
-                        cursor.getString(cursor.getColumnIndexOrThrow("start_date")),
-                        cursor.getString(cursor.getColumnIndexOrThrow("schedule")),
-                        cursor.getString(cursor.getColumnIndexOrThrow("time_preference"))
+                        // Parameters must match EXACTLY with your Task constructor
+                        cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TASK_ID)),       // id
+                        cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_TITLE)), // title
+                        cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_DESCRIPTION)), // notes
+                        cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_DUE_DATE)), // dueDate
+                        cursor.getInt(cursor.getColumnIndexOrThrow("color_res_id")),       // colorResId
+                        cursor.getInt(cursor.getColumnIndexOrThrow("icon_res_id")),       // iconResId
+                        cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TASK_SECTION_ID)), // sectionId
+                        cursor.getInt(cursor.getColumnIndexOrThrow("is_recurring")) == 1,  // isRecurring
+                        cursor.getString(cursor.getColumnIndexOrThrow("start_date")),      // startDate
+                        cursor.getString(cursor.getColumnIndexOrThrow("schedule")),        // schedule
+                        cursor.getString(cursor.getColumnIndexOrThrow("time_preference"))  // timePreference
                 );
                 task.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TASK_ID)));
                 tasks.add(task);
@@ -202,16 +204,32 @@ public class DatabaseManager extends SQLiteOpenHelper {
 
 
 
-    public void updateSection(Section section) {
+    public boolean updateSection(Section section) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put(COLUMN_NAME, section.getName());
-        values.put(COLUMN_COLOR, section.getColor());  // You might also want to update the color
-        values.put(COLUMN_NOTES, section.getNotes());
+        values.put("name", section.getName());
+        values.put("color", section.getColor());
+        values.put("notes", section.getNotes());
 
-        // Update the section by its ID
-        db.update(TABLE_SECTIONS, values, COLUMN_ID + " = ?", new String[]{String.valueOf(section.getId())});
+        int rows = db.update(
+                "sections",
+                values,
+                "id = ?",
+                new String[]{String.valueOf(section.getId())}
+        );
         db.close();
+        return rows > 0;
+    }
+
+    public boolean deleteSection(int sectionId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        int rows = db.delete(
+                "sections",
+                "id = ?",
+                new String[]{String.valueOf(sectionId)}
+        );
+        db.close();
+        return rows > 0;
     }
 
     // 🔹 UPDATED SAVE TASK METHOD (handles both insert and update)
@@ -280,26 +298,20 @@ public class DatabaseManager extends SQLiteOpenHelper {
         return sections;
     }
 
-    public void deleteSection(int sectionId) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        // Correct table name: TABLE_SECTIONS
-        db.delete(TABLE_SECTIONS, COLUMN_ID + " = ?", new String[]{String.valueOf(sectionId)});
-        db.close();
-    }
 
-    public void migrateOldTasks() {
-        SQLiteDatabase db = getWritableDatabase();
-        // Set default values for any tasks missing color/icon
-        ContentValues values = new ContentValues();
-        values.put("color_res_id", R.drawable.circle_background_1);
-        values.put("icon_res_id", R.drawable.ic_default_task);
-        db.update(TABLE_TASKS, values,
-                "color_res_id IS NULL OR icon_res_id IS NULL",
-                null);
-        db.close();
-    }
 
-    // In your DatabaseManager class
+//    public void migrateOldTasks() {
+//        SQLiteDatabase db = getWritableDatabase();
+//        // Set default values for any tasks missing color/icon
+//        ContentValues values = new ContentValues();
+//        values.put("color_res_id", R.drawable.circle_background_1);
+//        values.put("icon_res_id", R.drawable.ic_default_task);
+//        db.update(TABLE_TASKS, values,
+//                "color_res_id IS NULL OR icon_res_id IS NULL",
+//                null);
+//        db.close();
+//    }
+
     public boolean hasTasksForDate(Date date) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         String dateStr = sdf.format(date);
@@ -343,16 +355,17 @@ public class DatabaseManager extends SQLiteOpenHelper {
     private Task cursorToTask(Cursor cursor) {
         try {
             Task task = new Task(
-                    cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_TITLE)),
-                    cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_DESCRIPTION)),
-                    cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_DUE_DATE)),
-                    cursor.getInt(cursor.getColumnIndexOrThrow("color_res_id")),
-                    cursor.getInt(cursor.getColumnIndexOrThrow("icon_res_id")),
-                    cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TASK_SECTION_ID)),
-                    cursor.getInt(cursor.getColumnIndexOrThrow("is_recurring")) == 1,
-                    cursor.getString(cursor.getColumnIndexOrThrow("start_date")),
-                    cursor.getString(cursor.getColumnIndexOrThrow("schedule")),
-                    cursor.getString(cursor.getColumnIndexOrThrow("time_preference"))
+                    cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TASK_ID)),       // id
+                    cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_TITLE)), // title
+                    cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_DESCRIPTION)), // notes
+                    cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_DUE_DATE)), // dueDate
+                    cursor.getInt(cursor.getColumnIndexOrThrow("color_res_id")),       // colorResId
+                    cursor.getInt(cursor.getColumnIndexOrThrow("icon_res_id")),       // iconResId
+                    cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TASK_SECTION_ID)), // sectionId
+                    cursor.getInt(cursor.getColumnIndexOrThrow("is_recurring")) == 1,  // isRecurring
+                    cursor.getString(cursor.getColumnIndexOrThrow("start_date")),      // startDate
+                    cursor.getString(cursor.getColumnIndexOrThrow("schedule")),        // schedule
+                    cursor.getString(cursor.getColumnIndexOrThrow("time_preference"))  // timePreference
             );
             task.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TASK_ID)));
             return task;
@@ -361,21 +374,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
             return null; // or handle appropriately
         }
     }
-//
-//    public int deleteTask(int taskId) {
-//        SQLiteDatabase db = null;
-//        try {
-//            db = this.getWritableDatabase();
-//            return db.delete(TABLE_TASKS,
-//                    COLUMN_TASK_ID + " = ?",
-//                    new String[]{String.valueOf(taskId)});
-//        } catch (Exception e) {
-//            Log.e("Database", "Delete failed", e);
-//            return 0;
-//        } finally {
-//            if (db != null) db.close();
-//        }
-//    }
+
 
     public int getTasksDueTodayCount() {
         String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
@@ -437,4 +436,42 @@ public class DatabaseManager extends SQLiteOpenHelper {
             return ""; // or handle error appropriately
         }
     }
+
+
+    public boolean updateTask(Task task) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        values.put("title", task.getTitle());
+        values.put("notes", task.getNotes());
+        values.put("deadline", task.getDeadline());
+        values.put("color_res_id", task.getColorResId());
+        values.put("icon_res_id", task.getIconResId());
+        values.put("is_recurring", task.isRecurring() ? 1 : 0);
+        values.put("start_date", task.getStartDate());
+        values.put("schedule", task.getSchedule());
+        values.put("time_preference", task.getTimePreference());
+
+        int rows = db.update(
+                "tasks",
+                values,
+                "id = ?",
+                new String[]{String.valueOf(task.getId())}
+        );
+        db.close();
+        return rows > 0;
+    }
+
+    public boolean deleteTask(int taskId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        int rowsAffected = db.delete(
+                "tasks",
+                "id = ?",
+                new String[]{String.valueOf(taskId)}
+        );
+        db.close();
+        return rowsAffected > 0;
+    }
+
+
 }

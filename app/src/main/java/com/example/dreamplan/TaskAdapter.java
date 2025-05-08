@@ -34,7 +34,17 @@ import java.util.Map;
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder> {
     private List<Task> taskList;
     private Context context;
+    private OnTaskClickListener taskClickListener;
 
+
+    public interface OnTaskClickListener {
+        void onTaskClick(Task task);
+        void onTaskLongClick(Task task);
+    }
+
+    public void setOnTaskClickListener(OnTaskClickListener listener) {
+        this.taskClickListener = listener;
+    }
 
     public TaskAdapter(List<Task> taskList, Context context) {
         this.taskList = taskList;
@@ -62,6 +72,19 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         }
 
 
+        holder.itemView.setOnClickListener(v -> {
+            if (taskClickListener != null) {
+                taskClickListener.onTaskClick(task);
+            }
+        });
+
+        holder.itemView.setOnLongClickListener(v -> {
+            if (taskClickListener != null) {
+                taskClickListener.onTaskLongClick(task);
+                return true;
+            }
+            return false;
+        });
 
         // Set basic task info
         holder.tvTaskTitle.setText(task.getTitle());
@@ -231,4 +254,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             tvTaskType = itemView.findViewById(R.id.tv_task_type);
         }
     }
+
+
+
 }
