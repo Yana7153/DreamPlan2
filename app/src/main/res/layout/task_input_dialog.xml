@@ -46,94 +46,94 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp">
-        <!-- Color Selection Circles -->
-        <LinearLayout
-            android:id="@+id/color_picker"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="16dp"
-            android:gravity="center">
+            <!-- Color Selection Circles -->
+            <LinearLayout
+                android:id="@+id/color_picker"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="16dp"
+                android:gravity="center">
 
-            <!-- Color Circle 1 -->
-            <ImageView
-                android:id="@+id/color_circle_1"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:background="@drawable/circle_background_1"
-                android:contentDescription="Color 1"
-                android:clickable="true"
-                android:focusable="true"
-                android:layout_margin="8dp"/>
+                <!-- Color Circle 1 -->
+                <ImageView
+                    android:id="@+id/color_circle_1"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:background="@drawable/circle_background_1"
+                    android:contentDescription="Color 1"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_margin="8dp"/>
 
-            <!-- Color Circle 2 -->
-            <ImageView
-                android:id="@+id/color_circle_2"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:background="@drawable/circle_background_2"
-                android:contentDescription="Color 2"
-                android:clickable="true"
-                android:focusable="true"
-                android:layout_margin="8dp"/>
+                <!-- Color Circle 2 -->
+                <ImageView
+                    android:id="@+id/color_circle_2"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:background="@drawable/circle_background_2"
+                    android:contentDescription="Color 2"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_margin="8dp"/>
 
-            <!-- Color Circle 3 -->
-            <ImageView
-                android:id="@+id/color_circle_3"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:background="@drawable/circle_background_3"
-                android:contentDescription="Color 3"
-                android:clickable="true"
-                android:focusable="true"
-                android:layout_margin="8dp"/>
+                <!-- Color Circle 3 -->
+                <ImageView
+                    android:id="@+id/color_circle_3"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:background="@drawable/circle_background_3"
+                    android:contentDescription="Color 3"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_margin="8dp"/>
 
-            <!-- Color Circle 4 -->
-            <ImageView
-                android:id="@+id/color_circle_4"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:background="@drawable/circle_background_4"
-                android:contentDescription="Color 4"
-                android:clickable="true"
-                android:focusable="true"
-                android:layout_margin="8dp"/>
+                <!-- Color Circle 4 -->
+                <ImageView
+                    android:id="@+id/color_circle_4"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:background="@drawable/circle_background_4"
+                    android:contentDescription="Color 4"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_margin="8dp"/>
 
-            <!-- Color Circle 5 -->
-            <ImageView
-                android:id="@+id/color_circle_5"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:background="@drawable/circle_background_5"
-                android:contentDescription="Color 5"
-                android:clickable="true"
-                android:focusable="true"
-                android:layout_margin="8dp"/>
+                <!-- Color Circle 5 -->
+                <ImageView
+                    android:id="@+id/color_circle_5"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:background="@drawable/circle_background_5"
+                    android:contentDescription="Color 5"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_margin="8dp"/>
 
-            <!-- Color Circle 6 -->
-            <ImageView
-                android:id="@+id/color_circle_6"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:background="@drawable/circle_background_6"
-                android:contentDescription="Color 6"
-                android:clickable="true"
-                android:focusable="true"
-                android:layout_margin="8dp"/>
+                <!-- Color Circle 6 -->
+                <ImageView
+                    android:id="@+id/color_circle_6"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:background="@drawable/circle_background_6"
+                    android:contentDescription="Color 6"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_margin="8dp"/>
 
-            <!-- Color Circle 7 -->
-            <ImageView
-                android:id="@+id/color_circle_7"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:background="@drawable/circle_background_7"
-                android:contentDescription="Color 7"
-                android:clickable="true"
-                android:focusable="true"
-                android:layout_margin="8dp"/>
-        </LinearLayout>
+                <!-- Color Circle 7 -->
+                <ImageView
+                    android:id="@+id/color_circle_7"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:background="@drawable/circle_background_7"
+                    android:contentDescription="Color 7"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_margin="8dp"/>
+            </LinearLayout>
 
-    </HorizontalScrollView>
+        </HorizontalScrollView>
         <!-- Save Button -->
         <Button
             android:id="@+id/btn_save_section"

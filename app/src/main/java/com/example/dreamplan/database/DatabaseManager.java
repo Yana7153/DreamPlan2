@@ -20,8 +20,11 @@ import java.util.Locale;
 
 public class DatabaseManager extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "dreamplan.db";
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 4;
 
+
+
+    //
     // Table Names
     private static final String TABLE_SECTIONS = "sections";
     private static final String TABLE_TASKS = "tasks";

@@ -279,7 +279,7 @@ public class AddTaskFragment extends Fragment {
             colorOption.setImageResource(drawableId);
             colorOption.setOnClickListener(v -> {
                 selectedColorResId = drawableId;
-          //      colorPreview.setImageResource(drawableId);
+                //      colorPreview.setImageResource(drawableId);
             });
 
             colorOptions.addView(colorOption);

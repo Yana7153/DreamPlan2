@@ -112,4 +112,11 @@
     <color name="primary_light" />
     <color name="error_color">#F44336</color>
 
+    <array name="section_colors">
+        <item>#FFC6F8E5</item> <!-- Light Green -->
+        <item>#FFF5CDDE</item> <!-- Pink -->
+        <item>#FFCCE1F2</item> <!-- Blue -->
+        <item>#FFE2D1F9</item> <!-- Purple -->
+    </array>
+
 </resources>
