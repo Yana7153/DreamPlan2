@@ -319,7 +319,7 @@ public class HomeFragment extends Fragment {
         SectionDetailFragment fragment = SectionDetailFragment.newInstance(section);
         FragmentTransaction transaction = getFragmentManager().beginTransaction();
         transaction.replace(R.id.fragment_container, fragment);
-        transaction.addToBackStack(null);  // Allow going back to previous fragment
+        transaction.addToBackStack("section_detail");  // Allow going back to previous fragment
         transaction.commit();
     }
 

@@ -237,37 +237,28 @@ public class DatabaseManager extends SQLiteOpenHelper {
 
     // 🔹 UPDATED SAVE TASK METHOD (handles both insert and update)
     public void saveTask(Task task) {
-
-        Log.d("DB_DEBUG", "Updating task ID " + task.getId() +
-                " with icon: " + task.getIconResId());
-
         SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
+        db.beginTransaction(); 
+        try {
+            ContentValues values = new ContentValues();
+            values.put(COLUMN_TASK_TITLE, task.getTitle());
+            values.put(COLUMN_TASK_DESCRIPTION, task.getNotes());
+            values.put(COLUMN_TASK_DUE_DATE, task.getDeadline());
+            values.put("color_res_id", task.getColorResId());
+            values.put("icon_res_id", task.getIconResId());
+            values.put(COLUMN_TASK_SECTION_ID, task.getSectionId());
+            values.put("is_recurring", task.isRecurring() ? 1 : 0);
+            values.put("start_date", task.getStartDate());
+            values.put("schedule", task.getSchedule());
+            values.put("time_preference", task.getTimePreference());
 
-
-
-        values.put(COLUMN_TASK_TITLE, task.getTitle());
-        values.put(COLUMN_TASK_DESCRIPTION, task.getNotes());
-        values.put(COLUMN_TASK_DUE_DATE, task.getDeadline());
-        values.put("color_res_id", task.getColorResId());
-        values.put("icon_res_id", task.getIconResId());
-        values.put(COLUMN_TASK_SECTION_ID, task.getSectionId());
-        values.put("is_recurring", task.isRecurring() ? 1 : 0); // THIS IS CRUCIAL
-        values.put("start_date", task.getStartDate());
-        values.put("schedule", task.getSchedule());
-
-        if (task.getId() > 0) {
-            // Update existing task
-            db.update(TABLE_TASKS, values,
-                    COLUMN_TASK_ID + "=?",
-                    new String[]{String.valueOf(task.getId())});
-        } else {
-            // Insert new task
             db.insert(TABLE_TASKS, null, values);
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+            db.close();
         }
-        db.close();
     }
-
 
     public void insertMainSectionsIfNotExist() {
         List<Section> existingSections = getAllSections();

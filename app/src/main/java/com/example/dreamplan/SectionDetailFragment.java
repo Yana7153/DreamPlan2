@@ -88,11 +88,10 @@ public class SectionDetailFragment extends Fragment {
         taskAdapter.setOnTaskClickListener(new TaskAdapter.OnTaskClickListener() {
             @Override
             public void onTaskClick(Task task) {
-                // Edit task
                 AddTaskFragment addTaskFragment = AddTaskFragment.newInstance(section, task);
                 getParentFragmentManager().beginTransaction()
                         .replace(R.id.fragment_container, addTaskFragment)
-                        .addToBackStack(null)
+                        .addToBackStack("edit_task")
                         .commit();
             }
 
@@ -125,12 +124,11 @@ public class SectionDetailFragment extends Fragment {
             backButton.setOnClickListener(v -> getActivity().getSupportFragmentManager().popBackStack());
         }
 
-        // Add task button
         addTaskButton.setOnClickListener(v -> {
             AddTaskFragment addTaskFragment = AddTaskFragment.newInstance(section, null);
             getParentFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, addTaskFragment)
-                    .addToBackStack(null)
+                    .addToBackStack("add_task")
                     .commit();
         });
 

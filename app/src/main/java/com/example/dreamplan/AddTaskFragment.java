@@ -30,6 +30,7 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
 import com.example.dreamplan.database.DatabaseManager;
 import com.example.dreamplan.database.Section;
@@ -72,6 +73,8 @@ public class AddTaskFragment extends Fragment {
     private int taskIdToEdit = -1;
 
     private MaterialButtonToggleGroup toggleGroup;
+
+    private boolean isSaving = false;
 
 
 
@@ -211,18 +214,21 @@ public class AddTaskFragment extends Fragment {
 
 
         // Set click listeners
-        view.findViewById(R.id.btn_back).setOnClickListener(v -> getParentFragmentManager().popBackStack());
+        view.findViewById(R.id.btn_back).setOnClickListener(v -> {
+            navigateBackToTaskList();
+        });
+
         view.findViewById(R.id.btn_save).setOnClickListener(v -> {
             try {
                 if (TextUtils.isEmpty(etTaskTitle.getText())) {
                     Toast.makeText(getContext(), "Please enter a task title", Toast.LENGTH_SHORT).show();
                     return;
                 }
-
                 saveTask(
                         etTaskTitle.getText().toString(),
                         etDescription.getText().toString()
                 );
+                navigateBackToTaskList();  // Changed to use our new method
             } catch (Exception e) {
                 Log.e("AddTaskFragment", "Error saving task", e);
                 Toast.makeText(getContext(), "Error saving task", Toast.LENGTH_SHORT).show();
@@ -387,23 +393,15 @@ public class AddTaskFragment extends Fragment {
 
 
     private void saveTask(String title, String description) {
-        Log.d("ICON_DEBUG", "Saving task with icon ID: " + selectedIconResId);
+        if (isSaving) return;  // Prevent duplicate saves
+        isSaving = true;
+
         try {
-            if (TextUtils.isEmpty(title)) {
-                Toast.makeText(getContext(), "Title is required", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            if (selectedIconResId == 0) {
-                selectedIconResId = R.drawable.star; // Fallback to default
-            }
-
             DatabaseManager dbManager = new DatabaseManager(requireContext());
-            Task task;
 
             if (isEditMode && taskToEdit != null) {
-                // EDIT MODE - Use existing dates if not changed
-                task = new Task(
+                // UPDATE EXISTING TASK
+                Task updatedTask = new Task(
                         taskToEdit.getId(),
                         title.trim(),
                         description,
@@ -417,44 +415,36 @@ public class AddTaskFragment extends Fragment {
                         isOneTimeTask() ? "" : getSelectedTimePreference()
                 );
 
-                Log.d("TASK_SAVE", "Saving with icon: " + selectedIconResId);
-
-                boolean updated = dbManager.updateTask(task);
+                boolean updated = dbManager.updateTask(updatedTask);
                 if (updated) {
-                    Toast.makeText(getContext(), "Task updated!", Toast.LENGTH_SHORT).show();
-
-                    // Refresh parent if needed
-                    Fragment parent = getParentFragment();
-                    if (parent instanceof SectionDetailFragment) {
-                        ((SectionDetailFragment) parent).refreshTaskList();
-                    }
-                    getParentFragmentManager().popBackStack();
+                    Toast.makeText(getContext(), "Task updated", Toast.LENGTH_SHORT).show();
                 }
-
             } else {
-                // CREATE MODE - Require date selection
+                // CREATE NEW TASK
+                Task newTask;
                 if (isOneTimeTask()) {
                     String displayDate = btnDate.getText().toString();
                     if (isDateEmpty(displayDate)) {
                         showDateRequiredToast("Please select due date");
                         return;
                     }
-                    task = createOneTimeTask(title, description, displayDate);
+                    newTask = createOneTimeTask(title, description, displayDate);
                 } else {
                     String displayDate = btnStartDate.getText().toString();
                     if (isDateEmpty(displayDate)) {
                         showDateRequiredToast("Please select start date");
                         return;
                     }
-                    task = createRecurringTask(title, description, displayDate);
+                    newTask = createRecurringTask(title, description, displayDate);
                 }
-            }
-            dbManager.saveTask(task);
-            saveOrUpdateTask(dbManager, task);
 
-        } catch (Exception e) {
-            Toast.makeText(getContext(), "Error saving task", Toast.LENGTH_SHORT).show();
-            Log.e("TASK_SAVE", "Error", e);
+                dbManager.saveTask(newTask);
+                Toast.makeText(getContext(), "Task created", Toast.LENGTH_SHORT).show();
+            }
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        } finally {
+            isSaving = false;
         }
     }
 
@@ -689,4 +679,15 @@ public class AddTaskFragment extends Fragment {
         return dbFormat.format(displayFormat.parse(displayDate));
     }
 
+    private void navigateBackToTaskList() {
+        // Check if we came from SectionDetailFragment
+        FragmentManager fragmentManager = getParentFragmentManager();
+        fragmentManager.popBackStack("section_detail", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+
+        // Force refresh the task list
+        Fragment fragment = fragmentManager.findFragmentByTag("section_detail");
+        if (fragment instanceof SectionDetailFragment) {
+            ((SectionDetailFragment) fragment).refreshTaskList();
+        }
+    }
 }
