@@ -238,7 +238,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
     // 🔹 UPDATED SAVE TASK METHOD (handles both insert and update)
     public void saveTask(Task task) {
         SQLiteDatabase db = this.getWritableDatabase();
-        db.beginTransaction(); 
+        db.beginTransaction();
         try {
             ContentValues values = new ContentValues();
             values.put(COLUMN_TASK_TITLE, task.getTitle());

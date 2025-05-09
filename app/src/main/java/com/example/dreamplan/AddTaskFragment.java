@@ -215,7 +215,7 @@ public class AddTaskFragment extends Fragment {
 
         // Set click listeners
         view.findViewById(R.id.btn_back).setOnClickListener(v -> {
-            navigateBackToTaskList();
+            navigateBackToSectionDetail();
         });
 
         view.findViewById(R.id.btn_save).setOnClickListener(v -> {
@@ -228,7 +228,7 @@ public class AddTaskFragment extends Fragment {
                         etTaskTitle.getText().toString(),
                         etDescription.getText().toString()
                 );
-                navigateBackToTaskList();  // Changed to use our new method
+                navigateBackToSectionDetail();
             } catch (Exception e) {
                 Log.e("AddTaskFragment", "Error saving task", e);
                 Toast.makeText(getContext(), "Error saving task", Toast.LENGTH_SHORT).show();
@@ -688,6 +688,26 @@ public class AddTaskFragment extends Fragment {
         Fragment fragment = fragmentManager.findFragmentByTag("section_detail");
         if (fragment instanceof SectionDetailFragment) {
             ((SectionDetailFragment) fragment).refreshTaskList();
+        }
+    }
+
+    private void navigateBackToSectionDetail() {
+        // This ensures we go back to SectionDetailFragment
+        if (getActivity() != null) {
+            // First try to find existing SectionDetailFragment
+            FragmentManager fm = getActivity().getSupportFragmentManager();
+            Fragment sectionDetail = fm.findFragmentByTag("section_detail");
+
+            if (sectionDetail == null) {
+                // If not found, create new instance
+                sectionDetail = SectionDetailFragment.newInstance(section);
+            }
+
+            // Clear back stack and show section detail
+            fm.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+            fm.beginTransaction()
+                    .replace(R.id.fragment_container, sectionDetail, "section_detail")
+                    .commit();
         }
     }
 }

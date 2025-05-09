@@ -153,4 +153,12 @@ public class SectionDetailFragment extends Fragment {
             taskAdapter.notifyDataSetChanged();
         }
     }
+
+    public void openSectionDetail(Section section) {
+        SectionDetailFragment fragment = SectionDetailFragment.newInstance(section);
+        getParentFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .addToBackStack("section_detail")  // This is crucial
+                .commit();
+    }
 }
