@@ -3,6 +3,7 @@ package com.example.dreamplan.database;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -26,6 +27,7 @@ public class Task implements Parcelable {
 
     public Task(int id, String title, String notes, String dueDate, int colorResId, int iconResId, int sectionId,
                 boolean isRecurring, String startDate, String schedule, String timePreference) {
+        Log.d("TASK_DEBUG", "Creating task with icon: " + iconResId);
         this.id = id;
         this.title = title != null ? title : "";
         this.notes = notes != null ? notes : "";
@@ -117,7 +119,18 @@ public class Task implements Parcelable {
 
 
     protected Task(Parcel in) {
-        // Read all fields from parcel
+        id = in.readInt();
+        title = in.readString();
+        notes = in.readString();
+        deadline = in.readString();
+        colorResId = in.readInt();
+        iconResId = in.readInt();
+        sectionId = in.readInt();
+        isRecurring = in.readByte() != 0;
+        startDate = in.readString();
+        schedule = in.readString();
+        timePreference = in.readString();
+        taskTypeDisplay = in.readString();
     }
 
     public static final Creator<Task> CREATOR = new Creator<Task>() {
@@ -139,6 +152,17 @@ public class Task implements Parcelable {
 
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
-
+        dest.writeInt(id);
+        dest.writeString(title);
+        dest.writeString(notes);
+        dest.writeString(deadline);
+        dest.writeInt(colorResId);
+        dest.writeInt(iconResId);
+        dest.writeInt(sectionId);
+        dest.writeByte((byte) (isRecurring ? 1 : 0));
+        dest.writeString(startDate);
+        dest.writeString(schedule);
+        dest.writeString(timePreference);
+        dest.writeString(taskTypeDisplay);
     }
 }

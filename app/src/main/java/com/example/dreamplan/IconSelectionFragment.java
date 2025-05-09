@@ -61,8 +61,9 @@ public class IconSelectionFragment extends Fragment {
 
         gridView.setOnItemClickListener((parent, view, position, id) -> {
             if (listener != null) {
-                listener.onIconSelected(icons[position]);
-                getParentFragmentManager().popBackStack();
+                int selectedIconResId = icons[position];
+                listener.onIconSelected(selectedIconResId); // Send back the selected icon
+                getParentFragmentManager().popBackStack(); // Close the selection dialog
             }
         });
 
@@ -75,8 +76,8 @@ public class IconSelectionFragment extends Fragment {
 
     @Override
     public void onDetach() {
-        super.onDetach();
         listener = null;
+        super.onDetach();
     }
 
     public void setCurrentIcon(int iconResId) {

@@ -153,6 +153,7 @@ public class AddTaskFragment extends Fragment {
             }
         });
 
+
         btnDate = view.findViewById(R.id.btn_date);
         btnStartDate = view.findViewById(R.id.btn_start_date);
 
@@ -245,26 +246,26 @@ public class AddTaskFragment extends Fragment {
         imgTaskIcon.setOnClickListener(v -> {
             IconSelectionFragment fragment = new IconSelectionFragment();
 
-            // Pass current icon if editing
+            // Set the current icon when opening the selector
             if (isEditMode && taskToEdit != null) {
                 fragment.setCurrentIcon(taskToEdit.getIconResId());
+            } else {
+                fragment.setCurrentIcon(selectedIconResId);
             }
 
-            fragment.setIconSelectionListener(new IconSelectionFragment.IconSelectionListener() {
-                @Override
-                public void onIconSelected(int iconResId) {
-                    // Update the big circle immediately
-                    try {
-                        imgTaskIcon.setImageResource(iconResId);
-                        selectedIconResId = iconResId; // Save the selection
-                    } catch (Resources.NotFoundException e) {
-                        imgTaskIcon.setImageResource(R.drawable.ic_default_task);
-                        selectedIconResId = R.drawable.ic_default_task;
-                    }
+            fragment.setIconSelectionListener(iconResId -> {
+                Log.d("ICON_DEBUG", "User selected icon: " + iconResId);
+
+                // Update both the preview and stored value
+                selectedIconResId = iconResId;
+                updateIconPreview(iconResId);
+
+                // If editing, update the task object too
+                if (isEditMode && taskToEdit != null) {
+                    taskToEdit.setIconResId(iconResId);
                 }
             });
 
-            // Show icon selection
             getParentFragmentManager()
                     .beginTransaction()
                     .replace(R.id.fragment_container, fragment)
@@ -275,28 +276,22 @@ public class AddTaskFragment extends Fragment {
 
     private void updateIconPreview(int iconResId) {
         try {
-            // FIXED: Use requireActivity() for UI thread operations
-            requireActivity().runOnUiThread(() -> {
-                imgTaskIcon.setImageResource(iconResId);
-                imgTaskIcon.setTag(iconResId);
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    if (iconResId != 0) {
+                        imgTaskIcon.setImageResource(iconResId);
+                        imgTaskIcon.setTag(iconResId);
 
-                // Add visual feedback
-                imgTaskIcon.animate()
-                        .scaleX(1.1f)
-                        .scaleY(1.1f)
-                        .setDuration(100)
-                        .withEndAction(() -> imgTaskIcon.animate()
-                                .scaleX(1f)
-                                .scaleY(1f)
-                                .setDuration(100))
-                        .start();
-            });
+                        // Force redraw
+                        imgTaskIcon.invalidate();
+                        imgTaskIcon.requestLayout();
+
+                        Log.d("ICON_DEBUG", "Preview updated to: " + iconResId);
+                    }
+                });
+            }
         } catch (Resources.NotFoundException e) {
             Log.e("ICON_ERROR", "Icon not found", e);
-            if (getActivity() != null) {
-                getActivity().runOnUiThread(() ->
-                        imgTaskIcon.setImageResource(R.drawable.ic_default_task));
-            }
         }
     }
 
@@ -392,10 +387,15 @@ public class AddTaskFragment extends Fragment {
 
 
     private void saveTask(String title, String description) {
+        Log.d("ICON_DEBUG", "Saving task with icon ID: " + selectedIconResId);
         try {
             if (TextUtils.isEmpty(title)) {
                 Toast.makeText(getContext(), "Title is required", Toast.LENGTH_SHORT).show();
                 return;
+            }
+
+            if (selectedIconResId == 0) {
+                selectedIconResId = R.drawable.star; // Fallback to default
             }
 
             DatabaseManager dbManager = new DatabaseManager(requireContext());
@@ -416,6 +416,21 @@ public class AddTaskFragment extends Fragment {
                         isOneTimeTask() ? "" : scheduleSpinner.getSelectedItem().toString(),
                         isOneTimeTask() ? "" : getSelectedTimePreference()
                 );
+
+                Log.d("TASK_SAVE", "Saving with icon: " + selectedIconResId);
+
+                boolean updated = dbManager.updateTask(task);
+                if (updated) {
+                    Toast.makeText(getContext(), "Task updated!", Toast.LENGTH_SHORT).show();
+
+                    // Refresh parent if needed
+                    Fragment parent = getParentFragment();
+                    if (parent instanceof SectionDetailFragment) {
+                        ((SectionDetailFragment) parent).refreshTaskList();
+                    }
+                    getParentFragmentManager().popBackStack();
+                }
+
             } else {
                 // CREATE MODE - Require date selection
                 if (isOneTimeTask()) {
@@ -434,7 +449,7 @@ public class AddTaskFragment extends Fragment {
                     task = createRecurringTask(title, description, displayDate);
                 }
             }
-
+            dbManager.saveTask(task);
             saveOrUpdateTask(dbManager, task);
 
         } catch (Exception e) {
@@ -583,42 +598,19 @@ public class AddTaskFragment extends Fragment {
             taskToEdit = task;
 
             // Set basic fields
-            etTaskTitle.setText(task.getTitle());
-            etDescription.setText(task.getNotes());
             selectedIconResId = task.getIconResId();
-            imgTaskIcon.setImageResource(selectedIconResId);
-            selectedColorResId = task.getColorResId();
-
-//            selectedIconResId = task.getIconResId();
-//            try {
-//                imgTaskIcon.setImageResource(selectedIconResId != 0 ?
-//                        selectedIconResId : R.drawable.ic_default_task);
-//            } catch (Resources.NotFoundException e) {
-//                imgTaskIcon.setImageResource(R.drawable.ic_default_task);
-//            }
-
-
-            // Set the correct task type
-            if (task.isRecurring()) {
-                toggleGroup.check(R.id.btn_regular);
-                oneTimeSection.setVisibility(View.GONE);
-                recurringOptions.setVisibility(View.VISIBLE);
-
-                // Set recurring task fields
-                btnStartDate.setText(formatDateForDisplay(task.getStartDate()));
-                setScheduleSelection(task.getSchedule());
-            } else {
-                toggleGroup.check(R.id.btn_one_time);
-                oneTimeSection.setVisibility(View.VISIBLE);
-                recurringOptions.setVisibility(View.GONE);
-
-                // Set one-time task date
-                btnDate.setText(formatDateForDisplay(task.getDeadline()));
+            if (selectedIconResId == 0) {
+                selectedIconResId = R.drawable.star; // Fallback to default
             }
 
-            // Show delete button
-            btnDelete.setVisibility(View.VISIBLE);
+            // Update the icon preview
+            updateIconPreview(selectedIconResId);
 
+            etTaskTitle.setText(task.getTitle());
+            etDescription.setText(task.getNotes());
+            Log.d("ICON_FLOW", "Loaded existing icon: " + selectedIconResId);
+
+            // Rest of your existing code...
         } catch (Exception e) {
             Log.e("EditTask", "Error loading task data", e);
             Toast.makeText(getContext(), "Error loading task", Toast.LENGTH_SHORT).show();

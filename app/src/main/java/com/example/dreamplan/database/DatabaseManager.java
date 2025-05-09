@@ -237,6 +237,10 @@ public class DatabaseManager extends SQLiteOpenHelper {
 
     // 🔹 UPDATED SAVE TASK METHOD (handles both insert and update)
     public void saveTask(Task task) {
+
+        Log.d("DB_DEBUG", "Updating task ID " + task.getId() +
+                " with icon: " + task.getIconResId());
+
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
 
@@ -458,14 +462,10 @@ public class DatabaseManager extends SQLiteOpenHelper {
         values.put("schedule", task.getSchedule());
         values.put("time_preference", task.getTimePreference());
 
-        int rows = db.update(
-                TABLE_TASKS,
-                values,
-                COLUMN_TASK_ID + "=?",
-                new String[]{String.valueOf(task.getId())}
-        );
-        Log.d("DB_UPDATE", "Rows affected: " + rows);
-        db.close();
+        int rows = db.update("tasks", values, "id = ?",
+                new String[]{String.valueOf(task.getId())});
+
+        Log.d("DB_UPDATE", "Updated icon to: " + task.getIconResId());
         return rows > 0;
     }
 
