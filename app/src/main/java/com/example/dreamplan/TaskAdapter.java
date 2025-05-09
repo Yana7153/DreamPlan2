@@ -65,32 +65,22 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
         // Set task icon
         try {
-            holder.imgTaskIcon.setImageResource(task.getIconResId() != 0 ?
-                    task.getIconResId() : R.drawable.ic_default_task);
+            int iconRes = task.getIconResId();
+            if (iconRes == 0) {
+                iconRes = R.drawable.ic_default_task; // Fallback icon
+            }
+            holder.imgTaskIcon.setImageResource(iconRes);
+            holder.imgTaskIcon.setContentDescription("Task icon");
         } catch (Resources.NotFoundException e) {
+            Log.e("TASK_ICON", "Icon not found, using default", e);
             holder.imgTaskIcon.setImageResource(R.drawable.ic_default_task);
         }
-
-
-        holder.itemView.setOnClickListener(v -> {
-            if (taskClickListener != null) {
-                taskClickListener.onTaskClick(task);
-            }
-        });
-
-        holder.itemView.setOnLongClickListener(v -> {
-            if (taskClickListener != null) {
-                taskClickListener.onTaskLongClick(task);
-                return true;
-            }
-            return false;
-        });
 
         // Set basic task info
         holder.tvTaskTitle.setText(task.getTitle());
         holder.tvTaskDescription.setText(task.getNotes() != null ? task.getNotes() : "");
 
-        // Set task type display - THIS IS THE CRUCIAL PART
+        // Set task type display
         if (task.isRecurring()) {
             // Build the recurring task display string
             StringBuilder recurringText = new StringBuilder();
@@ -108,21 +98,14 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                 recurringText.append(" • ").append(task.getTimePreference());
             }
 
-            // If no details available, show default text
-            if (recurringText.length() == "🔄 ".length()) {
-                recurringText.append("Repeats regularly");
-            }
-
             holder.tvTaskType.setText(recurringText.toString());
             holder.tvTaskType.setTextColor(ContextCompat.getColor(context, R.color.recurring_task_color));
-            holder.tvTaskType.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
         } else {
             // One-time task display
             String deadlineText = !TextUtils.isEmpty(task.getDeadline()) ?
                     task.getDeadline() : "No deadline";
             holder.tvTaskType.setText("📅 " + deadlineText);
             holder.tvTaskType.setTextColor(ContextCompat.getColor(context, R.color.one_time_task_color));
-            holder.tvTaskType.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
         }
 
         // Set background color
@@ -132,6 +115,21 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         } catch (Exception e) {
             holder.taskContainer.setBackgroundColor(Color.WHITE);
         }
+
+        // Set click listeners
+        holder.itemView.setOnClickListener(v -> {
+            if (taskClickListener != null) {
+                taskClickListener.onTaskClick(task);
+            }
+        });
+
+        holder.itemView.setOnLongClickListener(v -> {
+            if (taskClickListener != null) {
+                taskClickListener.onTaskLongClick(task);
+                return true;
+            }
+            return false;
+        });
     }
 
     private void setTaskIcon(@NonNull TaskViewHolder holder, Task task) {

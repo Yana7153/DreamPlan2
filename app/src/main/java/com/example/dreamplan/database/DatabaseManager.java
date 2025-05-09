@@ -442,12 +442,15 @@ public class DatabaseManager extends SQLiteOpenHelper {
 
 
     public boolean updateTask(Task task) {
+        Log.d("DB_UPDATE", "Updating task ID: " + task.getId() +
+                " with icon: " + task.getIconResId());
+
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
 
-        values.put("title", task.getTitle());
-        values.put("notes", task.getNotes());
-        values.put("deadline", task.getDeadline());
+        values.put(COLUMN_TASK_TITLE, task.getTitle());
+        values.put(COLUMN_TASK_DESCRIPTION, task.getNotes());
+        values.put(COLUMN_TASK_DUE_DATE, task.getDeadline());
         values.put("color_res_id", task.getColorResId());
         values.put("icon_res_id", task.getIconResId());
         values.put("is_recurring", task.isRecurring() ? 1 : 0);
@@ -456,11 +459,12 @@ public class DatabaseManager extends SQLiteOpenHelper {
         values.put("time_preference", task.getTimePreference());
 
         int rows = db.update(
-                "tasks",
+                TABLE_TASKS,
                 values,
-                "id = ?",
+                COLUMN_TASK_ID + "=?",
                 new String[]{String.valueOf(task.getId())}
         );
+        Log.d("DB_UPDATE", "Rows affected: " + rows);
         db.close();
         return rows > 0;
     }

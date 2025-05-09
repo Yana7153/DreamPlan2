@@ -71,6 +71,10 @@ public class AddTaskFragment extends Fragment {
     private boolean isEditMode = false;
     private int taskIdToEdit = -1;
 
+    private MaterialButtonToggleGroup toggleGroup;
+
+
+
     public static AddTaskFragment newInstance(Section section, Task task) {
         AddTaskFragment fragment = new AddTaskFragment();
         Bundle args = new Bundle();
@@ -136,6 +140,29 @@ public class AddTaskFragment extends Fragment {
 //        btnDelete = view.findViewById(R.id.btnDeleteTask);
 //        btnDelete.setOnClickListener(v -> deleteTask());
 
+        toggleGroup = view.findViewById(R.id.toggle_recurrence);
+        toggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+            if (isChecked) {
+                isOneTime = (checkedId == R.id.btn_one_time);
+
+                // Toggle visibility of the appropriate sections
+                oneTimeSection.setVisibility(isOneTime ? View.VISIBLE : View.GONE);
+                recurringOptions.setVisibility(isOneTime ? View.GONE : View.VISIBLE);
+
+                Log.d("TASK_TYPE", "Task type changed to: " + (isOneTime ? "One-time" : "Recurring"));
+            }
+        });
+
+        btnDate = view.findViewById(R.id.btn_date);
+        btnStartDate = view.findViewById(R.id.btn_start_date);
+
+        if (!isEditMode) {
+            btnDate.setText("Select date");
+            btnStartDate.setText("Select date");
+        }
+
+        setupDatePicker(btnDate, isEditMode && taskToEdit != null ? taskToEdit.getDeadline() : null);
+        setupDatePicker(btnStartDate, isEditMode && taskToEdit != null ? taskToEdit.getStartDate() : null);
 
 
         // Get section from arguments
@@ -146,7 +173,7 @@ public class AddTaskFragment extends Fragment {
         // Setup components
         setupImageSelection();
         setupColorSelection(imgTaskIcon, colorOptions);
-        setupDatePicker(btnDate);
+        setupDatePicker(btnDate, isEditMode && taskToEdit != null ? taskToEdit.getDeadline() : null);
         setupRecurringOptions();
         setupTimeOptions();
 
@@ -214,46 +241,69 @@ public class AddTaskFragment extends Fragment {
 
     private void setupImageSelection() {
         imgTaskIcon.setOnClickListener(v -> {
-            // Reset to default state
-            imgTaskIcon.setImageResource(R.drawable.ic_default_task);
-            imgTaskIcon.setBackgroundResource(R.drawable.circle_with_border);
+            try {
+                IconSelectionFragment fragment = new IconSelectionFragment();
 
-            IconSelectionFragment fragment = new IconSelectionFragment();
+                // Pass current icon if in edit mode
+                if (isEditMode && taskToEdit != null) {
+                    fragment.setCurrentIcon(taskToEdit.getIconResId());
+                }
 
-            fragment.setIconSelectionListener(iconResId -> {
-                selectedIconResId = iconResId;
-                // Run on UI thread to ensure immediate update
-                new Handler(Looper.getMainLooper()).post(() -> {
-                    try {
-                        // Clear any tint or color filters
-                        imgTaskIcon.clearColorFilter();
-
-                        // Set the new icon with proper scaling
-                        imgTaskIcon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-                        imgTaskIcon.setImageResource(iconResId);
-
-                        // Store the selection
-                        imgTaskIcon.setTag(iconResId);
-
-                        Log.d("ICON_DEBUG", "Icon set to: " + getResources().getResourceName(iconResId));
-                    } catch (Resources.NotFoundException e) {
-                        Log.e("ICON_ERROR", "Icon not found", e);
-                        imgTaskIcon.setImageResource(R.drawable.ic_default_task);
+                fragment.setIconSelectionListener(iconResId -> {
+                    // Update icon immediately
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            try {
+                                selectedIconResId = iconResId;
+                                imgTaskIcon.setImageResource(iconResId);
+                                imgTaskIcon.setTag(iconResId);
+                            } catch (Resources.NotFoundException e) {
+                                imgTaskIcon.setImageResource(R.drawable.ic_default_task);
+                                Log.e("ICON_ERROR", "Icon not found", e);
+                            }
+                        });
                     }
                 });
-            });
 
-            // Execute transaction safely
-            try {
-                getParentFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.fragment_container, fragment)
-                        .addToBackStack("icon_selection")
-                        .commit();
+                // Safely show the fragment
+                if (getParentFragmentManager() != null && !isRemoving()) {
+                    getParentFragmentManager().beginTransaction()
+                            .replace(R.id.fragment_container, fragment)
+                            .addToBackStack("icon_selection")
+                            .commit();
+                }
             } catch (Exception e) {
-                Log.e("FRAGMENT", "Transaction failed", e);
+                Log.e("ICON_CLICK", "Error opening icon selection", e);
+                Toast.makeText(getContext(), "Error opening icon selector", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void updateIconPreview(int iconResId) {
+        try {
+            // FIXED: Use requireActivity() for UI thread operations
+            requireActivity().runOnUiThread(() -> {
+                imgTaskIcon.setImageResource(iconResId);
+                imgTaskIcon.setTag(iconResId);
+
+                // Add visual feedback
+                imgTaskIcon.animate()
+                        .scaleX(1.1f)
+                        .scaleY(1.1f)
+                        .setDuration(100)
+                        .withEndAction(() -> imgTaskIcon.animate()
+                                .scaleX(1f)
+                                .scaleY(1f)
+                                .setDuration(100))
+                        .start();
+            });
+        } catch (Resources.NotFoundException e) {
+            Log.e("ICON_ERROR", "Icon not found", e);
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() ->
+                        imgTaskIcon.setImageResource(R.drawable.ic_default_task));
+            }
+        }
     }
 
     private void setupColorSelection(ImageView colorPreview, LinearLayout colorOptions) {
@@ -286,38 +336,53 @@ public class AddTaskFragment extends Fragment {
         }
     }
 
-    private void setupDatePicker(Button btnDate) {
+    private void setupDatePicker(Button btnDate, String existingDate) {
         try {
-            // Initialize date format
-            SimpleDateFormat sdf = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
+            SimpleDateFormat displayFormat = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
+            SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
-            // Set initial date only if the button has no text
-            if (TextUtils.isEmpty(btnDate.getText().toString())) {
-                btnDate.setText(sdf.format(new Date()));
+            // Set initial text - show existing date in edit mode, placeholder for new tasks
+            if (isEditMode && existingDate != null && !existingDate.isEmpty()) {
+                try {
+                    Date date = dbFormat.parse(existingDate);
+                    btnDate.setText(displayFormat.format(date));
+                } catch (ParseException e) {
+                    btnDate.setText(existingDate); // Fallback to raw date if parsing fails
+                }
+            } else if (TextUtils.isEmpty(btnDate.getText().toString())) {
+                btnDate.setText("Select date"); // Only set placeholder if empty
             }
 
             btnDate.setOnClickListener(v -> {
                 try {
-                    // date picker with current selection
+                    // Calculate initial selection - use existing date if available
+                    long initialSelection = MaterialDatePicker.todayInUtcMilliseconds();
+                    if (isEditMode && existingDate != null && !existingDate.isEmpty()) {
+                        try {
+                            Date date = dbFormat.parse(existingDate);
+                            initialSelection = date.getTime();
+                        } catch (ParseException e) {
+                            Log.e("DatePicker", "Error parsing existing date", e);
+                        }
+                    }
+
                     MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
                             .setTitleText("Select Date")
-                            .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
+                            .setSelection(initialSelection)
                             .build();
 
-                    // Handle date selection
                     datePicker.addOnPositiveButtonClickListener(selection -> {
                         try {
                             if (selection != null) {
                                 Date selectedDate = new Date(selection);
-                                btnDate.setText(sdf.format(selectedDate));
+                                btnDate.setText(displayFormat.format(selectedDate));
                             }
                         } catch (Exception e) {
                             Log.e("DatePicker", "Error formatting selected date", e);
-                            btnDate.setText(sdf.format(new Date())); // Fallback to current date
+                            btnDate.setText(displayFormat.format(new Date())); // Fallback to current date
                         }
                     });
 
-                    // Show the date picker safely
                     if (getParentFragmentManager() != null && !isRemoving()) {
                         datePicker.show(getParentFragmentManager(), "DATE_PICKER");
                     }
@@ -341,101 +406,104 @@ public class AddTaskFragment extends Fragment {
 
             DatabaseManager dbManager = new DatabaseManager(requireContext());
             Task task;
-            String displayDate = "";
-            String dbFormattedDate = "";
 
-            if (!isOneTime) {
-                // Recurring task handling
-                displayDate = btnStartDate.getText().toString();
-                if (TextUtils.isEmpty(displayDate)) {
-                    Toast.makeText(getContext(), "Please select start date", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                SimpleDateFormat displayFormat = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
-                SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-                dbFormattedDate = dbFormat.format(displayFormat.parse(displayDate));
-
-                String timePreference = "";
-                if (timeSwitch.isChecked()) {
-                    int selectedId = timeOptionsGroup.getCheckedRadioButtonId();
-                    if (selectedId == R.id.radio_custom) {
-                        timePreference = String.format(Locale.getDefault(), "%02d:%02d",
-                                timePicker.getHour(),
-                                timePicker.getMinute());
-                    } else if (selectedId != -1) {
-                        RadioButton selected = requireView().findViewById(selectedId);
-                        timePreference = selected.getText().toString();
+            if (isEditMode && taskToEdit != null) {
+                // EDIT MODE - Use existing dates if not changed
+                task = new Task(
+                        taskToEdit.getId(),
+                        title.trim(),
+                        description,
+                        isOneTimeTask() ? getDateOrOriginal(btnDate, taskToEdit.getDeadline()) : taskToEdit.getDeadline(),
+                        selectedColorResId,
+                        selectedIconResId,
+                        section.getId(),
+                        !isOneTimeTask(),
+                        isOneTimeTask() ? "" : getDateOrOriginal(btnStartDate, taskToEdit.getStartDate()),
+                        isOneTimeTask() ? "" : scheduleSpinner.getSelectedItem().toString(),
+                        isOneTimeTask() ? "" : getSelectedTimePreference()
+                );
+            } else {
+                // CREATE MODE - Require date selection
+                if (isOneTimeTask()) {
+                    String displayDate = btnDate.getText().toString();
+                    if (isDateEmpty(displayDate)) {
+                        showDateRequiredToast("Please select due date");
+                        return;
                     }
+                    task = createOneTimeTask(title, description, displayDate);
+                } else {
+                    String displayDate = btnStartDate.getText().toString();
+                    if (isDateEmpty(displayDate)) {
+                        showDateRequiredToast("Please select start date");
+                        return;
+                    }
+                    task = createRecurringTask(title, description, displayDate);
                 }
-
-                task = new Task(
-                        isEditMode ? taskIdToEdit : 0, // Only use ID for edits
-                        title.trim(),
-                        description,
-                        "", // Empty deadline for recurring
-                        selectedColorResId,
-                        selectedIconResId,
-                        section.getId(),
-                        true,
-                        dbFormattedDate,
-                        scheduleSpinner.getSelectedItem().toString(),
-                        timePreference
-                );
-            } else {
-                // One-time task handling
-                displayDate = btnDate.getText().toString();
-                if (TextUtils.isEmpty(displayDate)) {
-                    Toast.makeText(getContext(), "Please select due date", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                SimpleDateFormat displayFormat = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
-                SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-                dbFormattedDate = dbFormat.format(displayFormat.parse(displayDate));
-
-                task = new Task(
-                        isEditMode ? taskIdToEdit : 0, // Only use ID for edits
-                        title.trim(),
-                        description,
-                        dbFormattedDate,
-                        selectedColorResId,
-                        selectedIconResId,
-                        section.getId(),
-                        false,
-                        "",
-                        "",
-                        ""
-                );
             }
 
-            // Save or update based on mode
-            if (isEditMode) {
-                boolean updated = dbManager.updateTask(task);
-                Toast.makeText(getContext(),
-                        updated ? "Task updated!" : "Update failed",
-                        Toast.LENGTH_SHORT).show();
-            } else {
-                dbManager.saveTask(task);
-                Toast.makeText(getContext(), "Task created!", Toast.LENGTH_SHORT).show();
-            }
+            saveOrUpdateTask(dbManager, task);
 
-            // Refresh UI
-            if (getParentFragment() instanceof SectionDetailFragment) {
-                ((SectionDetailFragment) getParentFragment()).refreshTaskList();
-            }
-            requireContext().sendBroadcast(new Intent("TASK_UPDATED"));
-            getParentFragmentManager().popBackStack();
-
-        } catch (ParseException e) {
-            Toast.makeText(getContext(), "Invalid date format", Toast.LENGTH_SHORT).show();
-            Log.e("TASK_SAVE", "Date error", e);
         } catch (Exception e) {
             Toast.makeText(getContext(), "Error saving task", Toast.LENGTH_SHORT).show();
             Log.e("TASK_SAVE", "Error", e);
         }
     }
 
+    // Helper methods
+    private boolean isOneTimeTask() {
+        return toggleGroup.getCheckedButtonId() == R.id.btn_one_time;
+    }
+
+    private boolean isDateEmpty(String dateText) {
+        return TextUtils.isEmpty(dateText) || dateText.equals("Select date");
+    }
+
+    private void showDateRequiredToast(String message) {
+        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+    }
+
+    private String getDateOrOriginal(Button dateButton, String originalDate) {
+        String displayDate = dateButton.getText().toString();
+        if (isDateEmpty(displayDate)) return originalDate;
+        try {
+            return formatDateForDb(displayDate);
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Task createOneTimeTask(String title, String description, String displayDate) throws ParseException {
+        return new Task(
+                0, title.trim(), description, formatDateForDb(displayDate),
+                selectedColorResId, selectedIconResId, section.getId(),
+                false, "", "", ""
+        );
+    }
+
+    private Task createRecurringTask(String title, String description, String displayDate) throws ParseException {
+        return new Task(
+                0, title.trim(), description, "",
+                selectedColorResId, selectedIconResId, section.getId(),
+                true, formatDateForDb(displayDate),
+                scheduleSpinner.getSelectedItem().toString(),
+                getSelectedTimePreference()
+        );
+    }
+
+    private void saveOrUpdateTask(DatabaseManager dbManager, Task task) {
+        if (isEditMode) {
+            boolean updated = dbManager.updateTask(task);
+            Toast.makeText(getContext(), updated ? "Task updated!" : "Update failed", Toast.LENGTH_SHORT).show();
+        } else {
+            dbManager.saveTask(task);
+            Toast.makeText(getContext(), "Task created!", Toast.LENGTH_SHORT).show();
+        }
+
+        if (getParentFragment() instanceof SectionDetailFragment) {
+            ((SectionDetailFragment) getParentFragment()).refreshTaskList();
+        }
+        getParentFragmentManager().popBackStack();
+    }
 
     private String getSelectedTimePreference() {
         if (!timeSwitch.isChecked()) {
@@ -518,44 +586,44 @@ public class AddTaskFragment extends Fragment {
     private void populateTaskData(Task task) {
         try {
             isEditMode = true;
-            taskIdToEdit = task.getId();
+            taskToEdit = task;
 
-            MaterialButtonToggleGroup toggleGroup = getView().findViewById(R.id.toggle_recurrence);
-            Button btnOneTime = getView().findViewById(R.id.btn_one_time);
-            Button btnRegular = getView().findViewById(R.id.btn_regular);
-            Button btnDate = getView().findViewById(R.id.btn_date);
-            Button btnStartDate = getView().findViewById(R.id.btn_start_date);
-
+            // Set basic fields
             etTaskTitle.setText(task.getTitle());
             etDescription.setText(task.getNotes());
-            selectedIconResId = task.getIconResId();
-            selectedColorResId = task.getColorResId();
+//            selectedIconResId = task.getIconResId();
             imgTaskIcon.setImageResource(selectedIconResId);
+            selectedColorResId = task.getColorResId();
 
+            selectedIconResId = task.getIconResId();
+            try {
+                imgTaskIcon.setImageResource(selectedIconResId != 0 ?
+                        selectedIconResId : R.drawable.ic_default_task);
+            } catch (Resources.NotFoundException e) {
+                imgTaskIcon.setImageResource(R.drawable.ic_default_task);
+            }
+
+
+            // Set the correct task type
             if (task.isRecurring()) {
                 toggleGroup.check(R.id.btn_regular);
-                btnStartDate.setText(formatDate(task.getStartDate()));
+                oneTimeSection.setVisibility(View.GONE);
+                recurringOptions.setVisibility(View.VISIBLE);
 
-                if (scheduleSpinner != null && task.getSchedule() != null) {
-                    ArrayAdapter<CharSequence> adapter = (ArrayAdapter<CharSequence>) scheduleSpinner.getAdapter();
-                    for (int i = 0; i < adapter.getCount(); i++) {
-                        if (adapter.getItem(i).equals(task.getSchedule())) {
-                            scheduleSpinner.setSelection(i);
-                            break;
-                        }
-                    }
-                }
+                // Set recurring task fields
+                btnStartDate.setText(formatDateForDisplay(task.getStartDate()));
+                setScheduleSelection(task.getSchedule());
             } else {
-                toggleGroup.check(R.id.btn_one_time);  // Check one-time button
-                btnDate.setText(formatDate(task.getDeadline()));
+                toggleGroup.check(R.id.btn_one_time);
+                oneTimeSection.setVisibility(View.VISIBLE);
+                recurringOptions.setVisibility(View.GONE);
+
+                // Set one-time task date
+                btnDate.setText(formatDateForDisplay(task.getDeadline()));
             }
 
             // Show delete button
             btnDelete.setVisibility(View.VISIBLE);
-
-            // Ensure proper visibility of options
-            oneTimeSection.setVisibility(task.isRecurring() ? View.GONE : View.VISIBLE);
-            recurringOptions.setVisibility(task.isRecurring() ? View.VISIBLE : View.GONE);
 
         } catch (Exception e) {
             Log.e("EditTask", "Error loading task data", e);
@@ -563,6 +631,35 @@ public class AddTaskFragment extends Fragment {
         }
     }
 
+    private String formatDateForDisplay(String dbDate) {
+        try {
+            SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            SimpleDateFormat displayFormat = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
+            Date date = dbFormat.parse(dbDate);
+            return displayFormat.format(date);
+        } catch (Exception e) {
+            return dbDate; // fallback to raw date if formatting fails
+        }
+    }
+
+    private void setScheduleSelection(String schedule) {
+        ArrayAdapter<CharSequence> adapter = (ArrayAdapter<CharSequence>) scheduleSpinner.getAdapter();
+        for (int i = 0; i < adapter.getCount(); i++) {
+            if (adapter.getItem(i).equals(schedule)) {
+                scheduleSpinner.setSelection(i);
+                break;
+            }
+        }
+    }
+    private int getSchedulePosition(String schedule) {
+        ArrayAdapter<CharSequence> adapter = (ArrayAdapter<CharSequence>) scheduleSpinner.getAdapter();
+        for (int i = 0; i < adapter.getCount(); i++) {
+            if (adapter.getItem(i).equals(schedule)) {
+                return i;
+            }
+        }
+        return 0;
+    }
     private void deleteTask() {
         new AlertDialog.Builder(requireContext())
                 .setTitle("Delete Task")
@@ -587,7 +684,7 @@ public class AddTaskFragment extends Fragment {
             Date date = inputFormat.parse(dateString);
             return outputFormat.format(date);
         } catch (Exception e) {
-            return dateString;
+            return dateString; // Return original if formatting fails
         }
     }
 

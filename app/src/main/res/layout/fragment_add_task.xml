@@ -192,7 +192,6 @@
                 android:id="@+id/toggle_recurrence"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
                 app:selectionRequired="true"
                 app:singleSelection="true"
                 app:checkedButton="@+id/btn_one_time">
@@ -202,7 +201,7 @@
                     android:layout_width="0dp"
                     android:layout_height="48dp"
                     android:layout_weight="1"
-                    style="@style/ToggleButtonStyle"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
                     android:text="One-time"/>
 
                 <com.google.android.material.button.MaterialButton
@@ -210,7 +209,7 @@
                     android:layout_width="0dp"
                     android:layout_height="48dp"
                     android:layout_weight="1"
-                    style="@style/ToggleButtonStyle"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
                     android:text="Recurring"/>
             </com.google.android.material.button.MaterialButtonToggleGroup>
 

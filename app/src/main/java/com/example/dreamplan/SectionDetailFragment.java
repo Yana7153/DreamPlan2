@@ -80,7 +80,6 @@ public class SectionDetailFragment extends Fragment {
         taskAdapter.setOnTaskClickListener(new TaskAdapter.OnTaskClickListener() {
             @Override
             public void onTaskClick(Task task) {
-                // Open task in edit mode
                 AddTaskFragment addTaskFragment = AddTaskFragment.newInstance(section, task);
                 getParentFragmentManager().beginTransaction()
                         .replace(R.id.fragment_container, addTaskFragment)
@@ -90,7 +89,6 @@ public class SectionDetailFragment extends Fragment {
 
             @Override
             public void onTaskLongClick(Task task) {
-                // Show delete confirmation
                 new AlertDialog.Builder(requireContext())
                         .setTitle("Delete Task")
                         .setMessage("Delete this task?")
@@ -131,17 +129,13 @@ public class SectionDetailFragment extends Fragment {
             }
         }
     }
+
     public void refreshTaskList() {
-        try {
-            List<Task> updatedTasks = new DatabaseManager(getContext()).getAllTasksForSection(section.getId());
-            RecyclerView rvTasks = getView().findViewById(R.id.rv_tasks);
-            TaskAdapter adapter = (TaskAdapter) rvTasks.getAdapter();
-            if (adapter != null) {
-                adapter.updateTasks(updatedTasks);
-            }
-        } catch (Exception e) {
-            Toast.makeText(getContext(), "Error loading tasks", Toast.LENGTH_SHORT).show();
-            Log.e("TASK_LOAD", "Error loading tasks", e);
+        List<Task> updatedTasks = dbManager.getAllTasksForSection(section.getId());
+        RecyclerView rvTasks = getView().findViewById(R.id.rv_tasks);
+        TaskAdapter adapter = (TaskAdapter) rvTasks.getAdapter();
+        if (adapter != null) {
+            adapter.updateTasks(updatedTasks);
         }
     }
 }
