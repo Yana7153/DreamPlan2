@@ -20,15 +20,17 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+
 public class IconSelectionFragment extends Fragment {
     private IconSelectionListener listener;
-    private int currentIconResId = -1;
+    private int currentIconResId = R.drawable.star;
+
     private Integer[] icons = {
             R.drawable.star,
             R.drawable.ic_work,
             R.drawable.ic_study,
             R.drawable.ic_shopping
-            // Add all your other icons here
+            // Add all your icons
     };
 
     public interface IconSelectionListener {
@@ -40,100 +42,46 @@ public class IconSelectionFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_icon_selection, container, false);
-        GridView gridView = view.findViewById(R.id.grid_icons);
+        GridView gridView = (GridView) inflater.inflate(R.layout.fragment_icon_selection, container, false);
 
-        gridView.setAdapter(new IconGridAdapter());
+        gridView.setAdapter(new ArrayAdapter<Integer>(requireContext(), R.layout.item_icon, icons) {
+            @NonNull
+            @Override
+            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                ImageView imageView = (ImageView) (convertView != null ? convertView :
+                        LayoutInflater.from(getContext()).inflate(R.layout.item_icon, parent, false));
 
-        gridView.setOnItemClickListener((parent, view1, position, id) -> {
-            if (listener != null && position >= 0 && position < icons.length) {
-                int selectedIcon = icons[position];
-                if (isIconValid(selectedIcon)) {
-                    currentIconResId = selectedIcon;
-                    listener.onIconSelected(selectedIcon);
-                    safelyDismiss();
-                } else {
-                    showIconError();
-                }
+                // Just set the icon, no background or selection effect
+                imageView.setImageResource(icons[position]);
+                imageView.setBackground(null);  // Remove any background
+
+                return imageView;
             }
         });
 
-        return view;
-    }
-
-    private boolean isIconValid(int iconResId) {
-        try {
-            return ContextCompat.getDrawable(requireContext(), iconResId) != null;
-        } catch (Resources.NotFoundException e) {
-            return false;
-        }
-    }
-
-    private void showIconError() {
-        if (getContext() != null) {
-            Toast.makeText(getContext(), "Icon not available", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void safelyDismiss() {
-        try {
-            if (isAdded() && getParentFragmentManager() != null) {
+        gridView.setOnItemClickListener((parent, view, position, id) -> {
+            if (listener != null) {
+                listener.onIconSelected(icons[position]);
                 getParentFragmentManager().popBackStack();
             }
-        } catch (Exception e) {
-            Log.e("IconSelection", "Error dismissing fragment", e);
-        }
-    }
+        });
 
-    private class IconGridAdapter extends BaseAdapter {
-        @Override
-        public int getCount() {
-            return icons.length;
-        }
-
-        @Override
-        public Integer getItem(int position) {
-            return icons[position];
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            ImageView imageView = convertView != null ? (ImageView) convertView :
-                    (ImageView) LayoutInflater.from(parent.getContext())
-                            .inflate(R.layout.item_icon, parent, false);
-
-            int iconResId = getItem(position);
-            try {
-                imageView.setImageResource(iconResId);
-                // Highlight if selected
-                imageView.setBackgroundResource(
-                        iconResId == currentIconResId ?
-                                R.drawable.icon_selected_bg :
-                                R.drawable.icon_normal_bg
-                );
-            } catch (Resources.NotFoundException e) {
-                imageView.setImageResource(R.drawable.ic_default_task);
-            }
-            return imageView;
-        }
+        return gridView;
     }
 
     public void setIconSelectionListener(IconSelectionListener listener) {
         this.listener = listener;
     }
 
-    public void setCurrentIcon(int currentIconResId) {
-        this.currentIconResId = currentIconResId;
-    }
-
     @Override
     public void onDetach() {
         super.onDetach();
         listener = null;
+    }
+
+    public void setCurrentIcon(int iconResId) {
+        if (iconResId != 0) { // Only set if valid resource ID
+            this.currentIconResId = iconResId;
+        }
     }
 }

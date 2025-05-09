@@ -200,9 +200,11 @@ public class AddTaskFragment extends Fragment {
 
 
         if (getArguments() != null && getArguments().containsKey("task")) {
-            Task taskToEdit = (Task) getArguments().getParcelable("task");
+            taskToEdit = getArguments().getParcelable("task");
             if (taskToEdit != null) {
+                isEditMode = true;
                 populateTaskData(taskToEdit);
+                btnDelete.setVisibility(View.VISIBLE); // Show delete button in edit mode
             }
         }
 
@@ -241,41 +243,33 @@ public class AddTaskFragment extends Fragment {
 
     private void setupImageSelection() {
         imgTaskIcon.setOnClickListener(v -> {
-            try {
-                IconSelectionFragment fragment = new IconSelectionFragment();
+            IconSelectionFragment fragment = new IconSelectionFragment();
 
-                // Pass current icon if in edit mode
-                if (isEditMode && taskToEdit != null) {
-                    fragment.setCurrentIcon(taskToEdit.getIconResId());
-                }
-
-                fragment.setIconSelectionListener(iconResId -> {
-                    // Update icon immediately
-                    if (getActivity() != null) {
-                        getActivity().runOnUiThread(() -> {
-                            try {
-                                selectedIconResId = iconResId;
-                                imgTaskIcon.setImageResource(iconResId);
-                                imgTaskIcon.setTag(iconResId);
-                            } catch (Resources.NotFoundException e) {
-                                imgTaskIcon.setImageResource(R.drawable.ic_default_task);
-                                Log.e("ICON_ERROR", "Icon not found", e);
-                            }
-                        });
-                    }
-                });
-
-                // Safely show the fragment
-                if (getParentFragmentManager() != null && !isRemoving()) {
-                    getParentFragmentManager().beginTransaction()
-                            .replace(R.id.fragment_container, fragment)
-                            .addToBackStack("icon_selection")
-                            .commit();
-                }
-            } catch (Exception e) {
-                Log.e("ICON_CLICK", "Error opening icon selection", e);
-                Toast.makeText(getContext(), "Error opening icon selector", Toast.LENGTH_SHORT).show();
+            // Pass current icon if editing
+            if (isEditMode && taskToEdit != null) {
+                fragment.setCurrentIcon(taskToEdit.getIconResId());
             }
+
+            fragment.setIconSelectionListener(new IconSelectionFragment.IconSelectionListener() {
+                @Override
+                public void onIconSelected(int iconResId) {
+                    // Update the big circle immediately
+                    try {
+                        imgTaskIcon.setImageResource(iconResId);
+                        selectedIconResId = iconResId; // Save the selection
+                    } catch (Resources.NotFoundException e) {
+                        imgTaskIcon.setImageResource(R.drawable.ic_default_task);
+                        selectedIconResId = R.drawable.ic_default_task;
+                    }
+                }
+            });
+
+            // Show icon selection
+            getParentFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, fragment)
+                    .addToBackStack(null)
+                    .commit();
         });
     }
 
@@ -591,17 +585,17 @@ public class AddTaskFragment extends Fragment {
             // Set basic fields
             etTaskTitle.setText(task.getTitle());
             etDescription.setText(task.getNotes());
-//            selectedIconResId = task.getIconResId();
+            selectedIconResId = task.getIconResId();
             imgTaskIcon.setImageResource(selectedIconResId);
             selectedColorResId = task.getColorResId();
 
-            selectedIconResId = task.getIconResId();
-            try {
-                imgTaskIcon.setImageResource(selectedIconResId != 0 ?
-                        selectedIconResId : R.drawable.ic_default_task);
-            } catch (Resources.NotFoundException e) {
-                imgTaskIcon.setImageResource(R.drawable.ic_default_task);
-            }
+//            selectedIconResId = task.getIconResId();
+//            try {
+//                imgTaskIcon.setImageResource(selectedIconResId != 0 ?
+//                        selectedIconResId : R.drawable.ic_default_task);
+//            } catch (Resources.NotFoundException e) {
+//                imgTaskIcon.setImageResource(R.drawable.ic_default_task);
+//            }
 
 
             // Set the correct task type
@@ -661,14 +655,23 @@ public class AddTaskFragment extends Fragment {
         return 0;
     }
     private void deleteTask() {
+        if (taskToEdit == null) return;
+
         new AlertDialog.Builder(requireContext())
                 .setTitle("Delete Task")
                 .setMessage("Are you sure you want to delete this task?")
                 .setPositiveButton("Delete", (dialog, which) -> {
                     DatabaseManager dbManager = new DatabaseManager(requireContext());
-                    boolean deleted = dbManager.deleteTask(taskIdToEdit);
+                    boolean deleted = dbManager.deleteTask(taskToEdit.getId());
                     if (deleted) {
                         Toast.makeText(getContext(), "Task deleted", Toast.LENGTH_SHORT).show();
+
+                        // Refresh the task list in parent fragment
+                        Fragment parent = getParentFragment();
+                        if (parent instanceof SectionDetailFragment) {
+                            ((SectionDetailFragment) parent).refreshTaskList();
+                        }
+
                         getParentFragmentManager().popBackStack();
                     }
                 })

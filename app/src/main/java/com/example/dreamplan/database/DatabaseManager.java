@@ -472,8 +472,8 @@ public class DatabaseManager extends SQLiteOpenHelper {
     public boolean deleteTask(int taskId) {
         SQLiteDatabase db = this.getWritableDatabase();
         int rowsAffected = db.delete(
-                "tasks",
-                "id = ?",
+                TABLE_TASKS,
+                COLUMN_TASK_ID + "=?",
                 new String[]{String.valueOf(taskId)}
         );
         db.close();

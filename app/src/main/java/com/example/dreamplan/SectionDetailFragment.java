@@ -27,6 +27,7 @@ import com.example.dreamplan.database.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -38,6 +39,8 @@ public class SectionDetailFragment extends Fragment {
     private TextView sectionName, sectionNotes, currentDate;
     private FloatingActionButton addTaskButton;
     private DatabaseManager dbManager;
+    private List<Task> taskList;
+    private TaskAdapter taskAdapter;
 
     public SectionDetailFragment() {}
 
@@ -54,32 +57,38 @@ public class SectionDetailFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_section_detail, container, false);
 
+        // Initialize views
         sectionName = view.findViewById(R.id.tvSectionName);
         sectionNotes = view.findViewById(R.id.tvSectionNotes);
         currentDate = view.findViewById(R.id.tvCurrentDate);
         addTaskButton = view.findViewById(R.id.fab_add_task);
         dbManager = new DatabaseManager(getContext());
 
+        // Get section from arguments
         if (getArguments() != null) {
             section = (Section) getArguments().getSerializable(ARG_SECTION);
         }
 
+        // Set section info
         sectionName.setText(section.getName());
         sectionNotes.setText(section.getNotes());
 
+        // Set current date
         String todayDate = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
         currentDate.setText(todayDate);
 
+        // Initialize RecyclerView
         RecyclerView rvTasks = view.findViewById(R.id.rv_tasks);
         rvTasks.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        List<Task> tasks = dbManager.getAllTasksForSection(section.getId());
+        // Initialize task list and adapter
+        taskList = dbManager.getAllTasksForSection(section.getId());
+        taskAdapter = new TaskAdapter(taskList, requireContext()); // Using the field now
 
-
-        TaskAdapter taskAdapter = new TaskAdapter(tasks, requireContext());
         taskAdapter.setOnTaskClickListener(new TaskAdapter.OnTaskClickListener() {
             @Override
             public void onTaskClick(Task task) {
+                // Edit task
                 AddTaskFragment addTaskFragment = AddTaskFragment.newInstance(section, task);
                 getParentFragmentManager().beginTransaction()
                         .replace(R.id.fragment_container, addTaskFragment)
@@ -89,27 +98,36 @@ public class SectionDetailFragment extends Fragment {
 
             @Override
             public void onTaskLongClick(Task task) {
-                new AlertDialog.Builder(requireContext())
-                        .setTitle("Delete Task")
-                        .setMessage("Delete this task?")
-                        .setPositiveButton("Delete", (dialog, which) -> {
-                            dbManager.deleteTask(task.getId());
-                            refreshTaskList();
-                        })
-                        .setNegativeButton("Cancel", null)
-                        .show();
+                // Delete task
+                int position = taskList.indexOf(task);
+                if (position != -1) {
+                    new AlertDialog.Builder(requireContext())
+                            .setTitle("Delete Task")
+                            .setMessage("Are you sure you want to delete this task?")
+                            .setPositiveButton("Delete", (dialog, which) -> {
+                                if (dbManager.deleteTask(task.getId())) {
+                                    taskList.remove(position);
+                                    taskAdapter.notifyItemRemoved(position); // Better than notifyDataSetChanged
+                                    Toast.makeText(getContext(), "Task deleted", Toast.LENGTH_SHORT).show();
+                                }
+                            })
+                            .setNegativeButton("Cancel", null)
+                            .show();
+                }
             }
         });
 
         rvTasks.setAdapter(taskAdapter);
 
+        // Back button
         ImageView backButton = view.findViewById(R.id.btnBack);
         if (backButton != null) {
             backButton.setOnClickListener(v -> getActivity().getSupportFragmentManager().popBackStack());
         }
 
+        // Add task button
         addTaskButton.setOnClickListener(v -> {
-            AddTaskFragment addTaskFragment = AddTaskFragment.newInstance(section, null); // Pass null for task
+            AddTaskFragment addTaskFragment = AddTaskFragment.newInstance(section, null);
             getParentFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, addTaskFragment)
                     .addToBackStack(null)
@@ -131,11 +149,10 @@ public class SectionDetailFragment extends Fragment {
     }
 
     public void refreshTaskList() {
-        List<Task> updatedTasks = dbManager.getAllTasksForSection(section.getId());
-        RecyclerView rvTasks = getView().findViewById(R.id.rv_tasks);
-        TaskAdapter adapter = (TaskAdapter) rvTasks.getAdapter();
-        if (adapter != null) {
-            adapter.updateTasks(updatedTasks);
+        if (taskAdapter != null) {
+            taskList.clear();
+            taskList.addAll(dbManager.getAllTasksForSection(section.getId()));
+            taskAdapter.notifyDataSetChanged();
         }
     }
 }
