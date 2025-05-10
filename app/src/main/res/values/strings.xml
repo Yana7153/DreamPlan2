@@ -23,4 +23,6 @@
     <string name="reset_email_sent">Reset link sent to your email</string>
 
     <string name="default_task_icon">Default Task Icon</string>
+
+    <string name="version_format">Version %s</string>
 </resources>

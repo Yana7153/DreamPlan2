@@ -106,4 +106,18 @@
     <style name="CustomAlertDialogStyle" parent="MaterialAlertDialog.MaterialComponents">
         <item name="background">@drawable/dialog_bg</item>
     </style>
+
+    <style name="SettingsCardStyle" parent="@style/Widget.MaterialComponents.CardView">
+        <item name="cardCornerRadius">8dp</item>
+        <item name="cardElevation">2dp</item>
+        <item name="strokeColor">@color/card_stroke</item>
+        <item name="strokeWidth">1dp</item>
+    </style>
+
+    <!-- Add to colors.xml -->
+    <color name="card_stroke">#1E000000</color>
+
+    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight">
+
+    </style>
 </resources>

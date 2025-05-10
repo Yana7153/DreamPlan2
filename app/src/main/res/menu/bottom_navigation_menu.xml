@@ -8,10 +8,10 @@
     android:title="Home" />
 
     <!-- Statistics -->
-    <item
-        android:id="@+id/nav_statistics"
-    android:icon="@drawable/ic_statistics"
-    android:title="Statistics" />
+<!--    <item-->
+<!--        android:id="@+id/nav_statistics"-->
+<!--    android:icon="@drawable/ic_statistics"-->
+<!--    android:title="Statistics" />-->
 
     <!-- Calendar -->
     <item

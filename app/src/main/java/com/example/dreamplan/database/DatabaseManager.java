@@ -4,6 +4,7 @@ import static androidx.room.RoomMasterTable.TABLE_NAME;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -86,33 +87,76 @@ public class DatabaseManager extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL(CREATE_TABLE_SECTIONS);
-        db.execSQL(CREATE_TABLE_TASKS);
+        try {
+            db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_SECTIONS + " ("
+                    + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + COLUMN_NAME + " TEXT NOT NULL, "
+                    + COLUMN_COLOR + " TEXT NOT NULL, "
+                    + COLUMN_NOTES + " TEXT)");
 
-        db.execSQL("CREATE TABLE users (" +
-                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "email TEXT UNIQUE," +
-                "password TEXT," +
-                "name TEXT)");
+            db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_TASKS + " ("
+                    + COLUMN_TASK_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    + COLUMN_TASK_TITLE + " TEXT NOT NULL, "
+                    + COLUMN_TASK_DESCRIPTION + " TEXT, "
+                    + COLUMN_TASK_DUE_DATE + " TEXT, "
+                    + "color_res_id INTEGER, "
+                    + "icon_res_id INTEGER, "
+                    + COLUMN_TASK_SECTION_ID + " INTEGER, "
+                    + "is_recurring INTEGER DEFAULT 0, "
+                    + "start_date TEXT, "
+                    + "schedule TEXT, "
+                    + "time_preference TEXT, "
+                    + "FOREIGN KEY(" + COLUMN_TASK_SECTION_ID + ") REFERENCES "
+                    + TABLE_SECTIONS + "(" + COLUMN_ID + "))");
+
+            db.execSQL("CREATE TABLE IF NOT EXISTS users ("
+                    + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                    + "email TEXT UNIQUE,"
+                    + "password TEXT,"
+                    + "name TEXT)");
+        } catch (SQLiteException e) {
+            Log.e("Database", "Error creating tables", e);
+        }
     }
+
+    public SQLiteDatabase getReadableDatabase() {
+        SQLiteDatabase db = super.getReadableDatabase();
+        if (!db.isOpen()) {
+            db = super.getReadableDatabase();
+        }
+        return db;
+    }
+
+    // Helper method to get writable database safely
+    public SQLiteDatabase getWritableDatabase() {
+        SQLiteDatabase db = super.getWritableDatabase();
+        if (!db.isOpen()) {
+            db = super.getWritableDatabase();
+        }
+        return db;
+    }
+
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // Improved upgrade path
-        if (oldVersion < 2) {
-            db.execSQL("ALTER TABLE " + TABLE_TASKS + " ADD COLUMN color_res_id INTEGER");
-            db.execSQL("ALTER TABLE " + TABLE_TASKS + " ADD COLUMN icon_res_id INTEGER");
-        }
-        if (oldVersion < 3) {
-            db.execSQL("ALTER TABLE " + TABLE_TASKS + " ADD COLUMN is_recurring INTEGER DEFAULT 0");
-            db.execSQL("ALTER TABLE " + TABLE_TASKS + " ADD COLUMN start_date TEXT");
-            db.execSQL("ALTER TABLE " + TABLE_TASKS + " ADD COLUMN schedule TEXT");
-            db.execSQL("ALTER TABLE " + TABLE_TASKS + " ADD COLUMN time_preference TEXT");
-        }
+        // Only perform incremental upgrades
+        try {
+            if (oldVersion < 2) {
+                db.execSQL("ALTER TABLE " + TABLE_TASKS + " ADD COLUMN color_res_id INTEGER");
+                db.execSQL("ALTER TABLE " + TABLE_TASKS + " ADD COLUMN icon_res_id INTEGER");
+            }
+            if (oldVersion < 3) {
+                db.execSQL("ALTER TABLE " + TABLE_TASKS + " ADD COLUMN is_recurring INTEGER DEFAULT 0");
+                db.execSQL("ALTER TABLE " + TABLE_TASKS + " ADD COLUMN start_date TEXT");
+                db.execSQL("ALTER TABLE " + TABLE_TASKS + " ADD COLUMN schedule TEXT");
+                db.execSQL("ALTER TABLE " + TABLE_TASKS + " ADD COLUMN time_preference TEXT");
+            }
 
-
-        db.execSQL("DROP TABLE IF EXISTS users");
-        onCreate(db);
+            // Don't drop tables unless absolutely necessary
+            // db.execSQL("DROP TABLE IF EXISTS users");
+        } catch (SQLiteException e) {
+            Log.e("Database", "Error upgrading database", e);
+        }
     }
 
     public void initializeDatabase() {
