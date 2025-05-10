@@ -18,7 +18,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Section Name"
-        android:textSize="22sp"
+        android:textSize="24sp"
         android:textStyle="bold"
         android:textColor="@android:color/black"/>
 
@@ -28,18 +28,17 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Section Notes"
-        android:textSize="18sp"
+        android:textSize="20sp"
         android:textColor="@android:color/darker_gray"
         android:layout_marginTop="4dp"/>
 
-    <!-- Delete Button (Initially hidden) -->
-    <Button
-        android:id="@+id/btnDeleteSection"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Delete"
-        android:visibility="gone"
-        android:layout_marginTop="8dp"
-        style="@style/Widget.AppCompat.Button.Colored"
-        android:backgroundTint="@color/red"/>
+<!--    <Button-->
+<!--        android:id="@+id/btnDeleteSection"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text="Delete"-->
+<!--        android:visibility="gone"-->
+<!--        android:layout_marginTop="8dp"-->
+<!--        style="@style/Widget.AppCompat.Button.Colored"-->
+<!--        android:backgroundTint="@color/red"/>-->
 </LinearLayout>
