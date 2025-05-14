@@ -8,15 +8,22 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.example.dreamplan.R;
+import com.google.firebase.firestore.Exclude;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class Task implements Parcelable {
-    private int id;
+    @Exclude
+    private String id;
     private String title;
     private String notes;
     private String deadline;
-    private int colorResId; // Changed from 'color' to store drawable resource ID
+    private int colorResId;
     private int iconResId;
-    private int sectionId;
+    private String sectionId;
 
     private boolean isRecurring;
     private String startDate;
@@ -25,13 +32,15 @@ public class Task implements Parcelable {
 
     private String taskTypeDisplay;
 
-    public Task(int id, String title, String notes, String dueDate, int colorResId, int iconResId, int sectionId,
+    public Task() {}
+
+    public Task(String id, String title, String notes, String dueDate, int colorResId, int iconResId, String sectionId,
                 boolean isRecurring, String startDate, String schedule, String timePreference) {
         Log.d("TASK_DEBUG", "Creating task with icon: " + iconResId);
         this.id = id;
         this.title = title != null ? title : "";
         this.notes = notes != null ? notes : "";
-        this.deadline = dueDate != null ? dueDate : "";  // Fixed: Set deadline from dueDate parameter
+        this.deadline = dueDate != null ? dueDate : "";
         this.colorResId = colorResId;
         this.iconResId = iconResId != 0 ? iconResId : R.drawable.star;
         this.sectionId = sectionId;
@@ -53,17 +62,38 @@ public class Task implements Parcelable {
 
     public String getTaskTypeDisplay() {
         if (isRecurring) {
-            // For recurring tasks, ALWAYS show at least "Recurring"
-            return "🔄 Recurring";
-        } else {
-            // For one-time tasks, show the deadline
-            return "📅 " + (TextUtils.isEmpty(deadline) ? "No deadline" : deadline);
+            return "🔄 Recurring • " + (TextUtils.isEmpty(schedule) ? "" : schedule);
+        }
+
+        // For one-time tasks
+        if (TextUtils.isEmpty(deadline)) {
+            return "📅 No date set";
+        }
+
+        try {
+            // First try parsing as yyyy-MM-dd (Firestore format)
+            SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            Date date = dbFormat.parse(deadline);
+            SimpleDateFormat displayFormat = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
+            return "📅 " + displayFormat.format(date);
+        } catch (ParseException e1) {
+            // If that fails, try other common formats
+            try {
+                SimpleDateFormat altFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault());
+                Date date = altFormat.parse(deadline);
+                SimpleDateFormat displayFormat = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
+                return "📅 " + displayFormat.format(date);
+            } catch (ParseException e2) {
+                // If all parsing fails, just show the raw string
+                return "📅 " + deadline;
+            }
         }
     }
 
     // Getters and setters
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+    @Exclude
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
@@ -79,8 +109,8 @@ public class Task implements Parcelable {
     }
     public void setColorResId(int colorResId) { this.colorResId = colorResId; }
 
-    public int getSectionId() { return sectionId; }
-    public void setSectionId(int sectionId) { this.sectionId = sectionId; }
+    public String getSectionId() { return sectionId; }
+    public void setSectionId(String sectionId) { this.sectionId = sectionId; }
 
     public int getIconResId() { return iconResId; }
     public void setIconResId(int iconResId) { this.iconResId = iconResId; }
@@ -119,13 +149,13 @@ public class Task implements Parcelable {
 
 
     protected Task(Parcel in) {
-        id = in.readInt();
+        id = String.valueOf(in.readInt());
         title = in.readString();
         notes = in.readString();
         deadline = in.readString();
         colorResId = in.readInt();
         iconResId = in.readInt();
-        sectionId = in.readInt();
+        sectionId = String.valueOf(in.readInt());
         isRecurring = in.readByte() != 0;
         startDate = in.readString();
         schedule = in.readString();
@@ -152,13 +182,13 @@ public class Task implements Parcelable {
 
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
-        dest.writeInt(id);
+        dest.writeInt(Integer.parseInt(id));
         dest.writeString(title);
         dest.writeString(notes);
         dest.writeString(deadline);
         dest.writeInt(colorResId);
         dest.writeInt(iconResId);
-        dest.writeInt(sectionId);
+        dest.writeInt(Integer.parseInt(sectionId));
         dest.writeByte((byte) (isRecurring ? 1 : 0));
         dest.writeString(startDate);
         dest.writeString(schedule);

@@ -48,16 +48,23 @@ public class SectionAdapter extends RecyclerView.Adapter<SectionAdapter.SectionV
         holder.sectionName.setText(section.getName());
         holder.sectionNotes.setText(section.getNotes());
 
-        // Get the existing background drawable
-        GradientDrawable background = (GradientDrawable) holder.itemView.getBackground();
-        if (background == null) {
-            // Create new if doesn't exist
-            background = (GradientDrawable) ContextCompat.getDrawable(context, R.drawable.section_background);
-        }
+        try {
+            int color = section.getSafeColor();
+            GradientDrawable background = (GradientDrawable) ContextCompat.getDrawable(context, R.drawable.section_background);
+            if (background != null) {
+                background.setColor(color);
+                ViewCompat.setBackground(holder.itemView, background);
+            }
+        } catch (Exception e) {
+            Log.e("SectionAdapter", "Error setting section color", e);
 
-        // Set the color while preserving rounded corners
-        background.setColor(Color.parseColor(section.getColor()));
-        ViewCompat.setBackground(holder.itemView, background);
+            // Fallback to default color
+            GradientDrawable background = (GradientDrawable) ContextCompat.getDrawable(context, R.drawable.section_background);
+            if (background != null) {
+                background.setColor(ContextCompat.getColor(context, R.color.purple_200));
+                ViewCompat.setBackground(holder.itemView, background);
+            }
+        }
     }
 
     @Override
@@ -65,7 +72,6 @@ public class SectionAdapter extends RecyclerView.Adapter<SectionAdapter.SectionV
         return sectionList.size();
     }
 
-    // Show the Edit/Delete dialog
     private void showEditDeleteDialog(Section section, int position) {
         new AlertDialog.Builder(context)
                 .setTitle("Section Options")
@@ -80,16 +86,16 @@ public class SectionAdapter extends RecyclerView.Adapter<SectionAdapter.SectionV
     }
 
     // Show a confirmation dialog before deleting the section
-    private void showDeleteConfirmationDialog(Section section, int position) {
-        new AlertDialog.Builder(context)
-                .setTitle("Delete Section")
-                .setMessage("Are you sure you want to delete this section?")
-                .setPositiveButton("Yes", (dialog, which) -> {
-                    homeFragment.deleteSection(section, position);  // Handle deletion in HomeFragment
-                })
-                .setNegativeButton("No", null)
-                .show();
-    }
+//    private void showDeleteConfirmationDialog(Section section, int position) {
+//        new AlertDialog.Builder(context)
+//                .setTitle("Delete Section")
+//                .setMessage("Are you sure you want to delete this section?")
+//                .setPositiveButton("Yes", (dialog, which) -> {
+//                    homeFragment.deleteSection(section, position);  // Handle deletion in HomeFragment
+//                })
+//                .setNegativeButton("No", null)
+//                .show();
+//    }
 
     public static class SectionViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         TextView sectionName;

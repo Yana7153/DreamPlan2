@@ -1,61 +1,155 @@
 package com.example.dreamplan.database;
 
-import android.content.ContentValues;
-import android.content.Context;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
+import com.google.firebase.firestore.WriteBatch;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+@Singleton
 public class AuthManager {
-    private DatabaseManager dbManager;
+   // private final FirebaseAuth mAuth = FirebaseAuth.getInstance();
 
-    public AuthManager(Context context) {
-        dbManager = new DatabaseManager(context);
+    private static AuthManager instance;
+    private final FirebaseAuth mAuth;
+    private final FirebaseFirestore db;
+
+    @Inject
+    public AuthManager(FirebaseAuth auth, FirebaseFirestore firestore) {
+        this.mAuth = auth;
+        this.db = firestore;
     }
 
-    public boolean registerUser(User user) {
-        SQLiteDatabase db = dbManager.getWritableDatabase();
+//    public static synchronized AuthManager getInstance() {
+//        if (instance == null) {
+//            instance = new AuthManager();
+//        }
+//        return instance;
+//    }
 
-        ContentValues values = new ContentValues();
-        values.put("email", user.getEmail());
-        values.put("password", user.getPassword()); // Note: In production, hash this password
-        values.put("name", user.getName());
+//    public void registerUser(String email, String password, AuthCallback callback) {
+//        mAuth.createUserWithEmailAndPassword(email, password)
+//                .addOnCompleteListener(task -> {
+//                    if (task.isSuccessful()) {
+//                        callback.onSuccess(mAuth.getCurrentUser());
+//                    } else {
+//                        callback.onFailure(task.getException());
+//                    }
+//                });
+//    }
+//
+//    public void loginUser(String email, String password, AuthCallback callback) {
+//        mAuth.signInWithEmailAndPassword(email, password)
+//                .addOnCompleteListener(task -> {
+//                    if (task.isSuccessful()) {
+//                        FirebaseUser user = mAuth.getCurrentUser();
+//                        if (user != null) {
+//                            initializeFirestoreUser(user.getUid(), user.getEmail()); // Add this
+//                        }
+//                        callback.onSuccess(user);
+//                    } else {
+//                        callback.onFailure(task.getException());
+//                    }
+//                });
+//    }
+//
+//    public boolean isUserLoggedIn() {
+//        return mAuth.getCurrentUser() != null;
+//    }
 
-        long result = db.insert("users", null, values);
-        return result != -1;
+    public void logout() {
+        mAuth.signOut();
     }
 
-    public User loginUser(String email, String password) {
-        SQLiteDatabase db = dbManager.getReadableDatabase();
-
-        Cursor cursor = db.query("users",
-                new String[]{"id", "email", "password", "name"},
-                "email = ? AND password = ?",
-                new String[]{email, password},
-                null, null, null);
-
-        if (cursor != null && cursor.moveToFirst()) {
-            User user = new User();
-            user.setId(cursor.getInt(0));
-            user.setEmail(cursor.getString(1));
-            user.setPassword(cursor.getString(2));
-            user.setName(cursor.getString(3));
-            cursor.close();
-            return user;
-        }
-        return null;
+    public interface AuthCallback {
+        void onSuccess(FirebaseUser user);
+        void onFailure(Exception e);
     }
 
-    public boolean isEmailTaken(String email) {
-        SQLiteDatabase db = dbManager.getReadableDatabase();
+    public void initializeFirestoreUser(String userId, String email) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-        Cursor cursor = db.query("users",
-                new String[]{"id"},
-                "email = ?",
-                new String[]{email},
-                null, null, null);
+        db.collection("users").document(userId).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (!documentSnapshot.exists()) {
+                        // Only create defaults for new users
+                        WriteBatch batch = db.batch();
 
-        boolean exists = (cursor.getCount() > 0);
-        cursor.close();
-        return exists;
+                        // 1. Create user document
+                        DocumentReference userRef = db.collection("users").document(userId);
+                        Map<String, Object> userData = new HashMap<>();
+                        userData.put("email", email);
+                        userData.put("createdAt", FieldValue.serverTimestamp());
+                        batch.set(userRef, userData);
+
+                        // 2. Create default sections
+                        String[] defaultSections = {"Work", "Study", "Personal"};
+                        String[] colors = {"1", "2", "3"};
+                        String[] descriptions = {
+                                "Your professional tasks",
+                                "Learning and education",
+                                "Personal life matters"
+                        };
+
+                        for (int i = 0; i < defaultSections.length; i++) {
+                            DocumentReference sectionRef = userRef.collection("sections").document();
+                            Map<String, Object> sectionData = new HashMap<>();
+                            sectionData.put("name", defaultSections[i]);
+                            sectionData.put("color", colors[i]);
+                            sectionData.put("notes", descriptions[i]);
+                            sectionData.put("isDefault", true);
+                            sectionData.put("order", i);
+                            sectionData.put("createdAt", FieldValue.serverTimestamp());
+                            batch.set(sectionRef, sectionData);
+                        }
+
+                        batch.commit()
+                                .addOnSuccessListener(__ -> Log.d("AuthManager", "Default sections created"))
+                                .addOnFailureListener(e -> Log.e("AuthManager", "Error creating sections", e));
+                    } else {
+                        Log.d("AuthManager", "User already exists, skipping default section creation");
+                    }
+                })
+                .addOnFailureListener(e -> Log.e("AuthManager", "Error checking user", e));
     }
+
+    public interface InitCallback {
+        void onSuccess();
+        void onFailure(Exception e);
+    }
+
+    public void initializeFirestoreUser(String userId, String email, InitCallback callback) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        // Check if user document already exists
+        db.collection("users").document(userId).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (!documentSnapshot.exists()) {
+                        // First-time setup
+                        Map<String, Object> user = new HashMap<>();
+                        user.put("email", email);
+                        user.put("initialSetupComplete", true);
+
+                        db.collection("users").document(userId)
+                                .set(user)
+                                .addOnSuccessListener(aVoid -> callback.onSuccess())
+                                .addOnFailureListener(callback::onFailure);
+                    } else {
+                        // Existing user
+                        callback.onSuccess();
+                    }
+                })
+                .addOnFailureListener(callback::onFailure);
+    }
+
 }

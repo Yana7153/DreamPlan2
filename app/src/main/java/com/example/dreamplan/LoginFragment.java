@@ -23,11 +23,23 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.AndroidEntryPoint;
+import com.example.dreamplan.database.AuthManager;
+
+@AndroidEntryPoint
 public class LoginFragment extends Fragment {
+    @Inject
+    AuthManager authManager;
+
+    @Inject
+    FirebaseAuth mAuth;
 
     private EditText etEmail, etPassword;
     private Button btnLogin;
     private TextView tvSignUp, tvForgotPassword;
+    private ProgressDialog progressDialog;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
@@ -52,32 +64,22 @@ public class LoginFragment extends Fragment {
         String password = etPassword.getText().toString().trim();
 
         if (email.isEmpty() || password.isEmpty()) {
-            Toast.makeText(requireContext(), "Please fill all fields", Toast.LENGTH_SHORT).show();
+            showError("Please fill all fields");
             return;
         }
 
-        showProgressDialog();
+        showProgressDialog("Logging in...");
 
-        FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password)
+        mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(task -> {
-                    if (getActivity() == null || getActivity().isFinishing()) return;
+                    dismissProgressDialog();
+
+                    if (!isAdded() || requireActivity().isFinishing()) return;
 
                     if (task.isSuccessful()) {
-                        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                        if (user != null) {
-                            if (user.isEmailVerified()) {
-                                ((AuthActivity) requireActivity()).startMainActivity(user);
-                            } else {
-                                Toast.makeText(requireContext(),
-                                        "Please verify your email first!",
-                                        Toast.LENGTH_LONG).show();
-                                FirebaseAuth.getInstance().signOut();
-                            }
-                        }
+                        handleSuccessfulLogin();
                     } else {
-                        Toast.makeText(requireContext(),
-                                "Login failed: " + task.getException().getMessage(),
-                                Toast.LENGTH_SHORT).show();
+                        showError("Login failed: " + task.getException().getMessage());
                     }
                 });
     }
@@ -89,83 +91,102 @@ public class LoginFragment extends Fragment {
     }
 
     private void showForgotPasswordDialog() {
-        try {
-            if (!isAdded() || getActivity() == null || getActivity().isFinishing()) return;
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(
+                requireContext(),
+                R.style.RoundedDialogTheme
+        );
 
-            MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(
-                    requireContext(),
-                    R.style.CustomDialogTheme
-            );
+        View dialogView = LayoutInflater.from(requireContext())
+                .inflate(R.layout.dialog_forgot_password, null);
 
-            View dialogView = LayoutInflater.from(requireContext())
-                    .inflate(R.layout.dialog_forgot_password, null);
+        TextInputLayout emailLayout = dialogView.findViewById(R.id.email_input_layout);
+        EditText emailInput = dialogView.findViewById(R.id.email_input);
 
-            TextInputLayout emailLayout = dialogView.findViewById(R.id.email_input_layout);
-            EditText emailInput = dialogView.findViewById(R.id.email_input);
+        builder.setView(dialogView)
+                .setTitle("Reset Password")
+                .setMessage("Enter your email to receive a reset link")
+                .setPositiveButton("Send Link", (dialog, which) -> {
+                    String email = emailInput.getText().toString().trim();
+                    if (TextUtils.isEmpty(email)) {
+                        emailLayout.setError("Email cannot be empty");
+                        return;
+                    }
+                    if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                        emailLayout.setError("Please enter a valid email");
+                        return;
+                    }
+                    sendPasswordResetEmail(email);
+                })
+                .setNegativeButton("Cancel", null);
 
-            builder.setView(dialogView)
-                    .setTitle("Reset Password")
-                    .setMessage("Enter your email to receive a reset link")
-                    .setPositiveButton("Send Link", (dialog, which) -> {
-                        String email = emailInput.getText().toString().trim();
-                        if (TextUtils.isEmpty(email)) {
-                            emailLayout.setError("Email cannot be empty");
-                            return;
-                        }
-                        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                            emailLayout.setError("Please enter a valid email");
-                            return;
-                        }
-                        sendPasswordResetEmail(email);
-                    })
-                    .setNegativeButton("Cancel", null);
+        AlertDialog dialog = builder.create();
+        dialog.show();
 
-            AlertDialog dialog = builder.create();
-            if (!getActivity().isFinishing()) {
-                dialog.show();
+        // Customize button colors if needed
+        Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+        positiveButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.primary_color));
 
-                Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
-                positiveButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.primary_color));
+        Button negativeButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
+        negativeButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.gray));
+    }
 
-                Button negativeButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
-                negativeButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.gray));
-            }
+    private void sendPasswordResetEmail(String email) {
+        showProgressDialog("Sending reset link...");
 
-        } catch (Exception e) {
-            Log.e("LoginFragment", "Dialog error", e);
-            if (getActivity() != null && !getActivity().isFinishing()) {
-                Toast.makeText(getActivity(), "Error showing dialog", Toast.LENGTH_SHORT).show();
+        mAuth.sendPasswordResetEmail(email)
+                .addOnCompleteListener(task -> {
+                    dismissProgressDialog();
+
+                    if (!isAdded() || requireActivity().isFinishing()) return;
+
+                    if (task.isSuccessful()) {
+                        showSuccess("Reset link sent to " + email);
+                    } else {
+                        showError("Failed to send reset link: " + task.getException().getMessage());
+                    }
+                });
+    }
+
+
+    private void handleSuccessfulLogin() {
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user != null) {
+            if (user.isEmailVerified()) {
+                authManager.initializeFirestoreUser(user.getUid(), user.getEmail());
+                ((AuthActivity) requireActivity()).startMainActivity(user);
+            } else {
+                showError("Please verify your email first!");
+                mAuth.signOut();
             }
         }
     }
 
-    private void showProgressDialog() {
-        if (getActivity() == null || getActivity().isFinishing()) return;
-
-        ProgressDialog progress = new ProgressDialog(getActivity());
-        progress.setMessage("Processing...");
-        progress.setCancelable(false);
-        progress.show();
+    private void showError(String message) {
+        if (isAdded() && getContext() != null) {
+            Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
+        }
     }
 
-    private void sendPasswordResetEmail(String email) {
-        showProgressDialog();
+    private void showSuccess(String message) {
+        if (isAdded() && getContext() != null) {
+            Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
+        }
+    }
 
-        FirebaseAuth.getInstance().sendPasswordResetEmail(email)
-                .addOnCompleteListener(task -> {
-                    if (getActivity() == null || getActivity().isFinishing()) return;
+    private void showProgressDialog(String message) {
+        if (progressDialog == null) {
+            progressDialog = new ProgressDialog(requireContext());
+            progressDialog.setCancelable(false);
+        }
+        progressDialog.setMessage(message);
+        if (!progressDialog.isShowing()) {
+            progressDialog.show();
+        }
+    }
 
-                    if (task.isSuccessful()) {
-                        Toast.makeText(requireContext(),
-                                "Reset link sent to " + email,
-                                Toast.LENGTH_LONG).show();
-                    } else {
-                        new MaterialAlertDialogBuilder(requireContext())
-                                .setTitle("Error")
-                                .setMessage(task.getException().getMessage())
-                                .setPositiveButton("OK", null)
-                                .show();
-                    }
-                });
+    private void dismissProgressDialog() {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
     }
 }

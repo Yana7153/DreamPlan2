@@ -19,6 +19,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+@Deprecated
 public class DatabaseManager extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "dreamplan.db";
     private static final int DATABASE_VERSION = 4;
@@ -202,52 +203,52 @@ public class DatabaseManager extends SQLiteOpenHelper {
 
 
     // 🔹 UPDATED GET ALL TASKS FOR SECTION
-    public List<Task> getAllTasksForSection(int sectionId) {
-        List<Task> tasks = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
-
-        Cursor cursor = db.query(TABLE_TASKS,
-                new String[] {
-                        COLUMN_TASK_ID,
-                        COLUMN_TASK_TITLE,
-                        COLUMN_TASK_DESCRIPTION,
-                        COLUMN_TASK_DUE_DATE,
-                        "color_res_id",
-                        "icon_res_id",
-                        COLUMN_TASK_SECTION_ID,
-                        "is_recurring",
-                        "start_date",
-                        "schedule",
-                        "time_preference"
-                },
-                COLUMN_TASK_SECTION_ID + "=?",
-                new String[]{String.valueOf(sectionId)},
-                null, null, null);
-
-        if (cursor.moveToFirst()) {
-            do {
-                Task task = new Task(
-                        // Parameters must match EXACTLY with your Task constructor
-                        cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TASK_ID)),       // id
-                        cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_TITLE)), // title
-                        cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_DESCRIPTION)), // notes
-                        cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_DUE_DATE)), // dueDate
-                        cursor.getInt(cursor.getColumnIndexOrThrow("color_res_id")),       // colorResId
-                        cursor.getInt(cursor.getColumnIndexOrThrow("icon_res_id")),       // iconResId
-                        cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TASK_SECTION_ID)), // sectionId
-                        cursor.getInt(cursor.getColumnIndexOrThrow("is_recurring")) == 1,  // isRecurring
-                        cursor.getString(cursor.getColumnIndexOrThrow("start_date")),      // startDate
-                        cursor.getString(cursor.getColumnIndexOrThrow("schedule")),        // schedule
-                        cursor.getString(cursor.getColumnIndexOrThrow("time_preference"))  // timePreference
-                );
-                task.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TASK_ID)));
-                tasks.add(task);
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-        db.close();
-        return tasks;
-    }
+//    public List<Task> getAllTasksForSection(int sectionId) {
+//        List<Task> tasks = new ArrayList<>();
+//        SQLiteDatabase db = this.getReadableDatabase();
+//
+//        Cursor cursor = db.query(TABLE_TASKS,
+//                new String[] {
+//                        COLUMN_TASK_ID,
+//                        COLUMN_TASK_TITLE,
+//                        COLUMN_TASK_DESCRIPTION,
+//                        COLUMN_TASK_DUE_DATE,
+//                        "color_res_id",
+//                        "icon_res_id",
+//                        COLUMN_TASK_SECTION_ID,
+//                        "is_recurring",
+//                        "start_date",
+//                        "schedule",
+//                        "time_preference"
+//                },
+//                COLUMN_TASK_SECTION_ID + "=?",
+//                new String[]{String.valueOf(sectionId)},
+//                null, null, null);
+//
+//        if (cursor.moveToFirst()) {
+//            do {
+//                Task task = new Task(
+//                        // Parameters must match EXACTLY with your Task constructor
+//                        cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TASK_ID)),       // id
+//                        cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_TITLE)), // title
+//                        cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_DESCRIPTION)), // notes
+//                        cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_DUE_DATE)), // dueDate
+//                        cursor.getInt(cursor.getColumnIndexOrThrow("color_res_id")),       // colorResId
+//                        cursor.getInt(cursor.getColumnIndexOrThrow("icon_res_id")),       // iconResId
+//                        cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TASK_SECTION_ID)), // sectionId
+//                        cursor.getInt(cursor.getColumnIndexOrThrow("is_recurring")) == 1,  // isRecurring
+//                        cursor.getString(cursor.getColumnIndexOrThrow("start_date")),      // startDate
+//                        cursor.getString(cursor.getColumnIndexOrThrow("schedule")),        // schedule
+//                        cursor.getString(cursor.getColumnIndexOrThrow("time_preference"))  // timePreference
+//                );
+//                task.setId(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TASK_ID))));
+//                tasks.add(task);
+//            } while (cursor.moveToNext());
+//        }
+//        cursor.close();
+//        db.close();
+//        return tasks;
+//    }
 
 
 
@@ -304,41 +305,41 @@ public class DatabaseManager extends SQLiteOpenHelper {
         }
     }
 
-    public void insertMainSectionsIfNotExist() {
-        List<Section> existingSections = getAllSections();
-        if (existingSections.isEmpty()) {
-            // Create predefined sections
-            Section section1 = new Section(0, "Personal", "#C6F8E5", "Personal tasks section");
-            Section section2 = new Section(0, "Work", "#F5CDDE", "Work-related tasks");
-            Section section3 = new Section(0, "Groceries", "#CCE1F2", "Items to buy");
-
-            // Insert predefined sections
-            insertSection(section1);
-            insertSection(section2);
-            insertSection(section3);
-        }
-    }
+//    public void insertMainSectionsIfNotExist() {
+//        List<Section> existingSections = getAllSections();
+//        if (existingSections.isEmpty()) {
+//            // Create predefined sections
+//            Section section1 = new Section(0, "Personal", "#C6F8E5", "Personal tasks section");
+//            Section section2 = new Section(0, "Work", "#F5CDDE", "Work-related tasks");
+//            Section section3 = new Section(0, "Groceries", "#CCE1F2", "Items to buy");
+//
+//            // Insert predefined sections
+//            insertSection(section1);
+//            insertSection(section2);
+//            insertSection(section3);
+//        }
+//    }
 
 
     // 🔹 GET ALL SECTIONS
-    public List<Section> getAllSections() {
-        List<Section> sections = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_SECTIONS, null);
-        if (cursor.moveToFirst()) {
-            do {
-                int id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID));
-                String name = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NAME));
-                String color = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_COLOR));
-                String notes = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NOTES));
-                sections.add(new Section(id, name, color, notes));
-                Log.d("DatabaseManager", "Section fetched: " + name); // Log each section
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-        db.close();
-        return sections;
-    }
+//    public List<Section> getAllSections() {
+//        List<Section> sections = new ArrayList<>();
+//        SQLiteDatabase db = this.getReadableDatabase();
+//        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_SECTIONS, null);
+//        if (cursor.moveToFirst()) {
+//            do {
+//                int id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID));
+//                String name = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NAME));
+//                String color = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_COLOR));
+//                String notes = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NOTES));
+//                sections.add(new Section(id, name, color, notes));
+//                Log.d("DatabaseManager", "Section fetched: " + name); // Log each section
+//            } while (cursor.moveToNext());
+//        }
+//        cursor.close();
+//        db.close();
+//        return sections;
+//    }
 
 
 
@@ -369,53 +370,53 @@ public class DatabaseManager extends SQLiteOpenHelper {
         return count > 0;
     }
 
-    public List<Task> getTasksForDate(Date date) {
-        if (db == null || !db.isOpen()) {
-            db = getReadableDatabase(); // Ensure db is valid
-        }
+//    public List<Task> getTasksForDate(Date date) {
+//        if (db == null || !db.isOpen()) {
+//            db = getReadableDatabase(); // Ensure db is valid
+//        }
+//
+//        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+//        String dateStr = sdf.format(date);
+//
+//        List<Task> tasks = new ArrayList<>();
+//        try {
+//            String query = "SELECT * FROM tasks WHERE " +
+//                    "(is_recurring = 0 AND due_date = ?) OR " +
+//                    "(is_recurring = 1 AND ? >= start_date)";
+//
+//            Cursor cursor = db.rawQuery(query, new String[]{dateStr, dateStr});
+//            while (cursor.moveToNext()) {
+//                tasks.add(cursorToTask(cursor));
+//            }
+//            cursor.close();
+//        } catch (Exception e) {
+//            Log.e("Database", "Error getting tasks", e);
+//        }
+//        return tasks;
+//    }
 
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        String dateStr = sdf.format(date);
-
-        List<Task> tasks = new ArrayList<>();
-        try {
-            String query = "SELECT * FROM tasks WHERE " +
-                    "(is_recurring = 0 AND due_date = ?) OR " +
-                    "(is_recurring = 1 AND ? >= start_date)";
-
-            Cursor cursor = db.rawQuery(query, new String[]{dateStr, dateStr});
-            while (cursor.moveToNext()) {
-                tasks.add(cursorToTask(cursor));
-            }
-            cursor.close();
-        } catch (Exception e) {
-            Log.e("Database", "Error getting tasks", e);
-        }
-        return tasks;
-    }
-
-    private Task cursorToTask(Cursor cursor) {
-        try {
-            Task task = new Task(
-                    cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TASK_ID)),       // id
-                    cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_TITLE)), // title
-                    cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_DESCRIPTION)), // notes
-                    cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_DUE_DATE)), // dueDate
-                    cursor.getInt(cursor.getColumnIndexOrThrow("color_res_id")),       // colorResId
-                    cursor.getInt(cursor.getColumnIndexOrThrow("icon_res_id")),       // iconResId
-                    cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TASK_SECTION_ID)), // sectionId
-                    cursor.getInt(cursor.getColumnIndexOrThrow("is_recurring")) == 1,  // isRecurring
-                    cursor.getString(cursor.getColumnIndexOrThrow("start_date")),      // startDate
-                    cursor.getString(cursor.getColumnIndexOrThrow("schedule")),        // schedule
-                    cursor.getString(cursor.getColumnIndexOrThrow("time_preference"))  // timePreference
-            );
-            task.setId(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TASK_ID)));
-            return task;
-        } catch (Exception e) {
-            Log.e("Database", "Error converting cursor to task", e);
-            return null; // or handle appropriately
-        }
-    }
+//    private Task cursorToTask(Cursor cursor) {
+//        try {
+//            Task task = new Task(
+//                    cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TASK_ID)),       // id
+//                    cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_TITLE)), // title
+//                    cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_DESCRIPTION)), // notes
+//                    cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TASK_DUE_DATE)), // dueDate
+//                    cursor.getInt(cursor.getColumnIndexOrThrow("color_res_id")),       // colorResId
+//                    cursor.getInt(cursor.getColumnIndexOrThrow("icon_res_id")),       // iconResId
+//                    cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TASK_SECTION_ID)), // sectionId
+//                    cursor.getInt(cursor.getColumnIndexOrThrow("is_recurring")) == 1,  // isRecurring
+//                    cursor.getString(cursor.getColumnIndexOrThrow("start_date")),      // startDate
+//                    cursor.getString(cursor.getColumnIndexOrThrow("schedule")),        // schedule
+//                    cursor.getString(cursor.getColumnIndexOrThrow("time_preference"))  // timePreference
+//            );
+//            task.setId(String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TASK_ID))));
+//            return task;
+//        } catch (Exception e) {
+//            Log.e("Database", "Error converting cursor to task", e);
+//            return null; // or handle appropriately
+//        }
+//    }
 
 
     public int getTasksDueTodayCount() {

@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     id("com.google.gms.google-services")
+    id("dagger.hilt.android.plugin")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -15,6 +17,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
     }
 
     buildTypes {
@@ -33,20 +36,26 @@ android {
 }
 
 dependencies {
-//    implementation ("com.github.bumptech.glide:glide:4.12.0")
-//    annotationProcessor ("com.github.bumptech.glide:compiler:4.12.0")
-    implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
-    implementation("com.google.firebase:firebase-analytics")
+    // Firebase (with BoM)
+    implementation(platform("com.google.firebase:firebase-bom:32.7.1"))
     implementation("com.google.firebase:firebase-auth")
-    implementation ("com.google.android.material:material:1.9.0")
-    implementation ("androidx.appcompat:appcompat:1.6.1'")
-    implementation(libs.appcompat)
-    implementation(libs.material)
-    implementation(libs.activity)
+    implementation("com.google.firebase:firebase-firestore")
+
+    // Hilt (for Java)
+    implementation("com.google.dagger:hilt-android:2.48")
+    annotationProcessor("com.google.dagger:hilt-compiler:2.48")  // annotationProcessor for Java
+
+    // UI
+    implementation("com.google.android.material:material:1.9.0")
+    implementation("androidx.appcompat:appcompat:1.6.1")  // Fixed the quote typo
     implementation(libs.constraintlayout)
+
+    // Architecture Components
     implementation(libs.room.runtime)
+    annotationProcessor(libs.room.compiler)  // For Java
+
+    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 }
-

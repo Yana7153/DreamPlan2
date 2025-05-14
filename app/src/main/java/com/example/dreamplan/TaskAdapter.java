@@ -27,8 +27,12 @@ import com.example.dreamplan.R;
 import com.example.dreamplan.database.Task;
 
 import java.text.BreakIterator;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder> {
@@ -63,11 +67,16 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     public void onBindViewHolder(@NonNull TaskViewHolder holder, int position) {
         Task task = taskList.get(position);
 
+
+        Log.d("TASK_DEBUG", "Task ID: " + task.getId());
+        Log.d("TASK_DEBUG", "Raw deadline: " + task.getDeadline());
+        Log.d("TASK_DEBUG", "Formatted: " + task.getTaskTypeDisplay());
+
         // Set task icon
         try {
             int iconRes = task.getIconResId();
             if (iconRes == 0) {
-                iconRes = R.drawable.ic_default_task; // Fallback icon
+                iconRes = R.drawable.ic_default_task;
             }
             holder.imgTaskIcon.setImageResource(iconRes);
             holder.imgTaskIcon.setContentDescription("Task icon");
@@ -77,11 +86,13 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         }
 
         // Set basic task info
+        holder.tvTaskType.setText(task.getTaskTypeDisplay());
         holder.tvTaskTitle.setText(task.getTitle());
         holder.tvTaskDescription.setText(task.getNotes() != null ? task.getNotes() : "");
 
         // Set task type display
         if (task.isRecurring()) {
+
             // Build the recurring task display string
             StringBuilder recurringText = new StringBuilder();
             recurringText.append("🔄 "); // Recurring icon
@@ -101,11 +112,18 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             holder.tvTaskType.setText(recurringText.toString());
             holder.tvTaskType.setTextColor(ContextCompat.getColor(context, R.color.recurring_task_color));
         } else {
-            // One-time task display
-            String deadlineText = !TextUtils.isEmpty(task.getDeadline()) ?
-                    task.getDeadline() : "No deadline";
-            holder.tvTaskType.setText("📅 " + deadlineText);
-            holder.tvTaskType.setTextColor(ContextCompat.getColor(context, R.color.one_time_task_color));
+            if (!TextUtils.isEmpty(task.getDeadline())) {
+                try {
+                    SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                    SimpleDateFormat displayFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
+                    Date date = dbFormat.parse(task.getDeadline());
+                    holder.tvTaskType.setText("📅 " + displayFormat.format(date));
+                } catch (ParseException e) {
+                    holder.tvTaskType.setText("📅 " + task.getDeadline());
+                }
+            } else {
+                holder.tvTaskType.setText("📅 No date set");
+            }
         }
 
         // Set background color
@@ -195,7 +213,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             background.setColor(backgroundColor);
 
             // Add a subtle border
-            int borderColor = Color.argb(30, 0, 0, 0); // Semi-transparent black
+            int borderColor = Color.argb(30, 0, 0, 0); 
             background.setStroke(1, borderColor);
 
             holder.taskContainer.setBackground(background);

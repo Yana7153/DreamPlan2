@@ -11,12 +11,16 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
-import com.example.dreamplan.calendar.CalendarFragment;
+//import com.example.dreamplan.calendar.CalendarFragment;
 //import com.example.dreamplan.settings.SettingsFragment;
 import com.example.dreamplan.settings.NotificationHelper;
 import com.example.dreamplan.settings.SettingsFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
+
 public class MainActivity extends AppCompatActivity {
     private FloatingActionButton btnAddSection;
     private BottomNavigationView bottomNavigationView;
@@ -33,6 +37,12 @@ public class MainActivity extends AppCompatActivity {
         setupFloatingActionButton();
         setupBottomNavigation();
 
+        FirebaseApp.initializeApp(this);
+        FirebaseFirestore.getInstance().setFirestoreSettings(
+                new FirebaseFirestoreSettings.Builder()
+                        .setPersistenceEnabled(true)
+                        .build()
+        );
 
         if (savedInstanceState == null) {
             loadFragment(new HomeFragment(), "home_fragment");
@@ -63,8 +73,9 @@ public class MainActivity extends AppCompatActivity {
 //                selectedFragment = new StatisticsFragment();
 //            }
             else if (itemId == R.id.nav_calendar) {
-                selectedFragment = new CalendarFragment();
-            } else if (itemId == R.id.nav_settings) {
+              //  selectedFragment = new CalendarFragment();
+            }
+            else if (itemId == R.id.nav_settings) {
                 selectedFragment = new SettingsFragment();
             }
 

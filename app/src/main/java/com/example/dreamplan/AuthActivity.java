@@ -7,19 +7,26 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.example.dreamplan.database.AuthManager;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
-public class AuthActivity extends AppCompatActivity {
+import javax.inject.Inject;
 
-    private FirebaseAuth mAuth;
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
+public class AuthActivity extends AppCompatActivity {
+    @Inject
+    AuthManager authManager;
+
+    @Inject
+    FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_auth);
-
-        mAuth = FirebaseAuth.getInstance();
 
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null && currentUser.isEmailVerified()) {
@@ -28,6 +35,13 @@ public class AuthActivity extends AppCompatActivity {
             loadFragment(new LoginFragment());
         }
     }
+
+//    public AuthManager getAuthManager() {
+//        if (authManager == null) {
+//            authManager = new AuthManager();
+//        }
+//        return authManager;
+//    }
 
     public void loadFragment(Fragment fragment) {
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
