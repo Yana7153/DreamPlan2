@@ -6,6 +6,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.PropertyName;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -107,7 +108,6 @@ public class FirebaseDatabaseManager {
                 .addOnFailureListener(callback::onFailure);
     }
 
-    // TASK OPERATIONS
     public void getTasksForSection(String sectionId, DatabaseCallback<List<Task>> callback) {
         String userId = auth.getCurrentUser().getUid();
 
@@ -120,6 +120,11 @@ public class FirebaseDatabaseManager {
                         List<Task> tasks = new ArrayList<>();
                         for (QueryDocumentSnapshot doc : task.getResult()) {
                             Task taskObj = doc.toObject(Task.class);
+                            if (doc.contains("isRecurring")) {
+                                taskObj.setRecurring(doc.getBoolean("isRecurring"));
+                            } else {
+                                taskObj.setRecurring(false);
+                            }
                             taskObj.setId(doc.getId());
                             tasks.add(taskObj);
                         }
@@ -129,7 +134,6 @@ public class FirebaseDatabaseManager {
                     }
                 });
     }
-
     public void saveTask(Task task, DatabaseCallback<String> callback) {
         String userId = auth.getCurrentUser().getUid();
 

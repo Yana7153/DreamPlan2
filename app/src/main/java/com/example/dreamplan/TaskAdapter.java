@@ -68,6 +68,19 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         Task task = taskList.get(position);
 
 
+        Log.d("TASK_DISPLAY", "Displaying task: " + task.getTitle() +
+                "\nRecurring: " + task.isRecurring() +
+                "\nStartDate: " + task.getStartDate() +
+                "\nSchedule: " + task.getSchedule() +
+                "\nDisplay: " + task.getTaskTypeDisplay());
+
+        Log.d("TASK_LOAD", "Task loaded - " +
+                "ID: " + task.getId() +
+                ", Title: " + task.getTitle() +
+                ", Recurring: " + task.isRecurring() +
+                ", StartDate: " + task.getStartDate() +
+                ", Schedule: " + task.getSchedule());
+
         Log.d("TASK_DEBUG", "Task ID: " + task.getId());
         Log.d("TASK_DEBUG", "Raw deadline: " + task.getDeadline());
         Log.d("TASK_DEBUG", "Formatted: " + task.getTaskTypeDisplay());
@@ -90,40 +103,49 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         holder.tvTaskTitle.setText(task.getTitle());
         holder.tvTaskDescription.setText(task.getNotes() != null ? task.getNotes() : "");
 
+//        // Set task type display
+//        if (task.isRecurring()) {
+//
+//            // Build the recurring task display string
+//            StringBuilder recurringText = new StringBuilder();
+//            recurringText.append("🔄 "); // Recurring icon
+//
+//            if (!TextUtils.isEmpty(task.getStartDate())) {
+//                recurringText.append(task.getStartDate());
+//            }
+//
+//            if (!TextUtils.isEmpty(task.getSchedule())) {
+//                recurringText.append(" • ").append(task.getSchedule());
+//            }
+//
+//            if (!TextUtils.isEmpty(task.getTimePreference())) {
+//                recurringText.append(" • ").append(task.getTimePreference());
+//            }
+//
+//            holder.tvTaskType.setText(recurringText.toString());
+//            holder.tvTaskType.setTextColor(ContextCompat.getColor(context, R.color.recurring_task_color));
+//        } else {
+//            if (!TextUtils.isEmpty(task.getDeadline())) {
+//                try {
+//                    SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+//                    SimpleDateFormat displayFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
+//                    Date date = dbFormat.parse(task.getDeadline());
+//                    holder.tvTaskType.setText("📅 " + displayFormat.format(date));
+//                } catch (ParseException e) {
+//                    holder.tvTaskType.setText("📅 " + task.getDeadline());
+//                }
+//            } else {
+//                holder.tvTaskType.setText("📅 No date set");
+//            }
+//        }
+
         // Set task type display
+        holder.tvTaskType.setText(task.getTaskTypeDisplay());
+
         if (task.isRecurring()) {
-
-            // Build the recurring task display string
-            StringBuilder recurringText = new StringBuilder();
-            recurringText.append("🔄 "); // Recurring icon
-
-            if (!TextUtils.isEmpty(task.getStartDate())) {
-                recurringText.append(task.getStartDate());
-            }
-
-            if (!TextUtils.isEmpty(task.getSchedule())) {
-                recurringText.append(" • ").append(task.getSchedule());
-            }
-
-            if (!TextUtils.isEmpty(task.getTimePreference())) {
-                recurringText.append(" • ").append(task.getTimePreference());
-            }
-
-            holder.tvTaskType.setText(recurringText.toString());
             holder.tvTaskType.setTextColor(ContextCompat.getColor(context, R.color.recurring_task_color));
         } else {
-            if (!TextUtils.isEmpty(task.getDeadline())) {
-                try {
-                    SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-                    SimpleDateFormat displayFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
-                    Date date = dbFormat.parse(task.getDeadline());
-                    holder.tvTaskType.setText("📅 " + displayFormat.format(date));
-                } catch (ParseException e) {
-                    holder.tvTaskType.setText("📅 " + task.getDeadline());
-                }
-            } else {
-                holder.tvTaskType.setText("📅 No date set");
-            }
+            holder.tvTaskType.setTextColor(ContextCompat.getColor(context, R.color.one_time_task_color));
         }
 
         // Set background color

@@ -432,41 +432,71 @@ public class AddTaskFragment extends Fragment {
 
 
     private void setupDatePicker(Button btnDate, String existingDate) {
-        final SimpleDateFormat displayFormat = new SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.getDefault());
+        final SimpleDateFormat displayFormat = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
         final SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+
+        btnDate.setTag("");
 
         // Set initial date if editing
         if (existingDate != null && !existingDate.isEmpty()) {
             try {
                 Date date = dbFormat.parse(existingDate);
                 btnDate.setText(displayFormat.format(date));
-                btnDate.setTag(existingDate); // Store original DB format
-                Log.d("DATE_DEBUG", "Existing date set: " + existingDate);
-            } catch (ParseException e) {
-                btnDate.setText(existingDate);
+                btnDate.setTag(existingDate);
+            } catch (ParseException e1) {
+                try {
+                    Date date = displayFormat.parse(existingDate);
+                    String dbDate = dbFormat.format(date);
+                    btnDate.setText(existingDate);
+                    btnDate.setTag(dbDate);
+                } catch (ParseException e2) {
+                    btnDate.setText(existingDate);
+                    btnDate.setTag(existingDate);
+                }
             }
-        } else {
-            btnDate.setTag("");
         }
 
         btnDate.setOnClickListener(v -> {
             MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
-                    .setTitleText("Select Due Date")
+                    .setTitleText("Select Date")
                     .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
                     .build();
 
             datePicker.addOnPositiveButtonClickListener(selection -> {
-                Date selectedDate = new Date(selection);
-                String displayDate = displayFormat.format(selectedDate);
-                String dbDate = dbFormat.format(selectedDate);
+                try {
+                    Date selectedDate = new Date(selection);
+                    String displayDate = displayFormat.format(selectedDate);
+                    String dbDate = dbFormat.format(selectedDate);
 
-                btnDate.setText(displayDate);
-                btnDate.setTag(dbDate);
-                Log.d("DATE_DEBUG", "Date selected - Display: " + displayDate + " | DB: " + dbDate);
+                    btnDate.setText(displayDate);
+                    btnDate.setTag(dbDate);
+                    Log.d("DATE_DEBUG", "Date selected - Display: " + displayDate + " | DB: " + dbDate);
+                } catch (Exception e) {
+                    Log.e("DATE_ERROR", "Error formatting date", e);
+                    btnDate.setTag("");
+                }
             });
 
             datePicker.show(getParentFragmentManager(), "DATE_PICKER");
         });
+    }
+
+    private String getSafeDateString(Button dateButton) {
+        try {
+            Object tag = dateButton.getTag();
+            if (tag == null) return "";
+
+            if (tag instanceof String) {
+                return (String) tag;
+            } else if (tag instanceof Long) {
+                SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                return dbFormat.format(new Date((Long) tag));
+            }
+            return "";
+        } catch (Exception e) {
+            Log.e("DATE_ERROR", "Error getting date string", e);
+            return "";
+        }
     }
 
     private void saveTask(String title, String description) {
@@ -474,33 +504,39 @@ public class AddTaskFragment extends Fragment {
         isSaving = true;
 
         try {
-            // Validate required fields
             if (TextUtils.isEmpty(title)) {
                 Toast.makeText(getContext(), "Please enter a task title", Toast.LENGTH_SHORT).show();
                 isSaving = false;
                 return;
             }
 
-            if (isOneTime && isDateEmpty((String) btnDate.getTag())) {
-                Toast.makeText(getContext(), "Please select date", Toast.LENGTH_SHORT).show();
-                isSaving = false;
-                return;
+            // Get dates safely
+            String dueDate = isOneTime ? getSafeDateString(btnDate) : "";
+            String startDate = !isOneTime ? getSafeDateString(btnStartDate) : "";
+
+            if (!isOneTime) {
+                if (TextUtils.isEmpty(startDate)) {
+                    Toast.makeText(getContext(), "Please select a start date", Toast.LENGTH_SHORT).show();
+                    isSaving = false;
+                    return;
+                }
+                if (scheduleSpinner.getSelectedItem() == null) {
+                    Toast.makeText(getContext(), "Please select a schedule", Toast.LENGTH_SHORT).show();
+                    isSaving = false;
+                    return;
+                }
             }
 
-            // Prepare task data
-            String dueDate = isOneTime ? (String) btnDate.getTag() : "";
-            String startDate = !isOneTime ? btnStartDate.getText().toString() : "";
-            String schedule = !isOneTime ? scheduleSpinner.getSelectedItem().toString() : "";
-            String timePreference = !isOneTime ? getSelectedTimePreference() : "";
+            // Debug logging
+            Log.d("TASK_SAVE", "Creating task with: " +
+                    "\nTitle: " + title +
+                    "\nOneTime: " + isOneTime +
+                    "\nDueDate: " + dueDate +
+                    "\nStartDate: " + startDate +
+                    "\nRecurring: " + !isOneTime +
+                    "\nSchedule: " + (!isOneTime ? scheduleSpinner.getSelectedItem().toString() : "N/A"));
 
 
-            Log.d("DATE_SAVE", "Attempting to save date: " + dueDate);
-
-            if (isOneTime && (dueDate == null || dueDate.isEmpty())) {
-                Toast.makeText(getContext(), "Please select date", Toast.LENGTH_SHORT).show();
-                isSaving = false;
-                return;
-            }
             // Create task object
             Task task = new Task(
                     taskToEdit != null ? taskToEdit.getId() : null,
@@ -511,7 +547,7 @@ public class AddTaskFragment extends Fragment {
                     selectedIconResId,
                     section.getId(),
                     !isOneTime,
-                    !isOneTime ? (String) btnStartDate.getTag() : "",
+                    startDate,
                     !isOneTime ? scheduleSpinner.getSelectedItem().toString() : "",
                     !isOneTime ? getSelectedTimePreference() : ""
             );
@@ -534,9 +570,6 @@ public class AddTaskFragment extends Fragment {
                 public void onFailure(Exception e) {
                     isSaving = false;
                     Log.e("TASK_SAVE", "Failed to save task", e);
-                    Log.e("TASK_SAVE", "Task details - Title: " + title
-                            + ", SectionID: " + section.getId()
-                            + ", Icon: " + selectedIconResId);
                     Toast.makeText(getContext(), "Failed to save: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 }
             });
@@ -548,6 +581,17 @@ public class AddTaskFragment extends Fragment {
         }
     }
 
+
+    private String getDateStringFromButton(Button dateButton) {
+        Object tag = dateButton.getTag();
+        if (tag instanceof String) {
+            return (String) tag;
+        } else if (tag instanceof Long) {
+            SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            return dbFormat.format(new Date((Long) tag));
+        }
+        return "";
+    }
 
     // Helper methods
     private boolean isOneTimeTask() {

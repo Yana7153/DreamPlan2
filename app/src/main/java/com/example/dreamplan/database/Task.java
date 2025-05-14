@@ -9,6 +9,7 @@ import androidx.annotation.NonNull;
 
 import com.example.dreamplan.R;
 import com.google.firebase.firestore.Exclude;
+import com.google.firebase.firestore.PropertyName;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -25,7 +26,7 @@ public class Task implements Parcelable {
     private int iconResId;
     private String sectionId;
 
-    private boolean isRecurring;
+  //  private boolean isRecurring;
     private String startDate;
     private String schedule;
     private String timePreference;
@@ -61,32 +62,46 @@ public class Task implements Parcelable {
 
 
     public String getTaskTypeDisplay() {
-        if (isRecurring) {
-            return "🔄 Recurring • " + (TextUtils.isEmpty(schedule) ? "" : schedule);
-        }
-
-        // For one-time tasks
-        if (TextUtils.isEmpty(deadline)) {
-            return "📅 No date set";
-        }
-
         try {
-            // First try parsing as yyyy-MM-dd (Firestore format)
-            SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-            Date date = dbFormat.parse(deadline);
-            SimpleDateFormat displayFormat = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
-            return "📅 " + displayFormat.format(date);
-        } catch (ParseException e1) {
-            // If that fails, try other common formats
-            try {
-                SimpleDateFormat altFormat = new SimpleDateFormat("MM/dd/yyyy", Locale.getDefault());
-                Date date = altFormat.parse(deadline);
-                SimpleDateFormat displayFormat = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
-                return "📅 " + displayFormat.format(date);
-            } catch (ParseException e2) {
-                // If all parsing fails, just show the raw string
-                return "📅 " + deadline;
+            if (isRecurring) {
+                StringBuilder builder = new StringBuilder("🔄 Recurring");
+
+                // Always show schedule if available
+                if (!TextUtils.isEmpty(schedule)) {
+                    builder.append(" • ").append(schedule);
+                }
+
+                // Show start date if available
+                if (!TextUtils.isEmpty(startDate)) {
+                    try {
+                        SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                        SimpleDateFormat displayFormat = new SimpleDateFormat("MMM d", Locale.getDefault());
+                        Date date = dbFormat.parse(startDate);
+                        builder.append(" • Starts ").append(displayFormat.format(date));
+                    } catch (ParseException e) {
+                        builder.append(" • ").append(startDate);
+                    }
+                }
+
+                return builder.toString();
+            } else {
+                // One-time task display
+                if (TextUtils.isEmpty(deadline)) {
+                    return "📅 No date set";
+                }
+
+                try {
+                    SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                    SimpleDateFormat displayFormat = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
+                    Date date = dbFormat.parse(deadline);
+                    return "📅 " + displayFormat.format(date);
+                } catch (ParseException e) {
+                    return "📅 " + deadline;
+                }
             }
+        } catch (Exception e) {
+            Log.e("TASK_DISPLAY", "Error formatting task display", e);
+            return isRecurring ? "🔄 Recurring Task" : "📅 Task";
         }
     }
 
@@ -115,13 +130,13 @@ public class Task implements Parcelable {
     public int getIconResId() { return iconResId; }
     public void setIconResId(int iconResId) { this.iconResId = iconResId; }
 
-    public boolean isRecurring() {
-        return isRecurring;
-    }
-
-    public void setRecurring(boolean recurring) {
-        isRecurring = recurring;
-    }
+//    public boolean isRecurring() {
+//        return isRecurring;
+//    }
+//
+//    public void setRecurring(boolean recurring) {
+//        isRecurring = recurring;
+//    }
 
     public String getStartDate() {
         return startDate;
@@ -194,5 +209,20 @@ public class Task implements Parcelable {
         dest.writeString(schedule);
         dest.writeString(timePreference);
         dest.writeString(taskTypeDisplay);
+    }
+
+    // Add explicit @PropertyName annotations for Firebase
+    @PropertyName("isRecurring")
+    private boolean isRecurring;
+
+    // Make sure you have proper getters/setters
+    @PropertyName("isRecurring")
+    public boolean isRecurring() {
+        return isRecurring;
+    }
+
+    @PropertyName("isRecurring")
+    public void setRecurring(boolean recurring) {
+        isRecurring = recurring;
     }
 }
