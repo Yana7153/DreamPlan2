@@ -213,7 +213,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             background.setColor(backgroundColor);
 
             // Add a subtle border
-            int borderColor = Color.argb(30, 0, 0, 0); 
+            int borderColor = Color.argb(30, 0, 0, 0);
             background.setStroke(1, borderColor);
 
             holder.taskContainer.setBackground(background);

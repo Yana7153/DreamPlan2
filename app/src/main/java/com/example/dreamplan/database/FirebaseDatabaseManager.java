@@ -234,4 +234,21 @@ public class FirebaseDatabaseManager {
             }
         });
     }
+
+    public void hasTasksForDate(String date, DatabaseCallback<Boolean> callback) {
+        String userId = auth.getCurrentUser().getUid();
+
+        db.collection("users").document(userId)
+                .collection("tasks")
+                .whereEqualTo("deadline", date)
+                .limit(1)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        callback.onSuccess(!task.getResult().isEmpty());
+                    } else {
+                        callback.onFailure(task.getException());
+                    }
+                });
+    }
 }

@@ -13,6 +13,7 @@ import androidx.fragment.app.FragmentTransaction;
 
 //import com.example.dreamplan.calendar.CalendarFragment;
 //import com.example.dreamplan.settings.SettingsFragment;
+import com.example.dreamplan.calendar.CalendarFragment;
 import com.example.dreamplan.settings.NotificationHelper;
 import com.example.dreamplan.settings.SettingsFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -73,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
 //                selectedFragment = new StatisticsFragment();
 //            }
             else if (itemId == R.id.nav_calendar) {
-              //  selectedFragment = new CalendarFragment();
+                selectedFragment = new CalendarFragment();
             }
             else if (itemId == R.id.nav_settings) {
                 selectedFragment = new SettingsFragment();
