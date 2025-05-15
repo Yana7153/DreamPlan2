@@ -6,7 +6,6 @@ public class User {
     private String password;
     private String name;
 
-    // Constructors
     public User() {}
 
     public User(String email, String password, String name) {
@@ -22,7 +21,6 @@ public class User {
         this.name = name;
     }
 
-    // Getters and Setters
     public int getId() {
         return id;
     }
@@ -55,7 +53,6 @@ public class User {
         this.name = name;
     }
 
-    // Utility methods
     @Override
     public String toString() {
         return "User{" +
@@ -66,7 +63,6 @@ public class User {
                 '}';
     }
 
-    // You might want to add validation methods
     public boolean isValidEmail() {
         return email != null && android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches();
     }
@@ -79,7 +75,6 @@ public class User {
         return name != null && !name.trim().isEmpty();
     }
 
-    // Method to check if all required fields are valid
     public boolean isValidUser() {
         return isValidEmail() && isValidPassword() && isValidName();
     }

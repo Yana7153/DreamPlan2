@@ -29,7 +29,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.dreamplan.adapters.SectionAdapter;
-import com.example.dreamplan.database.DatabaseManager;
 import com.example.dreamplan.database.FirebaseDatabaseManager;
 import com.example.dreamplan.database.Section;
 import com.google.android.gms.tasks.Task;
@@ -53,8 +52,6 @@ public class HomeFragment extends Fragment {
 
     private RecyclerView rvSections;
     private SectionAdapter sectionAdapter;
- //   private List<Section> sectionList;
-  //  private DatabaseManager dbManager;
     private TextView tvTasksTodayNumber;
     private TextView  tvTasksTomorrowNumber;
     private TextView  tvTasksWeekNumber;
@@ -76,30 +73,7 @@ public class HomeFragment extends Fragment {
         tvTasksTomorrowNumber = view.findViewById(R.id.tvTasksTomorrowNumber);
         tvTasksWeekNumber = view.findViewById(R.id.tvTasksWeekNumber);
         rvSections = view.findViewById(R.id.rvSections);
-    //    dbManager = new DatabaseManager(getContext());
-
-
-
-        // Insert predefined sections if not already inserted
-    //    dbManager.insertMainSectionsIfNotExist();
-
-    //    refreshTaskCounts();
-
-        // Set up RecyclerView
-    //    sectionList = dbManager.getAllSections();
         sectionAdapter = new SectionAdapter(sectionList, getContext(), this);
-//        sectionAdapter.setOnSectionActionListener(new SectionAdapter.OnSectionActionListener() {
-//            @Override
-//            public void onEditSection(Section section) {
-//                showEditSectionDialog(section);
-//            }
-//
-//            @Override
-//            public void onDeleteSection(Section section) {
-//                showDeleteConfirmationDialog(section);
-//            }
-//        });
-
         rvSections.setLayoutManager(new LinearLayoutManager(getContext()));
         rvSections.setAdapter(sectionAdapter);
 
@@ -152,11 +126,10 @@ public class HomeFragment extends Fragment {
     private final BroadcastReceiver updateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            loadTaskCounts(); // Use Firebase version instead of refreshTaskCounts()
+            loadTaskCounts();
         }
     };
 
-    // Method to show the Edit Section dialog
 //    public void showEditSectionDialog(Section section) {
 //        Dialog sectionDialog = new Dialog(requireContext());
 //        sectionDialog.setContentView(R.layout.task_input_dialog);
@@ -253,7 +226,6 @@ public class HomeFragment extends Fragment {
 
         final String[] selectedColor = {"1"};
 
-        // Set up color selection
         for (int i = 0; i < colorCircles.length; i++) {
             final int index = i;
             colorCircles[i].setOnClickListener(v -> {
@@ -261,7 +233,6 @@ public class HomeFragment extends Fragment {
                 updateColorSelectionUI(colorCircles, index);
             });
 
-            // Set initial selection state
             GradientDrawable drawable = (GradientDrawable) colorCircles[i].getBackground();
             drawable.setStroke(i == 0 ? 4 : 0, Color.BLACK); // Only first selected initially
         }
@@ -309,18 +280,17 @@ public class HomeFragment extends Fragment {
             drawable.setStroke(i == selectedIndex ? 4 : 0, Color.BLACK);
         }
     }
-    // Helper method to get the drawable resource for a color circle
+
     private Drawable getColorCircleDrawable(String color, boolean isSelected) {
         GradientDrawable circle = new GradientDrawable();
         circle.setShape(GradientDrawable.OVAL);
-        circle.setColor(Color.parseColor(color)); // Set the circle color
-        circle.setSize(40, 40); // Set the size
+        circle.setColor(Color.parseColor(color));
+        circle.setSize(40, 40);
 
         if (isSelected) {
-            // Add a black border for the selected color
             GradientDrawable border = new GradientDrawable();
             border.setShape(GradientDrawable.OVAL);
-            border.setStroke(4, Color.BLACK); // Thicker black border
+            border.setStroke(4, Color.BLACK);
             border.setSize(40, 40);
 
             LayerDrawable layerDrawable = new LayerDrawable(new Drawable[]{circle, border});
@@ -339,7 +309,6 @@ public class HomeFragment extends Fragment {
             return;
         }
 
-        // Proceed with normal deletion
         dbManager.deleteSection(section.getId(), new FirebaseDatabaseManager.DatabaseCallback<Void>() {
             @Override
             public void onSuccess(Void result) {
@@ -358,7 +327,6 @@ public class HomeFragment extends Fragment {
     }
 
     public void openSectionDetail(Section section) {
-        // Open the section details page
         SectionDetailFragment fragment = SectionDetailFragment.newInstance(section);
         FragmentTransaction transaction = getFragmentManager().beginTransaction();
         transaction.replace(R.id.fragment_container, fragment);
@@ -402,8 +370,8 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        // Week's tasks (today + 6 days = 7 days total)
-        cal.add(Calendar.DATE, 6); // Add 6 more days to tomorrow (total 7 days from today)
+        // Week's tasks
+        cal.add(Calendar.DATE, 6);
         String weekLater = sdf.format(cal.getTime());
 
         dbManager.getTaskCountForDateRange(today, weekLater, new FirebaseDatabaseManager.DatabaseCallback<Integer>() {
@@ -437,30 +405,27 @@ public class HomeFragment extends Fragment {
         });
     }
 
-    private void createDefaultSections() {
-        // Manually create default sections if they don't exist
-        String[] defaultSections = {"Work", "Study", "Personal"};
-        String[] colors = {"#FFB74D", "#81C784", "#64B5F6"};
-
-        for (int i = 0; i < defaultSections.length; i++) {
-            Section section = new Section(null, defaultSections[i], colors[i], "", true);
-            dbManager.addSection(section, new FirebaseDatabaseManager.DatabaseCallback<String>() {
-                @Override
-                public void onSuccess(String sectionId) {
-                    section.setId(sectionId);
-                    sectionList.add(section);
-                    sectionAdapter.notifyItemInserted(sectionList.size() - 1);
-                }
-
-                @Override
-                public void onFailure(Exception e) {
-                    Log.e("HomeFragment", "Error creating default section", e);
-                }
-            });
-        }
-    }
-
-
+//    private void createDefaultSections() {
+//        String[] defaultSections = {"Work", "Study", "Personal"};
+//        String[] colors = {"#FFB74D", "#81C784", "#64B5F6"};
+//
+//        for (int i = 0; i < defaultSections.length; i++) {
+//            Section section = new Section(null, defaultSections[i], colors[i], "", true);
+//            dbManager.addSection(section, new FirebaseDatabaseManager.DatabaseCallback<String>() {
+//                @Override
+//                public void onSuccess(String sectionId) {
+//                    section.setId(sectionId);
+//                    sectionList.add(section);
+//                    sectionAdapter.notifyItemInserted(sectionList.size() - 1);
+//                }
+//
+//                @Override
+//                public void onFailure(Exception e) {
+//                    Log.e("HomeFragment", "Error creating default section", e);
+//                }
+//            });
+//        }
+//    }
 
 //    private void refreshTaskCounts() {
 //        if (getActivity() == null || !isAdded()) return;

@@ -7,4 +7,12 @@
         <item>Every N days</item>
         <item>Custom...</item>
     </string-array>
+
+    <string-array name="task_icons">
+        <item>ic_work</item>
+        <item>ic_study</item>
+        <item>ic_shopping</item>
+        <item>ic_sports</item>
+        <item>ic_home</item>
+    </string-array>
 </resources>

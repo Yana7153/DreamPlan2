@@ -6,6 +6,8 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.content.res.Resources;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -17,6 +19,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
@@ -34,7 +37,6 @@ import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
-import com.example.dreamplan.database.DatabaseManager;
 import com.example.dreamplan.database.FirebaseDatabaseManager;
 import com.example.dreamplan.database.Section;
 import com.example.dreamplan.database.Task;
@@ -59,7 +61,7 @@ public class AddTaskFragment extends Fragment {
     private Section section;
     private int selectedColorResId = R.drawable.circle_background_1;
     private boolean isOneTime = true;
-    private ImageView imgTaskIcon; // Store reference to avoid multiple findViewById calls
+    private ImageView imgTaskIcon;
     private Spinner scheduleSpinner;
     private Switch timeSwitch;
     private RadioGroup timeOptionsGroup;
@@ -89,8 +91,8 @@ public class AddTaskFragment extends Fragment {
     private String userId;
     private FirebaseDatabaseManager dbManager;
 
-
-
+    private String iconResName = "star";
+    private String selectedIconName = "star";
 
     public static AddTaskFragment newInstance(Section section, Task task) {
         AddTaskFragment fragment = new AddTaskFragment();
@@ -102,7 +104,6 @@ public class AddTaskFragment extends Fragment {
         fragment.setArguments(args);
         return fragment;
     }
-
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -188,7 +189,7 @@ public class AddTaskFragment extends Fragment {
 
         setupDatePicker(btnDate, isEditMode && taskToEdit != null ? taskToEdit.getDeadline() : null);
         setupDatePicker(btnStartDate, isEditMode && taskToEdit != null ? taskToEdit.getStartDate() : null);
-
+        setupImageSelection();
 
         // Get section from arguments
         if (getArguments() != null) {
@@ -274,22 +275,10 @@ public class AddTaskFragment extends Fragment {
     private void setupImageSelection() {
         imgTaskIcon.setOnClickListener(v -> {
             IconSelectionFragment fragment = new IconSelectionFragment();
-
-            if (isEditMode && taskToEdit != null) {
-                fragment.setCurrentIcon(taskToEdit.getIconResId());
-            } else {
-                fragment.setCurrentIcon(selectedIconResId);
-            }
-
-            fragment.setIconSelectionListener(iconResId -> {
-                Log.d("ICON_DEBUG", "User selected icon: " + iconResId);
-
-                selectedIconResId = iconResId;
-                updateIconPreview(iconResId);
-
-                if (isEditMode && taskToEdit != null) {
-                    taskToEdit.setIconResId(iconResId);
-                }
+            fragment.setIconSelectionListener((resId, iconName) -> {
+                selectedIconResId = resId;
+                selectedIconName = iconName;
+                updateIconPreview(resId);
             });
 
             getParentFragmentManager()
@@ -332,106 +321,81 @@ public class AddTaskFragment extends Fragment {
                 R.drawable.circle_background_7
         };
 
+        colorOptions.removeAllViews();
+        colorOptions.setOrientation(LinearLayout.HORIZONTAL);
+
+        // Add proper spacing between circles
+        int marginInPx = dpToPx(12); // Increased spacing
+        int circleSize = dpToPx(36); // Slightly smaller circles
+
         for (int drawableId : colorDrawables) {
             ImageView colorOption = new ImageView(requireContext());
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                    dpToPx(40),
-                    dpToPx(40)
+                    circleSize,
+                    circleSize
             );
-            params.setMargins(dpToPx(8), 0, dpToPx(8), 0);
+            params.setMargins(marginInPx, 0, 0, 0); // Space between circles
 
-            colorOption.setLayoutParams(params);
+            // Set the circle image
             colorOption.setImageResource(drawableId);
+            colorOption.setTag(drawableId);
+
+            // Create a container FrameLayout for proper border
+            FrameLayout circleContainer = new FrameLayout(requireContext());
+            FrameLayout.LayoutParams containerParams = new FrameLayout.LayoutParams(
+                    circleSize + dpToPx(4), // Extra space for border
+                    circleSize + dpToPx(4)
+            );
+            circleContainer.setLayoutParams(containerParams);
+
+            // Add the color circle to container
+            circleContainer.addView(colorOption);
+
+            // Set initial selection
+            if (drawableId == selectedColorResId) {
+                circleContainer.setBackgroundResource(R.drawable.circle_selected_border);
+            }
+
             colorOption.setOnClickListener(v -> {
-                selectedColorResId = drawableId;
-                //      colorPreview.setImageResource(drawableId);
+                // Remove borders from all options
+                for (int j = 0; j < colorOptions.getChildCount(); j++) {
+                    View container = colorOptions.getChildAt(j);
+                    container.setBackground(null);
+                }
+
+                // Add border to selected container
+                ((ViewGroup)v.getParent()).setBackgroundResource(R.drawable.circle_selected_border);
+
+                // Update selected color
+                selectedColorResId = (int) v.getTag();
+
+                Log.d("COLOR_SELECT", "Selected color drawable: " + selectedColorResId);
             });
 
-            colorOptions.addView(colorOption);
+            colorOptions.addView(circleContainer);
         }
     }
 
-//    private void setupDatePicker(Button btnDate, String existingDate) {
-//        try {
-//            SimpleDateFormat displayFormat = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
-//            SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-//
-//            btnDate.setOnClickListener(v -> {
-//                MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
-//                        .setTitleText("Select Date")
-//                        .build();
-//
-//                datePicker.addOnPositiveButtonClickListener(selection -> {
-//                    try {
-//                        Date selectedDate = new Date(selection);
-//                        String displayDate = displayFormat.format(selectedDate);
-//                        String dbDate = dbFormat.format(selectedDate); // This is what you should save
-//
-//                        btnDate.setText(displayDate);
-//                        btnDate.setTag(dbDate); // Store the database-formatted date
-//                    } catch (Exception e) {
-//                        Log.e("DatePicker", "Error formatting date", e);
-//                    }
-//                });
-//                datePicker.show(getParentFragmentManager(), "DATE_PICKER");
-//            });
-//
-//
-//            // Set initial text - show existing date in edit mode, placeholder for new tasks
-//            if (isEditMode && existingDate != null && !existingDate.isEmpty()) {
-//                try {
-//                    Date date = dbFormat.parse(existingDate);
-//                    btnDate.setText(displayFormat.format(date));
-//                } catch (ParseException e) {
-//                    btnDate.setText(existingDate); // Fallback to raw date if parsing fails
-//                }
-//            } else if (TextUtils.isEmpty(btnDate.getText().toString())) {
-//                btnDate.setText("Select date"); // Only set placeholder if empty
-//            }
-//
-//            btnDate.setOnClickListener(v -> {
-//                try {
-//                    // Calculate initial selection - use existing date if available
-//                    long initialSelection = MaterialDatePicker.todayInUtcMilliseconds();
-//                    if (isEditMode && existingDate != null && !existingDate.isEmpty()) {
-//                        try {
-//                            Date date = dbFormat.parse(existingDate);
-//                            initialSelection = date.getTime();
-//                        } catch (ParseException e) {
-//                            Log.e("DatePicker", "Error parsing existing date", e);
-//                        }
-//                    }
-//
-//                    MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
-//                            .setTitleText("Select Date")
-//                            .setSelection(initialSelection)
-//                            .build();
-//
-//                    datePicker.addOnPositiveButtonClickListener(selection -> {
-//                        try {
-//                            if (selection != null) {
-//                                Date selectedDate = new Date(selection);
-//                                btnDate.setText(displayFormat.format(selectedDate));
-//                            }
-//                        } catch (Exception e) {
-//                            Log.e("DatePicker", "Error formatting selected date", e);
-//                            btnDate.setText(displayFormat.format(new Date())); // Fallback to current date
-//                        }
-//                    });
-//
-//                    if (getParentFragmentManager() != null && !isRemoving()) {
-//                        datePicker.show(getParentFragmentManager(), "DATE_PICKER");
-//                    }
-//                } catch (Exception e) {
-//                    Log.e("DatePicker", "Error showing date picker", e);
-//                    Toast.makeText(getContext(), "Error showing date picker", Toast.LENGTH_SHORT).show();
-//                }
-//            });
-//        } catch (Exception e) {
-//            Log.e("DatePicker", "Error initializing date picker", e);
-//        }
-//    }
-
+    // Helper method to get color resource for each drawable
+    private int getColorForDrawable(int drawableId) {
+        if (drawableId == R.drawable.circle_background_1) {
+            return R.color.task_bg_1;
+        } else if (drawableId == R.drawable.circle_background_2) {
+            return R.color.task_bg_2;
+        } else if (drawableId == R.drawable.circle_background_3) {
+            return R.color.task_bg_3;
+        } else if (drawableId == R.drawable.circle_background_4) {
+            return R.color.task_bg_4;
+        } else if (drawableId == R.drawable.circle_background_5) {
+            return R.color.task_bg_5;
+        } else if (drawableId == R.drawable.circle_background_6) {
+            return R.color.task_bg_6;
+        } else if (drawableId == R.drawable.circle_background_7) {
+            return R.color.task_bg_7;
+        } else {
+            return R.color.task_bg_1;
+        }
+    }
 
     private void setupDatePicker(Button btnDate, String existingDate) {
         final SimpleDateFormat displayFormat = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
@@ -516,6 +480,7 @@ public class AddTaskFragment extends Fragment {
             // Get dates safely
             String dueDate = isOneTime ? getSafeDateString(btnDate) : "";
             String startDate = !isOneTime ? getSafeDateString(btnStartDate) : "";
+            String iconResName = getResources().getResourceEntryName(selectedIconResId);
 
             if (!isOneTime) {
                 if (TextUtils.isEmpty(startDate)) {
@@ -548,6 +513,7 @@ public class AddTaskFragment extends Fragment {
                     dueDate,
                     selectedColorResId,
                     selectedIconResId,
+                    selectedIconName,
                     section.getId(),
                     !isOneTime,
                     startDate,
@@ -622,46 +588,6 @@ public class AddTaskFragment extends Fragment {
         }
     }
 
-//    private Task createOneTimeTask(String title, String description, String displayDate) throws ParseException {
-//        Task task = new Task();
-//        task.setTitle(title.trim());
-//        task.setNotes(description);
-//        task.setDeadline(formatDateForDb(displayDate));
-//        task.setColorResId(selectedColorResId);
-//        task.setIconResId(selectedIconResId);
-//        task.setSectionId(section.getId());
-//        task.setRecurring(false);
-//        return task;
-//    }
-//
-//    private Task createRecurringTask(String title, String description, String displayDate) throws ParseException {
-//        Task task = new Task();
-//        task.setTitle(title.trim());
-//        task.setNotes(description);
-//        task.setColorResId(selectedColorResId);
-//        task.setIconResId(selectedIconResId);
-//        task.setSectionId(section.getId());
-//        task.setRecurring(true);
-//        task.setStartDate(formatDateForDb(displayDate));
-//        task.setSchedule(scheduleSpinner.getSelectedItem().toString());
-//        task.setTimePreference(getSelectedTimePreference());
-//        return task;
-//    }
-
-    private void saveOrUpdateTask(DatabaseManager dbManager, Task task) {
-        if (isEditMode) {
-            boolean updated = dbManager.updateTask(task);
-            Toast.makeText(getContext(), updated ? "Task updated!" : "Update failed", Toast.LENGTH_SHORT).show();
-        } else {
-            dbManager.saveTask(task);
-            Toast.makeText(getContext(), "Task created!", Toast.LENGTH_SHORT).show();
-        }
-
-        if (getParentFragment() instanceof SectionDetailFragment) {
-            ((SectionDetailFragment) getParentFragment()).refreshTaskList();
-        }
-        getParentFragmentManager().popBackStack();
-    }
 
     private String getSelectedTimePreference() {
         if (!timeSwitch.isChecked()) {
@@ -807,6 +733,7 @@ public class AddTaskFragment extends Fragment {
             }
         }
     }
+
     private int getSchedulePosition(String schedule) {
         ArrayAdapter<CharSequence> adapter = (ArrayAdapter<CharSequence>) scheduleSpinner.getAdapter();
         for (int i = 0; i < adapter.getCount(); i++) {
@@ -816,6 +743,7 @@ public class AddTaskFragment extends Fragment {
         }
         return 0;
     }
+
     private void deleteTask() {
         if (taskToEdit == null) return;
 
@@ -837,7 +765,6 @@ public class AddTaskFragment extends Fragment {
         getParentFragmentManager().popBackStack();
     }
 
-    // Helper method for date formatting
     private String formatDate(String dateString) {
         try {
             SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
@@ -853,16 +780,6 @@ public class AddTaskFragment extends Fragment {
         SimpleDateFormat displayFormat = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
         SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         return dbFormat.format(displayFormat.parse(displayDate));
-    }
-
-    private void navigateBackToTaskList() {
-        FragmentManager fragmentManager = getParentFragmentManager();
-        fragmentManager.popBackStack("section_detail", FragmentManager.POP_BACK_STACK_INCLUSIVE);
-
-        Fragment fragment = fragmentManager.findFragmentByTag("section_detail");
-        if (fragment instanceof SectionDetailFragment) {
-            ((SectionDetailFragment) fragment).refreshTaskList();
-        }
     }
 
     private void navigateBackToSectionDetail() {

@@ -85,18 +85,31 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         Log.d("TASK_DEBUG", "Raw deadline: " + task.getDeadline());
         Log.d("TASK_DEBUG", "Formatted: " + task.getTaskTypeDisplay());
 
-        // Set task icon
+        int iconResId;
         try {
-            int iconRes = task.getIconResId();
-            if (iconRes == 0) {
-                iconRes = R.drawable.ic_default_task;
+            // First try to get by name if available
+            if (task.getIconResName() != null) {
+                iconResId = context.getResources().getIdentifier(
+                        task.getIconResName(),
+                        "drawable",
+                        context.getPackageName()
+                );
+            } else {
+                // Fallback to direct ID
+                iconResId = task.getIconResId();
             }
-            holder.imgTaskIcon.setImageResource(iconRes);
-            holder.imgTaskIcon.setContentDescription("Task icon");
-        } catch (Resources.NotFoundException e) {
+
+            if (iconResId == 0) {
+                throw new Resources.NotFoundException();
+            }
+        } catch (Exception e) {
+            iconResId = R.drawable.ic_default_task;
             Log.e("TASK_ICON", "Icon not found, using default", e);
-            holder.imgTaskIcon.setImageResource(R.drawable.ic_default_task);
         }
+
+
+        holder.imgTaskIcon.setImageResource(iconResId);
+        holder.imgTaskIcon.setContentDescription("Task icon");
 
         // Set basic task info
         holder.tvTaskType.setText(task.getTaskTypeDisplay());
@@ -228,19 +241,15 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         try {
             int backgroundColor = getBackgroundColor(task.getColorResId());
 
-            // Create a rounded rectangle background
             GradientDrawable background = new GradientDrawable();
             background.setShape(GradientDrawable.RECTANGLE);
             background.setCornerRadius(12f);
             background.setColor(backgroundColor);
-
-            // Add a subtle border
-            int borderColor = Color.argb(30, 0, 0, 0);
-            background.setStroke(1, borderColor);
+            background.setStroke(1, Color.argb(30, 0, 0, 0)); // subtle border
 
             holder.taskContainer.setBackground(background);
 
-            // Add some elevation for modern look
+            // Add elevation for modern look
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 holder.taskContainer.setElevation(2f);
             }
@@ -261,18 +270,23 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     }
 
     private int getBackgroundColor(int colorResId) {
-        // Create a mapping between circle drawables and background colors
-        Map<Integer, Integer> colorMap = new HashMap<>();
-        colorMap.put(R.drawable.circle_background_1, ContextCompat.getColor(context, R.color.task_bg_1));
-        colorMap.put(R.drawable.circle_background_2, ContextCompat.getColor(context, R.color.task_bg_2));
-        colorMap.put(R.drawable.circle_background_3, ContextCompat.getColor(context, R.color.task_bg_3));
-        colorMap.put(R.drawable.circle_background_4, ContextCompat.getColor(context, R.color.task_bg_4));
-        colorMap.put(R.drawable.circle_background_5, ContextCompat.getColor(context, R.color.task_bg_5));
-        colorMap.put(R.drawable.circle_background_6, ContextCompat.getColor(context, R.color.task_bg_6));
-        colorMap.put(R.drawable.circle_background_7, ContextCompat.getColor(context, R.color.task_bg_7));
-
-        // Return the mapped color or default white
-        return colorMap.getOrDefault(colorResId, Color.WHITE);
+        if (colorResId == R.drawable.circle_background_1) {
+            return ContextCompat.getColor(context, R.color.task_color_1);
+        } else if (colorResId == R.drawable.circle_background_2) {
+            return ContextCompat.getColor(context, R.color.task_color_2);
+        } else if (colorResId == R.drawable.circle_background_3) {
+            return ContextCompat.getColor(context, R.color.task_color_3);
+        } else if (colorResId == R.drawable.circle_background_4) {
+            return ContextCompat.getColor(context, R.color.task_color_4);
+        } else if (colorResId == R.drawable.circle_background_5) {
+            return ContextCompat.getColor(context, R.color.task_color_5);
+        } else if (colorResId == R.drawable.circle_background_6) {
+            return ContextCompat.getColor(context, R.color.task_color_6);
+        } else if (colorResId == R.drawable.circle_background_7) {
+            return ContextCompat.getColor(context, R.color.task_color_7);
+        } else {
+            return ContextCompat.getColor(context, R.color.task_default); // Default case
+        }
     }
 
     static class TaskViewHolder extends RecyclerView.ViewHolder {

@@ -21,7 +21,6 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.dreamplan.database.DatabaseManager;
 import com.example.dreamplan.database.FirebaseDatabaseManager;
 import com.example.dreamplan.database.Section;
 import com.example.dreamplan.database.Task;
@@ -39,21 +38,6 @@ import java.util.Locale;
 
 public class SectionDetailFragment extends Fragment {
 
-//    private static final String ARG_SECTION = "section";
-//    private Section section;
-//    private TextView sectionName, sectionNotes, currentDate;
-//    private FloatingActionButton addTaskButton;
-//    private DatabaseManager dbManager;
-//  //  private List<Task> taskList;
-//    private TaskAdapter taskAdapter;
-//
-//    private FirebaseFirestore db;
-//    private String userId;
-//    private List<Task> taskList = new ArrayList<>();
-//
-//    private FirebaseDatabaseManager dbManager;
-//  //  private List<Task> taskList = new ArrayList<>();
-//
 private static final String ARG_SECTION = "section";
     private Section section;
     private TextView sectionName, sectionNotes, currentDate;

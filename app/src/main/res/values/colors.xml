@@ -119,5 +119,13 @@
         <item>#FFE2D1F9</item> <!-- Purple -->
     </array>
 
+    <color name="task_color_1">#CCE1F2</color>
+    <color name="task_color_2">#C6F8E5</color> <!-- Green -->
+    <color name="task_color_3">#FBF7D5</color>
+    <color name="task_color_4">#F9DED7</color>
+    <color name="task_color_5">#F5CDDE</color>
+    <color name="task_color_6">#E2BEF1</color>
+    <color name="task_color_7">#D3D3D3</color>
+    <color name="task_default">#E0E0E0</color> <!-- Grey -->
 
 </resources>

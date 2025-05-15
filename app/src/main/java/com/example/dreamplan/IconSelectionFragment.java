@@ -25,16 +25,26 @@ public class IconSelectionFragment extends Fragment {
     private IconSelectionListener listener;
     private int currentIconResId = R.drawable.star;
 
-    private Integer[] icons = {
-            R.drawable.star,
-            R.drawable.ic_work,
-            R.drawable.ic_study,
-            R.drawable.ic_shopping
-            // Add all your icons
+
+    private final IconPair[] icons = {
+            new IconPair(R.drawable.star, "star"),
+            new IconPair(R.drawable.ic_work, "ic_work"),
+            new IconPair(R.drawable.ic_study, "ic_study"),
+            new IconPair(R.drawable.ic_shopping, "ic_shopping")
     };
 
+    private static class IconPair {
+        final int resId;
+        final String name;
+
+        IconPair(int resId, String name) {
+            this.resId = resId;
+            this.name = name;
+        }
+    }
+
     public interface IconSelectionListener {
-        void onIconSelected(int iconResId);
+        void onIconSelected(int iconResId, String iconName);
     }
 
     @Nullable
@@ -44,31 +54,43 @@ public class IconSelectionFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
         GridView gridView = (GridView) inflater.inflate(R.layout.fragment_icon_selection, container, false);
 
-        gridView.setAdapter(new ArrayAdapter<Integer>(requireContext(), R.layout.item_icon, icons) {
-            @NonNull
+        gridView.setAdapter(new BaseAdapter() {
+            @Override
+            public int getCount() {
+                return icons.length;
+            }
+
+            @Override
+            public Object getItem(int position) {
+                return icons[position];
+            }
+
+            @Override
+            public long getItemId(int position) {
+                return position;
+            }
+
             @Override
             public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
                 ImageView imageView = (ImageView) (convertView != null ? convertView :
                         LayoutInflater.from(getContext()).inflate(R.layout.item_icon, parent, false));
 
-                // Just set the icon, no background or selection effect
-                imageView.setImageResource(icons[position]);
-                imageView.setBackground(null);  // Remove any background
-
+                imageView.setImageResource(icons[position].resId);
                 return imageView;
             }
         });
 
         gridView.setOnItemClickListener((parent, view, position, id) -> {
             if (listener != null) {
-                int selectedIconResId = icons[position];
-                listener.onIconSelected(selectedIconResId); // Send back the selected icon
-                getParentFragmentManager().popBackStack(); // Close the selection dialog
+                IconPair selected = icons[position];
+                listener.onIconSelected(selected.resId, selected.name);
+                getParentFragmentManager().popBackStack();
             }
         });
 
         return gridView;
     }
+
 
     public void setIconSelectionListener(IconSelectionListener listener) {
         this.listener = listener;
@@ -81,7 +103,7 @@ public class IconSelectionFragment extends Fragment {
     }
 
     public void setCurrentIcon(int iconResId) {
-        if (iconResId != 0) { // Only set if valid resource ID
+        if (iconResId != 0) {
             this.currentIconResId = iconResId;
         }
     }

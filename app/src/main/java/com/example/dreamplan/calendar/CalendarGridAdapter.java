@@ -17,9 +17,7 @@ import android.widget.TextView;
 import androidx.core.content.ContextCompat;
 
 import com.example.dreamplan.R;
-import com.example.dreamplan.database.DatabaseManager;
 import com.example.dreamplan.database.FirebaseDatabaseManager;
-
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;

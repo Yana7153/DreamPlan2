@@ -37,7 +37,7 @@ public class SectionAdapter extends RecyclerView.Adapter<SectionAdapter.SectionV
     @Override
     public SectionViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(context).inflate(R.layout.item_section, parent, false);
-        return new SectionViewHolder(view, this); // Pass 'this' (adapter instance)
+        return new SectionViewHolder(view, this);
     }
 
     @Override
@@ -58,7 +58,6 @@ public class SectionAdapter extends RecyclerView.Adapter<SectionAdapter.SectionV
         } catch (Exception e) {
             Log.e("SectionAdapter", "Error setting section color", e);
 
-            // Fallback to default color
             GradientDrawable background = (GradientDrawable) ContextCompat.getDrawable(context, R.drawable.section_background);
             if (background != null) {
                 background.setColor(ContextCompat.getColor(context, R.color.purple_200));
@@ -116,7 +115,7 @@ public class SectionAdapter extends RecyclerView.Adapter<SectionAdapter.SectionV
             if (position != RecyclerView.NO_POSITION) {
                 Section section = adapter.sectionList.get(position);
                 Log.d("SectionAdapter", "Section clicked: " + section.getName());
-                adapter.homeFragment.openSectionDetail(section); // Open SectionDetailFragment
+                adapter.homeFragment.openSectionDetail(section);
             }
         }
 

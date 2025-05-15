@@ -13,8 +13,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
-
-//import com.example.dreamplan.database.AuthManager;
 import com.example.dreamplan.database.AuthManager;
 import com.example.dreamplan.database.FirebaseDatabaseManager;
 import com.example.dreamplan.database.Section;
@@ -23,9 +21,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.List;
-
 import javax.inject.Inject;
-
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
@@ -46,10 +42,8 @@ public class SignUpFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_signup, container, false);
-
         initializeViews(view);
         setupClickListeners();
-
         return view;
     }
 
@@ -196,7 +190,6 @@ public class SignUpFragment extends Fragment {
         dbManager.getSections(new FirebaseDatabaseManager.DatabaseCallback<List<Section>>() {
             @Override
             public void onSuccess(List<Section> existingSections) {
-                // Only create defaults if no sections exist
                 if (existingSections == null || existingSections.isEmpty()) {
                     String[] sectionNames = {"Work", "Personal", "Study"};
                     String[] sectionColors = {"1", "2", "3"};

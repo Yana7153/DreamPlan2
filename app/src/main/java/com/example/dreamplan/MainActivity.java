@@ -118,13 +118,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-//    public void refreshHomeTaskCounts() {
-//        Fragment home = getSupportFragmentManager().findFragmentByTag("home_fragment");
-//        if (home instanceof HomeFragment) {
-//            ((HomeFragment) home).refreshTaskCounts();
-//        }
-//    }
-
     @Override
     protected void onResume() {
         super.onResume();

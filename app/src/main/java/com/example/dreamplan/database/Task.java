@@ -1,5 +1,6 @@
 package com.example.dreamplan.database;
 
+import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
@@ -33,9 +34,12 @@ public class Task implements Parcelable {
 
     private String taskTypeDisplay;
 
+    @PropertyName("iconResName")  // Store the resource name, not just ID
+    private String iconResName;
+
     public Task() {}
 
-    public Task(String id, String title, String notes, String dueDate, int colorResId, int iconResId, String sectionId,
+    public Task(String id, String title, String notes, String dueDate, int colorResId, int iconResId,  String iconResName, String sectionId,
                 boolean isRecurring, String startDate, String schedule, String timePreference) {
         Log.d("TASK_DEBUG", "Creating task with icon: " + iconResId);
         this.id = id;
@@ -43,7 +47,8 @@ public class Task implements Parcelable {
         this.notes = notes != null ? notes : "";
         this.deadline = dueDate != null ? dueDate : "";
         this.colorResId = colorResId;
-        this.iconResId = iconResId != 0 ? iconResId : R.drawable.star;
+        this.iconResId = iconResId;
+        this.iconResName = iconResName != null ? iconResName : "star";
         this.sectionId = sectionId;
         this.isRecurring = isRecurring;
         this.startDate = startDate != null ? startDate : "";
@@ -58,6 +63,7 @@ public class Task implements Parcelable {
             this.taskTypeDisplay = "📅 One-time • " +
                     (TextUtils.isEmpty(dueDate) ? "Not set" : dueDate);
         }
+
     }
 
 
@@ -66,12 +72,10 @@ public class Task implements Parcelable {
             if (isRecurring) {
                 StringBuilder builder = new StringBuilder("🔄 Recurring");
 
-                // Always show schedule if available
                 if (!TextUtils.isEmpty(schedule)) {
                     builder.append(" • ").append(schedule);
                 }
 
-                // Show start date if available
                 if (!TextUtils.isEmpty(startDate)) {
                     try {
                         SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
@@ -85,7 +89,6 @@ public class Task implements Parcelable {
 
                 return builder.toString();
             } else {
-                // One-time task display
                 if (TextUtils.isEmpty(deadline)) {
                     return "📅 No date set";
                 }
@@ -105,7 +108,6 @@ public class Task implements Parcelable {
         }
     }
 
-    // Getters and setters
     @Exclude
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -130,18 +132,9 @@ public class Task implements Parcelable {
     public int getIconResId() { return iconResId; }
     public void setIconResId(int iconResId) { this.iconResId = iconResId; }
 
-//    public boolean isRecurring() {
-//        return isRecurring;
-//    }
-//
-//    public void setRecurring(boolean recurring) {
-//        isRecurring = recurring;
-//    }
-
     public String getStartDate() {
         return startDate;
     }
-
     public void setStartDate(String startDate) {
         this.startDate = startDate;
     }
@@ -149,7 +142,6 @@ public class Task implements Parcelable {
     public String getSchedule() {
         return schedule;
     }
-
     public void setSchedule(String schedule) {
         this.schedule = schedule;
     }
@@ -157,7 +149,6 @@ public class Task implements Parcelable {
     public String getTimePreference() {
         return timePreference;
     }
-
     public void setTimePreference(String timePreference) {
         this.timePreference = timePreference;
     }
@@ -209,6 +200,7 @@ public class Task implements Parcelable {
         dest.writeString(schedule);
         dest.writeString(timePreference);
         dest.writeString(taskTypeDisplay);
+
     }
 
     // Add explicit @PropertyName annotations for Firebase
@@ -224,5 +216,30 @@ public class Task implements Parcelable {
     @PropertyName("isRecurring")
     public void setRecurring(boolean recurring) {
         isRecurring = recurring;
+    }
+
+    public String getIconResName() {
+        return iconResName;
+    }
+
+    @PropertyName("iconResName")
+    public void setIconResName(String iconResName) {
+        this.iconResName = iconResName;
+    }
+
+    @Exclude
+    public int getIconResId(Context context) {
+        try {
+            // First try by name if available
+            if (iconResName != null) {
+                int resId = context.getResources()
+                        .getIdentifier(iconResName, "drawable", context.getPackageName());
+                if (resId != 0) return resId;
+            }
+            // Fallback to stored ID
+            return iconResId;
+        } catch (Exception e) {
+            return R.drawable.ic_default_task;
+        }
     }
 }

@@ -11,9 +11,9 @@ public class Section implements Serializable {
     private String notes;
     private boolean isDefault;
 
+
     public Section() {}
 
-    // Constructor
     public Section(String id, String name, String color, String notes, boolean isDefault) {
         this.id = id;
         this.name = name;
@@ -22,7 +22,6 @@ public class Section implements Serializable {
         this.isDefault = isDefault;
     }
 
-    // Getters and setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 

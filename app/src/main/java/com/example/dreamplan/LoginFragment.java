@@ -122,7 +122,6 @@ public class LoginFragment extends Fragment {
         AlertDialog dialog = builder.create();
         dialog.show();
 
-        // Customize button colors if needed
         Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
         positiveButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.primary_color));
 
