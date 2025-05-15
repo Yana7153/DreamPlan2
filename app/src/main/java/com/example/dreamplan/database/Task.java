@@ -24,7 +24,7 @@ public class Task implements Parcelable {
     private String notes;
     private String deadline;
     private int colorResId;
-    private int iconResId;
+  //  private int iconResId;
     private String sectionId;
 
   //  private boolean isRecurring;
@@ -36,6 +36,9 @@ public class Task implements Parcelable {
 
     @PropertyName("iconResName")  // Store the resource name, not just ID
     private String iconResName;
+
+    @PropertyName("iconResId")
+    private int iconResId;
 
     public Task() {}
 

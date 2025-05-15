@@ -186,16 +186,35 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     }
 
     private void setTaskIcon(@NonNull TaskViewHolder holder, Task task) {
+        int iconResId;
         try {
-            int iconResId = task.getIconResId() != 0 ? task.getIconResId() : R.drawable.star;
+            // First try to load by resource ID if available
+            if (task.getIconResId() != 0) {
+                iconResId = task.getIconResId();
+                holder.imgTaskIcon.setImageResource(iconResId);
+                return;
+            }
+
+            // Fallback to loading by name
+            if (task.getIconResName() != null) {
+                iconResId = context.getResources().getIdentifier(
+                        task.getIconResName(),
+                        "drawable",
+                        context.getPackageName()
+                );
+                if (iconResId != 0) {
+                    holder.imgTaskIcon.setImageResource(iconResId);
+                    return;
+                }
+            }
+
+            // Ultimate fallback
+            iconResId = R.drawable.ic_default_task;
             holder.imgTaskIcon.setImageResource(iconResId);
 
-            // Optional: Add some padding and scaling
-            holder.imgTaskIcon.setPadding(8, 8, 8, 8);
-            holder.imgTaskIcon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        } catch (Resources.NotFoundException e) {
-            holder.imgTaskIcon.setImageResource(R.drawable.star);
-            Log.w("TaskAdapter", "Icon not found, using default", e);
+        } catch (Exception e) {
+            Log.e("TaskAdapter", "Error loading icon", e);
+            holder.imgTaskIcon.setImageResource(R.drawable.ic_default_task);
         }
     }
 

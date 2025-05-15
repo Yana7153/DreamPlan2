@@ -275,12 +275,15 @@ public class AddTaskFragment extends Fragment {
     private void setupImageSelection() {
         imgTaskIcon.setOnClickListener(v -> {
             IconSelectionFragment fragment = new IconSelectionFragment();
+            // Pass current icon if editing
+            if (isEditMode && taskToEdit != null) {
+                fragment.setCurrentIcon(taskToEdit.getIconResId());
+            }
             fragment.setIconSelectionListener((resId, iconName) -> {
                 selectedIconResId = resId;
-                selectedIconName = iconName;
+                selectedIconName = iconName; // Make sure this matches exactly with your drawable names
                 updateIconPreview(resId);
             });
-
             getParentFragmentManager()
                     .beginTransaction()
                     .replace(R.id.fragment_container, fragment)
@@ -513,7 +516,7 @@ public class AddTaskFragment extends Fragment {
                     dueDate,
                     selectedColorResId,
                     selectedIconResId,
-                    selectedIconName,
+                    iconResName,
                     section.getId(),
                     !isOneTime,
                     startDate,
