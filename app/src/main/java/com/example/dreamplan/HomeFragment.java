@@ -138,7 +138,8 @@ public class HomeFragment extends Fragment {
     public void onResume() {
         super.onResume();
         loadTaskCounts();
-        // Show FAB again when returning to HomeFragment
+        loadSections();
+
         if (getActivity() != null && getActivity() instanceof MainActivity) {
             FloatingActionButton btnAddSection = getActivity().findViewById(R.id.btnAddSection);
             if (btnAddSection != null) {
@@ -146,13 +147,12 @@ public class HomeFragment extends Fragment {
                 btnAddSection.setOnClickListener(v -> showAddSectionDialog());
             }
         }
-        refreshTaskCounts();
     }
 
     private final BroadcastReceiver updateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            refreshTaskCounts();
+            loadTaskCounts(); // Use Firebase version instead of refreshTaskCounts()
         }
     };
 
@@ -367,47 +367,55 @@ public class HomeFragment extends Fragment {
     }
 
     private void loadTaskCounts() {
-        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String today = sdf.format(new Date());
 
         // Today's tasks
         dbManager.getTaskCountForDate(today, new FirebaseDatabaseManager.DatabaseCallback<Integer>() {
             @Override
             public void onSuccess(Integer count) {
                 tvTasksTodayNumber.setText(String.valueOf(count));
+                Log.d("TASK_COUNT", "Today's tasks: " + count);
             }
             @Override
             public void onFailure(Exception e) {
                 tvTasksTodayNumber.setText("0");
+                Log.e("TASK_COUNT", "Error getting today's tasks", e);
             }
         });
 
         // Tomorrow's tasks
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DATE, 1);
-        String tomorrow = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(cal.getTime());
+        String tomorrow = sdf.format(cal.getTime());
 
         dbManager.getTaskCountForDate(tomorrow, new FirebaseDatabaseManager.DatabaseCallback<Integer>() {
             @Override
             public void onSuccess(Integer count) {
                 tvTasksTomorrowNumber.setText(String.valueOf(count));
+                Log.d("TASK_COUNT", "Tomorrow's tasks: " + count);
             }
             @Override
             public void onFailure(Exception e) {
                 tvTasksTomorrowNumber.setText("0");
+                Log.e("TASK_COUNT", "Error getting tomorrow's tasks", e);
             }
         });
 
-        cal.add(Calendar.DATE, 6);
-        String weekLater = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(cal.getTime());
+        // Week's tasks (today + 6 days = 7 days total)
+        cal.add(Calendar.DATE, 6); // Add 6 more days to tomorrow (total 7 days from today)
+        String weekLater = sdf.format(cal.getTime());
 
-        dbManager.getTaskCountForDate(today, new FirebaseDatabaseManager.DatabaseCallback<Integer>() {
+        dbManager.getTaskCountForDateRange(today, weekLater, new FirebaseDatabaseManager.DatabaseCallback<Integer>() {
             @Override
             public void onSuccess(Integer count) {
                 tvTasksWeekNumber.setText(String.valueOf(count));
+                Log.d("TASK_COUNT", "Week's tasks: " + count);
             }
             @Override
             public void onFailure(Exception e) {
                 tvTasksWeekNumber.setText("0");
+                Log.e("TASK_COUNT", "Error getting week's tasks", e);
             }
         });
     }
@@ -454,32 +462,32 @@ public class HomeFragment extends Fragment {
 
 
 
-    private void refreshTaskCounts() {
-        if (getActivity() == null || !isAdded()) return;
-
-        new Thread(() -> {
-            try {
-                DatabaseManager db = new DatabaseManager(requireContext());
-                final int todayCount = db.getTasksDueTodayCount();
-                final int tomorrowCount = db.getTasksDueTomorrowCount();
-                final int weekCount = db.getTasksDueInWeekCount();
-
-                getActivity().runOnUiThread(() -> {
-                    if (!tvTasksTodayNumber.getText().equals(String.valueOf(todayCount))) {
-                        tvTasksTodayNumber.setText(String.valueOf(todayCount));
-                    }
-                    if (!tvTasksTomorrowNumber.getText().equals(String.valueOf(tomorrowCount))) {
-                        tvTasksTomorrowNumber.setText(String.valueOf(tomorrowCount));
-                    }
-                    if (!tvTasksWeekNumber.getText().equals(String.valueOf(weekCount))) {
-                        tvTasksWeekNumber.setText(String.valueOf(weekCount));
-                    }
-                });
-            } catch (Exception e) {
-                Log.e("REFRESH", "Auto-refresh failed", e);
-            }
-        }).start();
-    }
+//    private void refreshTaskCounts() {
+//        if (getActivity() == null || !isAdded()) return;
+//
+//        new Thread(() -> {
+//            try {
+//                DatabaseManager db = new DatabaseManager(requireContext());
+//                final int todayCount = db.getTasksDueTodayCount();
+//                final int tomorrowCount = db.getTasksDueTomorrowCount();
+//                final int weekCount = db.getTasksDueInWeekCount();
+//
+//                getActivity().runOnUiThread(() -> {
+//                    if (!tvTasksTodayNumber.getText().equals(String.valueOf(todayCount))) {
+//                        tvTasksTodayNumber.setText(String.valueOf(todayCount));
+//                    }
+//                    if (!tvTasksTomorrowNumber.getText().equals(String.valueOf(tomorrowCount))) {
+//                        tvTasksTomorrowNumber.setText(String.valueOf(tomorrowCount));
+//                    }
+//                    if (!tvTasksWeekNumber.getText().equals(String.valueOf(weekCount))) {
+//                        tvTasksWeekNumber.setText(String.valueOf(weekCount));
+//                    }
+//                });
+//            } catch (Exception e) {
+//                Log.e("REFRESH", "Auto-refresh failed", e);
+//            }
+//        }).start();
+//    }
 
 //    private void showDeleteConfirmationDialog(Section section) {
 //        new AlertDialog.Builder(requireContext())

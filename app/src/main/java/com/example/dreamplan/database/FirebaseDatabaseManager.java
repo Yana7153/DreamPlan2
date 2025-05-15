@@ -8,9 +8,15 @@ import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.PropertyName;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class FirebaseDatabaseManager {
@@ -176,17 +182,59 @@ public class FirebaseDatabaseManager {
     public void getTaskCountForDate(String date, DatabaseCallback<Integer> callback) {
         String userId = auth.getCurrentUser().getUid();
 
+        Log.d("FIREBASE_QUERY", "Querying tasks for date: " + date);
+
         db.collection("users").document(userId)
                 .collection("tasks")
-                .whereEqualTo("dueDate", date)
+                .whereEqualTo("deadline", date)
                 .get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        callback.onSuccess(task.getResult().size());
+                        int count = task.getResult().size();
+                        Log.d("FIREBASE_QUERY", "Found " + count + " tasks for " + date);
+                        for (QueryDocumentSnapshot doc : task.getResult()) {
+                            Log.d("FIREBASE_QUERY", "Task: " + doc.getData());
+                        }
+                        callback.onSuccess(count);
                     } else {
+                        Log.e("FIREBASE_QUERY", "Error getting tasks", task.getException());
                         callback.onFailure(task.getException());
                     }
                 });
+    }
+
+    private boolean doesRecurOnDate(Task task, String checkDate) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            Date startDate = sdf.parse(task.getStartDate());
+            Date targetDate = sdf.parse(checkDate);
+
+            // Check if target date is before start date
+            if (targetDate.before(startDate)) {
+                return false;
+            }
+
+            Calendar startCal = Calendar.getInstance();
+            startCal.setTime(startDate);
+            Calendar targetCal = Calendar.getInstance();
+            targetCal.setTime(targetDate);
+
+            // Check recurrence pattern
+            switch (task.getSchedule()) {
+                case "Daily":
+                    return true;
+                case "Weekly":
+                    // Check if same day of week
+                    return startCal.get(Calendar.DAY_OF_WEEK) == targetCal.get(Calendar.DAY_OF_WEEK);
+                case "Monthly":
+                    // Check if same day of month
+                    return startCal.get(Calendar.DAY_OF_MONTH) == targetCal.get(Calendar.DAY_OF_MONTH);
+                default:
+                    return false;
+            }
+        } catch (ParseException e) {
+            return false;
+        }
     }
 
     public void deleteTask(String taskId, DatabaseCallback<Void> callback) {
@@ -250,6 +298,23 @@ public class FirebaseDatabaseManager {
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         callback.onSuccess(!task.getResult().isEmpty());
+                    } else {
+                        callback.onFailure(task.getException());
+                    }
+                });
+    }
+
+    public void getTaskCountForDateRange(String startDate, String endDate, DatabaseCallback<Integer> callback) {
+        String userId = auth.getCurrentUser().getUid();
+
+        db.collection("users").document(userId)
+                .collection("tasks")
+                .whereGreaterThanOrEqualTo("deadline", startDate)
+                .whereLessThanOrEqualTo("deadline", endDate)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        callback.onSuccess(task.getResult().size());
                     } else {
                         callback.onFailure(task.getException());
                     }

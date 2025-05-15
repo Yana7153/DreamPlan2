@@ -161,8 +161,8 @@ public class AddTaskFragment extends Fragment {
         imgTaskIcon.setScaleType(ImageView.ScaleType.FIT_CENTER);
         imgTaskIcon.setAdjustViewBounds(true);
 
-//        btnDelete = view.findViewById(R.id.btnDeleteTask);
-//        btnDelete.setOnClickListener(v -> deleteTask());
+        btnDelete = view.findViewById(R.id.btnDeleteTask);
+        btnDelete.setOnClickListener(v -> deleteTask());
 
         toggleGroup = view.findViewById(R.id.toggle_recurrence);
         toggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
@@ -229,7 +229,9 @@ public class AddTaskFragment extends Fragment {
             if (taskToEdit != null) {
                 isEditMode = true;
                 populateTaskData(taskToEdit);
-                btnDelete.setVisibility(View.VISIBLE);
+                if (btnDelete != null) {  // Add null check for safety
+                    btnDelete.setVisibility(View.VISIBLE);
+                }
             }
         }
 
@@ -573,6 +575,9 @@ public class AddTaskFragment extends Fragment {
                     Toast.makeText(getContext(), "Failed to save: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 }
             });
+
+            Log.d("TASK_SAVE", "Saving task with deadline: " + task.getDeadline());
+            Log.d("TASK_SAVE", "Is recurring: " + task.isRecurring());
 
         } catch (Exception e) {
             isSaving = false;
