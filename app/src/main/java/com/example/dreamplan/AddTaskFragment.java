@@ -439,7 +439,6 @@ public class AddTaskFragment extends Fragment {
 
         btnDate.setTag("");
 
-        // Set initial date if editing
         if (existingDate != null && !existingDate.isEmpty()) {
             try {
                 Date date = dbFormat.parse(existingDate);
@@ -456,6 +455,8 @@ public class AddTaskFragment extends Fragment {
                     btnDate.setTag(existingDate);
                 }
             }
+        } else {
+            btnDate.setText("Select date");
         }
 
         btnDate.setOnClickListener(v -> {
@@ -756,9 +757,29 @@ public class AddTaskFragment extends Fragment {
 
             etTaskTitle.setText(task.getTitle());
             etDescription.setText(task.getNotes());
-            Log.d("ICON_FLOW", "Loaded existing icon: " + selectedIconResId);
 
+            if (task.isRecurring()) {
+                toggleGroup.check(R.id.btn_regular);
+                if (!TextUtils.isEmpty(task.getStartDate())) {
+                    btnStartDate.setText(formatDateForDisplay(task.getStartDate()));
+                    btnStartDate.setTag(task.getStartDate());
+                }
+                if (!TextUtils.isEmpty(task.getSchedule())) {
+                    setScheduleSelection(task.getSchedule());
+                }
+            } else {
+                toggleGroup.check(R.id.btn_one_time);
+                if (!TextUtils.isEmpty(task.getDeadline())) {
+                    btnDate.setText(formatDateForDisplay(task.getDeadline()));
+                    btnDate.setTag(task.getDeadline());
+                }
+            }
 
+            if (!TextUtils.isEmpty(task.getTimePreference())) {
+                timeSwitch.setChecked(true);
+            }
+
+            Log.d("TASK_EDIT", "Loaded task data for editing");
         } catch (Exception e) {
             Log.e("EditTask", "Error loading task data", e);
             Toast.makeText(getContext(), "Error loading task", Toast.LENGTH_SHORT).show();
@@ -772,7 +793,8 @@ public class AddTaskFragment extends Fragment {
             Date date = dbFormat.parse(dbDate);
             return displayFormat.format(date);
         } catch (Exception e) {
-            return dbDate;
+            Log.e("DATE_FORMAT", "Error formatting date", e);
+            return dbDate; // Return original if formatting fails
         }
     }
 
