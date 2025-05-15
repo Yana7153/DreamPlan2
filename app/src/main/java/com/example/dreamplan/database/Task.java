@@ -24,7 +24,7 @@ public class Task implements Parcelable {
     private String notes;
     private String deadline;
     private int colorResId;
-  //  private int iconResId;
+ //   private int iconResId;
     private String sectionId;
 
   //  private boolean isRecurring;

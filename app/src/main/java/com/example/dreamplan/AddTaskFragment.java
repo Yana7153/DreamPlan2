@@ -3,16 +3,20 @@ package com.example.dreamplan;
 import static com.example.dreamplan.database.FirebaseDatabaseManager.*;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -93,6 +97,7 @@ public class AddTaskFragment extends Fragment {
 
     private String iconResName = "star";
     private String selectedIconName = "star";
+    private boolean iconSelectionLock = false;
 
     public static AddTaskFragment newInstance(Section section, Task task) {
         AddTaskFragment fragment = new AddTaskFragment();
@@ -162,6 +167,11 @@ public class AddTaskFragment extends Fragment {
         imgTaskIcon.setScaleType(ImageView.ScaleType.FIT_CENTER);
         imgTaskIcon.setAdjustViewBounds(true);
 
+        SharedPreferences prefs = requireContext().getSharedPreferences("icon_prefs", Context.MODE_PRIVATE);
+        selectedIconResId = prefs.getInt("selected_icon_res", R.drawable.star);
+        selectedIconName = prefs.getString("selected_icon_name", "star");
+
+
         btnDelete = view.findViewById(R.id.btnDeleteTask);
         btnDelete.setOnClickListener(v -> deleteTask());
 
@@ -178,6 +188,18 @@ public class AddTaskFragment extends Fragment {
             }
         });
 
+        if (savedInstanceState != null) {
+            selectedIconResId = savedInstanceState.getInt("selected_icon", R.drawable.star);
+            iconSelectionLock = savedInstanceState.getBoolean("icon_lock", false);
+            updateIconPreview(selectedIconResId);
+        }
+
+        if (getArguments() != null && getArguments().containsKey("task")) {
+            taskToEdit = getArguments().getParcelable("task");
+            if (taskToEdit != null) {
+                populateTaskData(taskToEdit);
+            }
+        }
 
         btnDate = view.findViewById(R.id.btn_date);
         btnStartDate = view.findViewById(R.id.btn_start_date);
@@ -230,7 +252,7 @@ public class AddTaskFragment extends Fragment {
             if (taskToEdit != null) {
                 isEditMode = true;
                 populateTaskData(taskToEdit);
-                if (btnDelete != null) {  // Add null check for safety
+                if (btnDelete != null) {
                     btnDelete.setVisibility(View.VISIBLE);
                 }
             }
@@ -272,18 +294,57 @@ public class AddTaskFragment extends Fragment {
         });
     }
 
+    private IconSelectionFragment.IconSelectionListener iconSelectionListener =
+            new IconSelectionFragment.IconSelectionListener() {
+                @Override
+                public void onIconSelected(int iconResId, String iconName) {
+                    if (!isAdded()) return;
+
+                    // Lock to prevent overwrites
+                    iconSelectionLock = true;
+
+                    // Update state
+                    selectedIconResId = iconResId;
+                    selectedIconName = iconName;
+
+                    // Update task object if editing
+                    if (taskToEdit != null) {
+                        taskToEdit.setIconResId(iconResId);
+                    }
+
+                    // Update UI immediately
+                    requireActivity().runOnUiThread(() -> {
+                        imgTaskIcon.setImageResource(iconResId);
+                        imgTaskIcon.invalidate();
+                        Log.d("ICON_FIX", "Icon permanently set to: " + iconResId);
+                    });
+                }
+            };
+
+    private void persistIconSelection(int resId, String name) {
+        // Store in SharedPreferences as backup
+        requireContext().getSharedPreferences("icon_prefs", Context.MODE_PRIVATE)
+                .edit()
+                .putInt("selected_icon_res", resId)
+                .putString("selected_icon_name", name)
+                .apply();
+    }
+
     private void setupImageSelection() {
         imgTaskIcon.setOnClickListener(v -> {
             IconSelectionFragment fragment = new IconSelectionFragment();
-            // Pass current icon if editing
+
             if (isEditMode && taskToEdit != null) {
                 fragment.setCurrentIcon(taskToEdit.getIconResId());
+            } else {
+                fragment.setCurrentIcon(selectedIconResId);
             }
             fragment.setIconSelectionListener((resId, iconName) -> {
                 selectedIconResId = resId;
                 selectedIconName = iconName; // Make sure this matches exactly with your drawable names
                 updateIconPreview(resId);
             });
+
             getParentFragmentManager()
                     .beginTransaction()
                     .replace(R.id.fragment_container, fragment)
@@ -313,6 +374,7 @@ public class AddTaskFragment extends Fragment {
         }
     }
 
+
     private void setupColorSelection(ImageView colorPreview, LinearLayout colorOptions) {
         int[] colorDrawables = {
                 R.drawable.circle_background_1,
@@ -325,45 +387,47 @@ public class AddTaskFragment extends Fragment {
         };
 
         colorOptions.removeAllViews();
-        colorOptions.setOrientation(LinearLayout.HORIZONTAL);
 
-        // Add proper spacing between circles
-        int marginInPx = dpToPx(12); // Increased spacing
-        int circleSize = dpToPx(36); // Slightly smaller circles
+        // Get the initially selected color (for edit mode)
+        int initialSelection = isEditMode && taskToEdit != null ?
+                taskToEdit.getColorResId() : R.drawable.circle_background_1;
 
-        for (int drawableId : colorDrawables) {
-            ImageView colorOption = new ImageView(requireContext());
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                    circleSize,
-                    circleSize
+        for (int i = 0; i < colorDrawables.length; i++) {
+            int drawableId = colorDrawables[i];
+
+            // Create container FrameLayout
+            FrameLayout container = new FrameLayout(requireContext());
+            FrameLayout.LayoutParams containerParams = new FrameLayout.LayoutParams(
+                    dpToPx(44), // Slightly larger to accommodate border
+                    dpToPx(44)
             );
-            params.setMargins(marginInPx, 0, 0, 0); // Space between circles
+            containerParams.setMargins(dpToPx(8), 0, dpToPx(8), 0);
+            container.setLayoutParams(containerParams);
 
-            // Set the circle image
+            // Create the color circle
+            ImageView colorOption = new ImageView(requireContext());
+            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                    dpToPx(36),
+                    dpToPx(36),
+                    Gravity.CENTER
+            );
+            colorOption.setLayoutParams(params);
             colorOption.setImageResource(drawableId);
             colorOption.setTag(drawableId);
 
-            // Create a container FrameLayout for proper border
-            FrameLayout circleContainer = new FrameLayout(requireContext());
-            FrameLayout.LayoutParams containerParams = new FrameLayout.LayoutParams(
-                    circleSize + dpToPx(4), // Extra space for border
-                    circleSize + dpToPx(4)
-            );
-            circleContainer.setLayoutParams(containerParams);
-
-            // Add the color circle to container
-            circleContainer.addView(colorOption);
-
-            // Set initial selection
-            if (drawableId == selectedColorResId) {
-                circleContainer.setBackgroundResource(R.drawable.circle_selected_border);
+            // Set selection state
+            if (drawableId == initialSelection) {
+                container.setBackgroundResource(R.drawable.circle_selected_border);
+                selectedColorResId = drawableId;
             }
 
             colorOption.setOnClickListener(v -> {
-                // Remove borders from all options
+                // Remove all borders first
                 for (int j = 0; j < colorOptions.getChildCount(); j++) {
-                    View container = colorOptions.getChildAt(j);
-                    container.setBackground(null);
+                    View child = colorOptions.getChildAt(j);
+                    if (child instanceof FrameLayout) {
+                        child.setBackground(null);
+                    }
                 }
 
                 // Add border to selected container
@@ -371,11 +435,10 @@ public class AddTaskFragment extends Fragment {
 
                 // Update selected color
                 selectedColorResId = (int) v.getTag();
-
-                Log.d("COLOR_SELECT", "Selected color drawable: " + selectedColorResId);
             });
 
-            colorOptions.addView(circleContainer);
+            container.addView(colorOption);
+            colorOptions.addView(container);
         }
     }
 
@@ -675,14 +738,13 @@ public class AddTaskFragment extends Fragment {
             isEditMode = true;
             taskToEdit = task;
 
-            // Set basic fields
-            selectedIconResId = task.getIconResId();
-            if (selectedIconResId == 0) {
-                selectedIconResId = R.drawable.star;
+            if (!iconSelectionLock && selectedIconResId == R.drawable.star) {
+                selectedIconResId = task.getIconResId();
+                if (selectedIconResId == 0) {
+                    selectedIconResId = R.drawable.star;
+                }
+                updateIconPreview(selectedIconResId);
             }
-
-            // Update the icon preview
-            updateIconPreview(selectedIconResId);
 
             etTaskTitle.setText(task.getTitle());
             etDescription.setText(task.getNotes());
@@ -800,4 +862,23 @@ public class AddTaskFragment extends Fragment {
                     .commit();
         }
     }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt("selected_icon", selectedIconResId);
+        if (taskToEdit != null) {
+            taskToEdit.setIconResId(selectedIconResId);
+        }
+    }
+
+    @Override
+    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
+        if (savedInstanceState != null) {
+            selectedIconResId = savedInstanceState.getInt("selected_icon", R.drawable.star);
+            updateIconPreview(selectedIconResId);
+        }
+    }
+
 }

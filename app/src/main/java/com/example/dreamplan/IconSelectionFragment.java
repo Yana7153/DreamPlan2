@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,9 +22,15 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
+import java.lang.ref.WeakReference;
+import java.util.logging.Handler;
+
 public class IconSelectionFragment extends Fragment {
+    private static final String ARG_CURRENT_ICON = "current_icon";
+    private int currentIconResId;
     private IconSelectionListener listener;
-    private int currentIconResId = R.drawable.star;
+
+    private WeakReference<IconSelectionListener> listenerRef;
 
 
     private final IconPair[] icons = {
@@ -43,9 +50,54 @@ public class IconSelectionFragment extends Fragment {
         }
     }
 
+    public static IconSelectionFragment newInstance(int currentIconResId) {
+        IconSelectionFragment fragment = new IconSelectionFragment();
+        Bundle args = new Bundle();
+        args.putInt(ARG_CURRENT_ICON, currentIconResId);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            currentIconResId = getArguments().getInt(ARG_CURRENT_ICON, R.drawable.star);
+        }
+    }
+
     public interface IconSelectionListener {
         void onIconSelected(int iconResId, String iconName);
     }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        GridView gridView = (GridView) view;
+        gridView.setOnItemClickListener((parent, view1, position, id) -> {
+            IconSelectionListener listener = listenerRef != null ? listenerRef.get() : null;
+            if (listener != null) {
+                IconPair selected = icons[position];
+
+                // Add debug logging
+                Log.d("ICON_DEBUG", "Icon selected - ID: " + selected.resId +
+                        ", Name: " + selected.name);
+
+                // Verify the drawable exists
+                try {
+                    Drawable d = ContextCompat.getDrawable(requireContext(), selected.resId);
+                    Log.d("ICON_DEBUG", "Drawable exists: " + (d != null));
+                } catch (Exception e) {
+                    Log.e("ICON_DEBUG", "Drawable error", e);
+                }
+
+                listener.onIconSelected(selected.resId, selected.name);
+                getParentFragmentManager().popBackStack();
+            }
+        });
+    }
+
 
     @Nullable
     @Override
@@ -85,6 +137,7 @@ public class IconSelectionFragment extends Fragment {
                 IconPair selected = icons[position];
                 listener.onIconSelected(selected.resId, selected.name);
                 getParentFragmentManager().popBackStack();
+                Log.d("ICON_FLOW", "User selected icon: " + selected.resId);
             }
         });
 
@@ -93,7 +146,7 @@ public class IconSelectionFragment extends Fragment {
 
 
     public void setIconSelectionListener(IconSelectionListener listener) {
-        this.listener = listener;
+        this.listenerRef = new WeakReference<>(listener);
     }
 
     @Override
@@ -107,4 +160,6 @@ public class IconSelectionFragment extends Fragment {
             this.currentIconResId = iconResId;
         }
     }
+
+
 }
