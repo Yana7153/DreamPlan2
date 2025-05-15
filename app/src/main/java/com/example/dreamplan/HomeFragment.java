@@ -11,6 +11,7 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,11 +19,13 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -32,6 +35,7 @@ import com.example.dreamplan.adapters.SectionAdapter;
 import com.example.dreamplan.database.FirebaseDatabaseManager;
 import com.example.dreamplan.database.Section;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -48,7 +52,7 @@ import java.util.Map;
 
 import android.os.Handler;
 
-public class HomeFragment extends Fragment {
+public class HomeFragment extends Fragment implements SectionAdapter.OnSectionActionListener {
 
     private RecyclerView rvSections;
     private SectionAdapter sectionAdapter;
@@ -63,17 +67,21 @@ public class HomeFragment extends Fragment {
 
 
 
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
-
         tvTasksTodayNumber = view.findViewById(R.id.tvTasksTodayNumber);
         tvTasksTomorrowNumber = view.findViewById(R.id.tvTasksTomorrowNumber);
         tvTasksWeekNumber = view.findViewById(R.id.tvTasksWeekNumber);
         rvSections = view.findViewById(R.id.rvSections);
-        sectionAdapter = new SectionAdapter(sectionList, getContext(), this);
+
+        // Initialize adapter with action listener
+        sectionAdapter = new SectionAdapter(sectionList, requireContext());
+        sectionAdapter.setOnSectionActionListener(this);
+
         rvSections.setLayoutManager(new LinearLayoutManager(getContext()));
         rvSections.setAdapter(sectionAdapter);
 
@@ -121,6 +129,21 @@ public class HomeFragment extends Fragment {
                 btnAddSection.setOnClickListener(v -> showAddSectionDialog());
             }
         }
+
+//        @Override
+//        public void onEditSection(Section section) {
+//            showEditSectionDialog(section);
+//        }
+//
+//        @Override
+//        public void onDeleteSection(Section section) {
+//            showDeleteConfirmationDialog(section);
+//        }
+//
+//        @Override
+//        public void onOpenSection(Section section) {
+//            openSectionDetail(section);
+//        }
     }
 
     private final BroadcastReceiver updateReceiver = new BroadcastReceiver() {
@@ -130,80 +153,6 @@ public class HomeFragment extends Fragment {
         }
     };
 
-//    public void showEditSectionDialog(Section section) {
-//        Dialog sectionDialog = new Dialog(requireContext());
-//        sectionDialog.setContentView(R.layout.task_input_dialog);
-//
-//        // Get views
-//        EditText sectionName = sectionDialog.findViewById(R.id.et_section_name);
-//        EditText notes = sectionDialog.findViewById(R.id.et_notes);
-//        Button saveButton = sectionDialog.findViewById(R.id.btn_save_section);
-//        ImageView[] colorCircles = {
-//                sectionDialog.findViewById(R.id.color_circle_1),
-//                sectionDialog.findViewById(R.id.color_circle_2),
-//                sectionDialog.findViewById(R.id.color_circle_3),
-//                sectionDialog.findViewById(R.id.color_circle_4),
-//                sectionDialog.findViewById(R.id.color_circle_5),
-//                sectionDialog.findViewById(R.id.color_circle_6),
-//                sectionDialog.findViewById(R.id.color_circle_7)
-//        };
-//
-//        String[] colors = {"#CCE1F2", "#C6F8E5", "#FBF7D5", "#F9DED7", "#F5CDDE", "#E2BEF1", "#D3D3D3"};
-//        final String[] selectedColor = {section.getColor()};
-//
-//        // Set initial values
-//        sectionName.setText(section.getName());
-//        notes.setText(section.getNotes());
-//
-//        // Highlight current color
-//        for (int i = 0; i < colors.length; i++) {
-//            if (colors[i].equalsIgnoreCase(section.getColor())) {
-//                colorCircles[i].setBackground(getColorCircleDrawable(colors[i], true));
-//            } else {
-//                colorCircles[i].setBackground(getColorCircleDrawable(colors[i], false));
-//            }
-//
-//            final int index = i;
-//            colorCircles[i].setOnClickListener(v -> {
-//                selectedColor[0] = colors[index];
-//                // Update UI
-//                for (int j = 0; j < colors.length; j++) {
-//                    colorCircles[j].setBackground(getColorCircleDrawable(
-//                            colors[j],
-//                            j == index
-//                    ));
-//                }
-//            });
-//        }
-//
-//        saveButton.setOnClickListener(v -> {
-//                    section.setName(sectionName.getText().toString());
-//                    section.setColor(selectedColor[0]);
-//                    section.setNotes(notes.getText().toString());
-//
-//                    Map<String, Object> updates = new HashMap<>();
-//                    updates.put("name", section.getName());
-//                    updates.put("color", section.getColor());
-//                    updates.put("notes", section.getNotes());
-//
-//                    dbManager.updateSection(section.getId(), updates, new FirebaseDatabaseManager.DatabaseCallback<Void>() {
-//                        @Override
-//                        public void onSuccess(Void result) {
-//                            int position = sectionList.indexOf(section);
-//                            if (position != -1) {
-//                                sectionAdapter.notifyItemChanged(position);
-//                            }
-//                            dialog.dismiss();
-//                        }
-//
-//                        @Override
-//                        public void onFailure(Exception e) {
-//                            Toast.makeText(getContext(), "Update failed", Toast.LENGTH_SHORT).show();
-//                        }
-//                    });
-//                });
-//        sectionDialog.show();
-//    }
 
     public void showAddSectionDialog() {
         Dialog dialog = new Dialog(requireContext());
@@ -390,9 +339,11 @@ public class HomeFragment extends Fragment {
 
 
     private void loadSections() {
+        Log.d("FIREBASE", "Attempting to load sections...");
         dbManager.getSections(new FirebaseDatabaseManager.DatabaseCallback<List<Section>>() {
             @Override
             public void onSuccess(List<Section> sections) {
+                Log.d("FIREBASE", "Successfully loaded " + sections.size() + " sections");
                 sectionList.clear();
                 sectionList.addAll(sections);
                 sectionAdapter.notifyDataSetChanged();
@@ -400,10 +351,26 @@ public class HomeFragment extends Fragment {
 
             @Override
             public void onFailure(Exception e) {
-                Toast.makeText(getContext(), "Error loading sections", Toast.LENGTH_SHORT).show();
+                Log.e("FIREBASE", "Error loading sections", e);
+                Toast.makeText(getContext(), "Error loading sections: " + e.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
     }
+
+
+//    public void onEditSection(Section section) {
+//        showEditSectionDialog(section);
+//    }
+//
+//
+//    public void onDeleteSection(Section section) {
+//        showDeleteConfirmationDialog(section);
+//    }
+//
+//
+//    public void onOpenSection(Section section) {
+//        openSectionDetail(section);
+//    }
 
 //    private void createDefaultSections() {
 //        String[] defaultSections = {"Work", "Study", "Personal"};
@@ -485,4 +452,358 @@ public class HomeFragment extends Fragment {
                     Toast.makeText(getContext(), "Section added", Toast.LENGTH_SHORT).show();
                 });
     }
+
+//    private void setupSectionAdapter() {
+//        sectionAdapter = new SectionAdapter(sectionList, requireContext(), this);
+//        sectionAdapter.setOnSectionActionListener(new SectionAdapter.OnSectionActionListener() {
+//            @Override
+//            public void onEditSection(Section section) {
+//                updateSectionInFirebase(section);
+//            }
+//
+//            @Override
+//            public void onDeleteSection(Section section) {
+//                deleteSectionFromFirebase(section);
+//            }
+//        });
+//        sectionsRecyclerView.setAdapter(sectionAdapter);
+//    }
+
+    private void updateSectionInFirebase(Section section) {
+        FirebaseDatabaseManager.getInstance().updateSection(section, new FirebaseDatabaseManager.DatabaseCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                Toast.makeText(requireContext(), "Section updated", Toast.LENGTH_SHORT).show();
+                loadSections();
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Toast.makeText(requireContext(), "Failed to update section", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void deleteSectionFromFirebase(Section section) {
+        FirebaseDatabaseManager.getInstance().deleteSection(section.getId(), new FirebaseDatabaseManager.DatabaseCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                Toast.makeText(requireContext(), "Section deleted", Toast.LENGTH_SHORT).show();
+                loadSections();
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Toast.makeText(requireContext(), "Failed to delete section", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+//    private void showDeleteConfirmationDialog(Section section) {
+//        new AlertDialog.Builder(context)
+//                .setTitle("Delete Section")
+//                .setMessage("Are you sure you want to delete this section? All tasks in it will be deleted.")
+//                .setPositiveButton("Delete", (dialog, which) -> {
+//                    if (actionListener != null) {
+//                        actionListener.onDeleteSection(section);
+//                    }
+//                })
+//                .setNegativeButton("Cancel", null)
+//                .show();
+//    }
+
+    private void showSectionDialog(@Nullable Section section, boolean isEditMode) {
+        Dialog dialog = new Dialog(requireContext());
+        dialog.setContentView(R.layout.task_input_dialog);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext(), R.style.RoundedDialogTheme);
+
+
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.task_input_dialog, null);
+        builder.setView(dialogView);
+        // Setup views
+        TextView title = dialog.findViewById(R.id.dialog_title);
+        EditText etName = dialog.findViewById(R.id.et_section_name);
+        EditText etNotes = dialog.findViewById(R.id.et_notes);
+        Button btnSave = dialog.findViewById(R.id.btn_save_section);
+        Button btnDelete = dialog.findViewById(R.id.btnDeleteTask);
+        LinearLayout colorPicker = dialog.findViewById(R.id.color_picker);
+
+        // Configure based on mode
+        title.setText(isEditMode ? "Edit Section" : "Add Section");
+        btnDelete.setVisibility(isEditMode ? View.VISIBLE : View.GONE);
+
+
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(R.drawable.dialog_background);
+        }
+
+        // Pre-fill for edit mode
+        if (isEditMode && section != null) {
+            etName.setText(section.getName());
+            etNotes.setText(section.getNotes());
+            int colorPos = Integer.parseInt(section.getColor());
+            updateColorSelectionUI(colorPicker, colorPos);
+        }
+
+        // Color selection logic
+        final int[] selectedColor = {isEditMode ? Integer.parseInt(section.getColor()) : 1};
+        for (int i = 0; i < colorPicker.getChildCount(); i++) {
+            final int position = i + 1;
+            ImageView circle = (ImageView) colorPicker.getChildAt(i);
+            circle.setOnClickListener(v -> {
+                selectedColor[0] = position;
+                updateColorSelectionUI(colorPicker, position);
+            });
+        }
+
+        // Save button handler
+        btnSave.setOnClickListener(v -> {
+            String name = etName.getText().toString().trim();
+            if (name.isEmpty()) {
+                Toast.makeText(getContext(), "Name required", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            Section targetSection = isEditMode ? section : new Section();
+            targetSection.setName(name);
+            targetSection.setNotes(etNotes.getText().toString().trim());
+            targetSection.setColor(String.valueOf(selectedColor[0]));
+
+            if (isEditMode) {
+                updateSectionInFirebase(targetSection);
+            } else {
+                dbManager.addSection(targetSection, new FirebaseDatabaseManager.DatabaseCallback<String>() {
+                    @Override
+                    public void onSuccess(String documentId) {
+                        targetSection.setId(documentId);
+                        sectionList.add(targetSection);
+                        sectionAdapter.notifyItemInserted(sectionList.size() - 1);
+                        dialog.dismiss();
+                        Toast.makeText(getContext(), "Section created", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onFailure(Exception e) {
+                        Toast.makeText(getContext(), "Failed to create section: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+            dialog.dismiss();
+        });
+
+        // Delete button handler (only in edit mode)
+        btnDelete.setOnClickListener(v -> {
+            dialog.dismiss();
+            showDeleteConfirmationDialog(section);
+        });
+
+        dialog.show();
+    }
+
+
+    public void onEditSection(Section section) {
+        showSectionDialog(section, true);
+    }
+
+
+    public void onDeleteSection(Section section) {
+        showDeleteConfirmationDialog(section);
+    }
+
+
+    public void onOpenSection(Section section) {
+        openSectionDetail(section);
+    }
+
+//    // Section Management Methods
+//    private void loadSections() {
+//        dbManager.getSections(new FirebaseDatabaseManager.DatabaseCallback<List<Section>>() {
+//            @Override
+//            public void onSuccess(List<Section> sections) {
+//                sectionList.clear();
+//                sectionList.addAll(sections);
+//                sectionAdapter.notifyDataSetChanged();
+//            }
+//
+//            @Override
+//            public void onFailure(Exception e) {
+//                Toast.makeText(getContext(), "Error loading sections", Toast.LENGTH_SHORT).show();
+//            }
+//        });
+//    }
+
+//    private void showAddSectionDialog() {
+//        Dialog dialog = new Dialog(requireContext());
+//        dialog.setContentView(R.layout.dialog_section);
+//        dialog.getWindow().setBackgroundDrawableResource(R.drawable.dialog_background);
+//
+//        EditText etName = dialog.findViewById(R.id.et_section_name);
+//        EditText etNotes = dialog.findViewById(R.id.et_notes);
+//        Button btnSave = dialog.findViewById(R.id.btn_save_section);
+//        LinearLayout colorPicker = dialog.findViewById(R.id.color_picker);
+//
+//        final int[] selectedColorPosition = {1}; // Default to first color
+//
+//        // Initialize color picker
+//        for (int i = 0; i < colorPicker.getChildCount(); i++) {
+//            final int position = i + 1;
+//            ImageView colorCircle = (ImageView) colorPicker.getChildAt(i);
+//            colorCircle.setOnClickListener(v -> {
+//                selectedColorPosition[0] = position;
+//                updateColorSelectionUI(colorPicker, position);
+//            });
+//        }
+//        updateColorSelectionUI(colorPicker, selectedColorPosition[0]);
+//
+//        btnSave.setOnClickListener(v -> {
+//            String name = etName.getText().toString().trim();
+//            String notes = etNotes.getText().toString().trim();
+//
+//            if (name.isEmpty()) {
+//                Toast.makeText(getContext(), "Section name required", Toast.LENGTH_SHORT).show();
+//                return;
+//            }
+//
+//            Section newSection = new Section(
+//                    null,
+//                    name,
+//                    String.valueOf(selectedColorPosition[0]),
+//                    notes,
+//                    false
+//            );
+//
+//            dbManager.addSection(newSection, new FirebaseDatabaseManager.DatabaseCallback<String>() {
+//                @Override
+//                public void onSuccess(String documentId) {
+//                    newSection.setId(documentId);
+//                    sectionList.add(newSection);
+//                    sectionAdapter.notifyItemInserted(sectionList.size() - 1);
+//                    dialog.dismiss();
+//                }
+//
+//                @Override
+//                public void onFailure(Exception e) {
+//                    Toast.makeText(getContext(), "Error creating section", Toast.LENGTH_SHORT).show();
+//                }
+//            });
+//        });
+//
+//        dialog.show();
+//    }
+
+    private void showEditSectionDialog(Section section) {
+        Dialog dialog = new Dialog(requireContext());
+        dialog.setContentView(R.layout.task_input_dialog);
+        dialog.getWindow().setBackgroundDrawableResource(R.drawable.dialog_background);
+
+        TextView dialogTitle = dialog.findViewById(R.id.dialog_title);
+        dialogTitle.setText("Edit Section");
+
+        EditText etName = dialog.findViewById(R.id.et_section_name);
+        EditText etNotes = dialog.findViewById(R.id.et_notes);
+        Button btnDelete = dialog.findViewById(R.id.btnDeleteTask);
+        Button btnSave = dialog.findViewById(R.id.btn_save_section);
+        LinearLayout colorPicker = dialog.findViewById(R.id.color_picker);
+
+        // Initialize with current section color
+        final int[] selectedColorHolder = {Integer.parseInt(section.getColor())};
+
+        // Set current values
+        etName.setText(section.getName());
+        etNotes.setText(section.getNotes());
+        updateColorSelectionUI(colorPicker, selectedColorHolder[0]);
+
+        btnDelete.setVisibility(View.VISIBLE);
+        // Color selection
+        for (int i = 0; i < colorPicker.getChildCount(); i++) {
+            final int position = i + 1;
+            ImageView colorCircle = (ImageView) colorPicker.getChildAt(i);
+            colorCircle.setOnClickListener(v -> {
+                selectedColorHolder[0] = position; // Now this works
+                updateColorSelectionUI(colorPicker, position);
+            });
+        }
+
+        btnSave.setOnClickListener(v -> {
+            String name = etName.getText().toString().trim();
+            String notes = etNotes.getText().toString().trim();
+
+            if (name.isEmpty()) {
+                Toast.makeText(getContext(), "Section name required", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            section.setName(name);
+            section.setNotes(notes);
+            section.setColor(String.valueOf(selectedColorHolder[0])); // Use the holder here
+
+            updateSectionInFirebase(section);
+            dialog.dismiss();
+        });
+
+        btnDelete.setOnClickListener(v -> {
+            dialog.dismiss();
+            showDeleteConfirmationDialog(section);
+        });
+
+        dialog.show();
+    }
+
+    private void updateColorSelectionUI(LinearLayout colorPicker, int selectedPosition) {
+        for (int i = 0; i < colorPicker.getChildCount(); i++) {
+            ImageView colorCircle = (ImageView) colorPicker.getChildAt(i);
+            GradientDrawable background = (GradientDrawable) colorCircle.getBackground();
+            background.setStroke(i + 1 == selectedPosition ? 4 : 0, Color.BLACK);
+        }
+    }
+
+    private void showDeleteConfirmationDialog(Section section) {
+        new MaterialAlertDialogBuilder(requireContext(), R.style.RoundedDialogTheme)
+                .setTitle("Delete Section")
+                .setMessage("Are you sure you want to delete this section?")
+                .setPositiveButton("Delete", (dialog, which) -> {
+                    deleteSectionFromFirebase(section);
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+//
+//    private void updateSectionInFirebase(Section section) {
+//        dbManager.updateSection(section, new FirebaseDatabaseManager.DatabaseCallback<Void>() {
+//            @Override
+//            public void onSuccess(Void result) {
+//                loadSections();
+//                Toast.makeText(getContext(), "Section updated", Toast.LENGTH_SHORT).show();
+//            }
+//
+//            @Override
+//            public void onFailure(Exception e) {
+//                Toast.makeText(getContext(), "Update failed", Toast.LENGTH_SHORT).show();
+//            }
+//        });
+//    }
+//
+//    private void deleteSectionFromFirebase(Section section) {
+//        dbManager.deleteSection(section.getId(), new FirebaseDatabaseManager.DatabaseCallback<Void>() {
+//            @Override
+//            public void onSuccess(Void result) {
+//                loadSections();
+//                Toast.makeText(getContext(), "Section deleted", Toast.LENGTH_SHORT).show();
+//            }
+//
+//            @Override
+//            public void onFailure(Exception e) {
+//                Toast.makeText(getContext(), "Delete failed", Toast.LENGTH_SHORT).show();
+//            }
+//        });
+//    }
+
+//    private void openSectionDetail(Section section) {
+//        SectionDetailFragment fragment = SectionDetailFragment.newInstance(section);
+//        getParentFragmentManager().beginTransaction()
+//                .replace(R.id.fragment_container, fragment)
+//                .addToBackStack(null)
+//                .commit();
+//    }
 }

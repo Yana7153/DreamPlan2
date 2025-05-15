@@ -2,13 +2,24 @@ package com.example.dreamplan.database;
 
 import android.graphics.Color;
 
+import com.google.firebase.firestore.PropertyName;
+
 import java.io.Serializable;
 
 public class Section implements Serializable {
+    @PropertyName("id")
     private String id;
+
+    @PropertyName("name")
     private String name;
+
+    @PropertyName("color")
     private String color;
+
+    @PropertyName("notes")
     private String notes;
+
+    @PropertyName("isDefault")
     private boolean isDefault;
 
 

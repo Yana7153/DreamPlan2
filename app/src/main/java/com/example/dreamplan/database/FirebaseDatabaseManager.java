@@ -77,12 +77,18 @@ public class FirebaseDatabaseManager {
                     if (task.isSuccessful()) {
                         List<Section> sections = new ArrayList<>();
                         for (QueryDocumentSnapshot doc : task.getResult()) {
-                            Section section = doc.toObject(Section.class);
+                            // Manually map fields to handle conversion
+                            Section section = new Section();
                             section.setId(doc.getId());
+                            section.setName(doc.getString("name"));
+                            section.setColor(doc.getString("color"));
+                            section.setNotes(doc.getString("notes"));
+                            section.setDefault(doc.getBoolean("isDefault"));
                             sections.add(section);
                         }
                         callback.onSuccess(sections);
                     } else {
+                        Log.e("FIRESTORE", "Error getting sections", task.getException());
                         callback.onFailure(task.getException());
                     }
                 });
@@ -319,5 +325,20 @@ public class FirebaseDatabaseManager {
                         callback.onFailure(task.getException());
                     }
                 });
+    }
+
+    public void updateSection(Section section, DatabaseCallback<Void> callback) {
+        String userId = auth.getCurrentUser().getUid();
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("name", section.getName());
+        updates.put("notes", section.getNotes());
+        updates.put("color", section.getColor());
+
+        db.collection("users").document(userId)
+                .collection("sections").document(section.getId())
+                .update(updates)
+                .addOnSuccessListener(aVoid -> callback.onSuccess(null))
+                .addOnFailureListener(callback::onFailure);
     }
 }
