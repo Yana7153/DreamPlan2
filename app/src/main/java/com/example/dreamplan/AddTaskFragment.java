@@ -561,6 +561,17 @@ public class AddTaskFragment extends Fragment {
                 }
             }
 
+            if (!isOneTime) {
+                String schedule = scheduleSpinner.getSelectedItem().toString();
+                if (!schedule.equals("Every day") &&
+                        !schedule.equals("Weekdays only") &&
+                        !schedule.equals("Weekends only")) {
+                    Toast.makeText(getContext(), "Please select a valid schedule", Toast.LENGTH_SHORT).show();
+                    isSaving = false;
+                    return;
+                }
+            }
+
             // Debug logging
             Log.d("TASK_SAVE", "Creating task with: " +
                     "\nTitle: " + title +

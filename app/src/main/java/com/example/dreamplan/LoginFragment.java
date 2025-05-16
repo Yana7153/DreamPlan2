@@ -1,6 +1,9 @@
 package com.example.dreamplan;
 
 import android.app.ProgressDialog;
+import android.content.Context;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -8,6 +11,7 @@ import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -91,42 +95,65 @@ public class LoginFragment extends Fragment {
     }
 
     private void showForgotPasswordDialog() {
-        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(
-                requireContext(),
-                R.style.RoundedDialogTheme
-        );
+        try {
+            // Safely get context
+            Context context = getContext();
+            if (context == null) {
+                context = requireContext(); // For fragments
+            }
 
-        View dialogView = LayoutInflater.from(requireContext())
-                .inflate(R.layout.dialog_forgot_password, null);
+            // Create dialog with proper context
+            AlertDialog.Builder builder = new AlertDialog.Builder(
+                    context,
+                    R.style.ForgotPasswordDialogTheme
+            );
 
-        TextInputLayout emailLayout = dialogView.findViewById(R.id.email_input_layout);
-        EditText emailInput = dialogView.findViewById(R.id.email_input);
+            // Inflate view safely
+            View dialogView = LayoutInflater.from(context)
+                    .inflate(R.layout.dialog_forgot_password, null);
 
-        builder.setView(dialogView)
-                .setTitle("Reset Password")
-                .setMessage("Enter your email to receive a reset link")
-                .setPositiveButton("Send Link", (dialog, which) -> {
-                    String email = emailInput.getText().toString().trim();
-                    if (TextUtils.isEmpty(email)) {
-                        emailLayout.setError("Email cannot be empty");
-                        return;
-                    }
-                    if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                        emailLayout.setError("Please enter a valid email");
-                        return;
-                    }
-                    sendPasswordResetEmail(email);
-                })
-                .setNegativeButton("Cancel", null);
+            // Find views with null checks
+            TextInputLayout emailLayout = dialogView.findViewById(R.id.email_input_layout);
+            EditText emailInput = dialogView.findViewById(R.id.email_input);
+            Button btnCancel = dialogView.findViewById(R.id.btn_cancel);
+            Button btnSubmit = dialogView.findViewById(R.id.btn_submit);
 
-        AlertDialog dialog = builder.create();
-        dialog.show();
+            if (emailLayout == null || emailInput == null ||
+                    btnCancel == null || btnSubmit == null) {
+                throw new IllegalStateException("Dialog layout missing required views");
+            }
 
-        Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
-        positiveButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.primary_color));
+            builder.setView(dialogView);
+            AlertDialog dialog = builder.create();
 
-        Button negativeButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
-        negativeButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.gray));
+            // Set window attributes safely
+            Window window = dialog.getWindow();
+            if (window != null) {
+                window.setBackgroundDrawableResource(R.drawable.dialog_rounded_background);
+            }
+
+            btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+            btnSubmit.setOnClickListener(v -> {
+                String email = emailInput.getText().toString().trim();
+                if (TextUtils.isEmpty(email)) {
+                    emailLayout.setError("Email cannot be empty");
+                    return;
+                }
+                if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                    emailLayout.setError("Please enter a valid email");
+                    return;
+                }
+                sendPasswordResetEmail(email);
+                dialog.dismiss();
+            });
+
+            dialog.show();
+
+        } catch (Exception e) {
+            Log.e("ForgotPassword", "Dialog error: " + e.getMessage());
+            Toast.makeText(getContext(), "Error showing password dialog", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void sendPasswordResetEmail(String email) {

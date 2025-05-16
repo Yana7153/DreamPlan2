@@ -128,4 +128,38 @@
     <color name="task_color_7">#D3D3D3</color>
     <color name="task_default">#E0E0E0</color> <!-- Grey -->
 
+
+
+
+        <!-- Text Colors -->
+        <color name="text_primary">#DE000000</color>  <!-- 87% Black -->
+        <color name="text_secondary">#8A000000</color> <!-- 54% Black -->
+        <color name="text_hint">#61000000</color>     <!-- 38% Black -->
+
+        <!-- Background Colors -->
+        <color name="background_light">#FAFAFA</color>
+        <color name="background_dark">#121212</color>
+
+        <!-- Error Colors -->
+        <color name="error_red">#B00020</color>
+        <color name="error_light">#FFCDD2</color>
+
+        <!-- Gray Shades -->
+        <color name="gray_50">#FAFAFA</color>
+        <color name="gray_100">#F5F5F5</color>
+        <color name="gray_200">#EEEEEE</color>
+        <color name="gray_300">#E0E0E0</color>
+        <color name="gray_500">#9E9E9E</color>
+        <color name="gray_700">#616161</color>
+        <color name="gray_900">#212121</color>
+
+        <!-- Status Colors -->
+        <color name="success_green">#4CAF50</color>
+        <color name="warning_yellow">#FFC107</color>
+
+        <!-- Transparent Colors -->
+        <color name="transparent">#00000000</color>
+        <color name="semi_transparent_white">#80FFFFFF</color>
+        <color name="semi_transparent_black">#80000000</color>
+
 </resources>

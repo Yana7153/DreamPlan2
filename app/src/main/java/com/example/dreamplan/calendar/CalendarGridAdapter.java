@@ -18,12 +18,15 @@ import androidx.core.content.ContextCompat;
 
 import com.example.dreamplan.R;
 import com.example.dreamplan.database.FirebaseDatabaseManager;
+import com.google.android.gms.tasks.Task;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.logging.Handler;
+import android.os.Handler;
+
 
 public class CalendarGridAdapter extends BaseAdapter {
     private Context context;
@@ -37,6 +40,10 @@ public class CalendarGridAdapter extends BaseAdapter {
         this.dates = dates;
         this.currentCalendar = Calendar.getInstance();
         this.selectedDate = new Date();
+    }
+
+    public Date getSelectedDate() {
+        return selectedDate;
     }
 
     @Override
@@ -81,26 +88,28 @@ public class CalendarGridAdapter extends BaseAdapter {
     }
 
     private void updateDayAppearance(TextView dayText, Calendar dateCalendar, Date date) {
-        // Default colors with fallbacks
+        // Reset appearance first
+        dayText.setBackgroundResource(0);
+
+        // Get colors safely
         int currentMonthColor = getColorSafe(R.color.black);
         int otherMonthColor = getColorSafe(R.color.gray);
-        int selectedColor = getColorSafe(R.color.white);
-
-        // Clear previous state
-        dayText.setBackgroundResource(0);
+        int selectedTextColor = getColorSafe(R.color.white);
 
         if (isToday(date)) {
             dayText.setBackgroundResource(R.drawable.circle_today);
-            dayText.setTextColor(selectedColor);
+            dayText.setTextColor(selectedTextColor);
         }
         else if (isSameDay(date, selectedDate)) {
             dayText.setBackgroundResource(R.drawable.circle_selected);
-            dayText.setTextColor(selectedColor);
+            dayText.setTextColor(selectedTextColor);
+            Log.d("CalendarDebug", "Setting selected style for: " + date);
         }
         else {
             dayText.setTextColor(
                     dateCalendar.get(Calendar.MONTH) == currentCalendar.get(Calendar.MONTH)
-                            ? currentMonthColor : otherMonthColor
+                            ? currentMonthColor
+                            : otherMonthColor
             );
         }
     }
@@ -166,23 +175,27 @@ public class CalendarGridAdapter extends BaseAdapter {
     }
 
     private void checkTasksForDate(Date date, View indicator) {
-        SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        String dateString = dbFormat.format(date);
+        String dateStr = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(date);
 
-        FirebaseDatabaseManager.getInstance().hasTasksForDate(dateString,
-                new FirebaseDatabaseManager.DatabaseCallback<Boolean>() {
+        FirebaseDatabaseManager.getInstance().getTasksForDate(dateStr,
+                new FirebaseDatabaseManager.DatabaseCallback<List<com.example.dreamplan.database.Task>>() {
                     @Override
-                    public void onSuccess(Boolean hasTasks) {
-                        if (context != null) {
-                            ((Activity) context).runOnUiThread(() -> {
-                                indicator.setVisibility(hasTasks ? View.VISIBLE : View.GONE);
+                    public void onSuccess(List<com.example.dreamplan.database.Task> tasks) {
+                        if (context instanceof Activity) {
+                            ((Activity)context).runOnUiThread(() -> {
+                                indicator.setVisibility(!tasks.isEmpty() ? View.VISIBLE : View.GONE);
                             });
                         }
                     }
 
                     @Override
                     public void onFailure(Exception e) {
-                        Log.e("CalendarGrid", "Error checking tasks", e);
+                        Log.e("Calendar", "Error checking tasks: " + e.getMessage());
+                        if (context instanceof Activity) {
+                            ((Activity)context).runOnUiThread(() -> {
+                                indicator.setVisibility(View.GONE);
+                            });
+                        }
                     }
                 });
     }

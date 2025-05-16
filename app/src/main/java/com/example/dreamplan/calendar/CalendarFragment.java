@@ -63,10 +63,12 @@ public class CalendarFragment extends Fragment {
                 throw new IllegalStateException("Critical views not found in layout");
             }
 
-            setupCalendarGrid();
-            setupTasksList();
-            setupNavigation(rootView);
-            loadTasksForDate(new Date());
+            rootView.post(() -> {
+                setupCalendarGrid();
+                setupTasksList();
+                setupNavigation(rootView);
+                loadTasksForDate(new Date());
+            });
 
         } catch (Exception e) {
             Log.e("CalendarFragment", "Initialization error", e);
@@ -85,8 +87,13 @@ public class CalendarFragment extends Fragment {
 
             calendarGrid.setOnItemClickListener((parent, view, position, id) -> {
                 Date selectedDate = calendarAdapter.getItem(position);
-                calendarAdapter.setSelectedDate(selectedDate);
+                calendarAdapter.setSelectedDate(selectedDate); // This triggers the red highlight
                 loadTasksForDate(selectedDate);
+
+                // Optional: Print currently selected date
+                Date currentSelected = calendarAdapter.getSelectedDate();
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                Log.d("Calendar", "Selected date: " + sdf.format(currentSelected));
             });
 
             updateMonthHeader();
@@ -228,5 +235,13 @@ public class CalendarFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (calendarAdapter != null && calendarAdapter.getSelectedDate() != null) {
+            loadTasksForDate(calendarAdapter.getSelectedDate());
+        }
     }
 }

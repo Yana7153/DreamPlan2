@@ -126,17 +126,59 @@
     <!-- Add to colors.xml -->
     <color name="card_stroke">#1E000000</color>
 
-    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight">
-    </style>
+<!--    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight">-->
+<!--    </style>-->
 
 <!--    <style name="RoundedDialogTheme" parent="Theme.MaterialComponents.Dialog.Alert" tools:ignore="DuplicateDefinition">-->
 <!--        <item name="dialogCornerRadius">16dp</item>-->
 <!--        <item name="android:windowBackground">@drawable/dialog_background</item>-->
 <!--    </style>-->
 
-    <style name="RoundedDialog" parent="Theme.AppCompat.Light.Dialog.Alert">
-        <item name="android:windowBackground">@drawable/dialog_background</item>
-        <item name="android:windowIsFloating">true</item>
-        <item name="android:windowCloseOnTouchOutside">true</item>
+    <!-- Add this to your styles.xml -->
+    <style name="ForgotPasswordDialogTheme" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <!-- Force light theme -->
+        <item name="materialAlertDialogTheme">@style/WhiteAlertDialogTheme</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
     </style>
+
+    <style name="WhiteAlertDialogTheme" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <!-- Background and text colors -->
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnSurface">@color/black</item>
+
+        <!-- Title and message styling -->
+        <item name="materialAlertDialogTitleTextStyle">@style/DialogTitleStyle</item>
+        <item name="materialAlertDialogBodyTextStyle">@style/DialogMessageStyle</item>
+
+        <!-- Button styles -->
+        <item name="buttonBarPositiveButtonStyle">@style/DialogButton.Positive</item>
+        <item name="buttonBarNegativeButtonStyle">@style/DialogButton.Negative</item>
+
+        <!-- Shape appearance -->
+        <item name="shapeAppearanceOverlay">@style/DialogShapeAppearance</item>
+    </style>
+
+    <style name="DialogTitleStyle" parent="MaterialAlertDialog.MaterialComponents.Title.Text">
+        <item name="android:textColor">@color/black</item>
+        <item name="android:textSize">20sp</item>
+    </style>
+
+    <style name="DialogMessageStyle" parent="MaterialAlertDialog.MaterialComponents.Body.Text">
+        <item name="android:textColor">@color/black</item>
+    </style>
+
+    <style name="DialogShapeAppearance" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+
+    <style name="DialogButton.Positive" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="android:textColor">@color/primary_color</item>
+    </style>
+
+    <style name="DialogButton.Negative" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="android:textColor">@color/gray</item>
+    </style>
+
+
 </resources>

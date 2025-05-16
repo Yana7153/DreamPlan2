@@ -89,17 +89,26 @@ public class MainActivity extends AppCompatActivity {
 
     private void loadFragment(@NonNull Fragment fragment, String tag) {
         try {
-            FragmentManager fragmentManager = getSupportFragmentManager();
-            FragmentTransaction transaction = fragmentManager.beginTransaction();
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
 
-            transaction.setCustomAnimations(
-                    R.anim.fade_in,
-                    R.anim.fade_out,
-                    R.anim.fade_in,
-                    R.anim.fade_out
-            );
+            if (fragment instanceof CalendarFragment) {
+                transaction.setCustomAnimations(
+                        R.anim.slide_in_right,  // Enter animation
+                        R.anim.fade_out,        // Exit animation
+                        R.anim.fade_in,         // Pop enter animation
+                        R.anim.slide_out_left    // Pop exit animation
+                );
+            }
+            else {
+                transaction.setCustomAnimations(
+                        R.anim.fade_in,
+                        R.anim.fade_out,
+                        R.anim.fade_in,
+                        R.anim.fade_out
+                );
+            }
 
-            transaction.replace(R.id.fragment_container, fragment, "home_fragment");
+            transaction.replace(R.id.fragment_container, fragment, tag);
 
             if (!(fragment instanceof HomeFragment)) {
                 transaction.addToBackStack(null);
@@ -108,13 +117,9 @@ public class MainActivity extends AppCompatActivity {
             transaction.commit();
 
             btnAddSection.setVisibility(fragment instanceof HomeFragment ? View.VISIBLE : View.GONE);
-
         } catch (Exception e) {
             Log.e("MainActivity", "Fragment load failed", e);
-            if (!isFinishing()) {
-                Toast.makeText(this, "Loading failed, returning home", Toast.LENGTH_SHORT).show();
-                loadFragment(new HomeFragment(), "home_fragment");
-            }
+            Toast.makeText(this, "Error loading screen", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -136,4 +141,6 @@ public class MainActivity extends AppCompatActivity {
             super.onBackPressed();
         }
     }
+
+
 }

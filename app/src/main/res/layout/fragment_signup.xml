@@ -11,14 +11,47 @@
         android:orientation="vertical"
         android:gravity="center">
 
-        <TextView
+        <ImageView
+            android:layout_width="160dp"
+            android:layout_height="160dp"
+            android:src="@drawable/logo_dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="30dp"
+            android:contentDescription="@string/app_name"/>
+
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Create Account"
-            android:textSize="30sp"
-            android:textStyle="bold"
-            android:textColor="@color/purple_700"
-            android:layout_marginBottom="40dp"/>
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <!-- Title Section with corrected styling -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Create an Account"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@color/purple_700"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="in"
+                android:textSize="18sp"
+                android:textColor="@color/medium_gray"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dream Plan"
+                android:textSize="28sp"
+                android:textStyle="bold"
+                android:textColor="@color/purple_700"
+                android:layout_marginBottom="32dp"/>
+        </LinearLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"

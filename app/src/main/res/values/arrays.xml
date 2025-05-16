@@ -4,8 +4,8 @@
         <item>Every day</item>
         <item>Weekdays only</item>
         <item>Weekends only</item>
-        <item>Every N days</item>
-        <item>Custom...</item>
+<!--        <item>Every N days</item>-->
+<!--        <item>Custom...</item>-->
     </string-array>
 
     <string-array name="task_icons">

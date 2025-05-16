@@ -3,10 +3,8 @@ package com.example.dreamplan.database;
 import android.util.Log;
 
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.PropertyName;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.text.ParseException;
@@ -18,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
 
 public class FirebaseDatabaseManager {
     private static FirebaseDatabaseManager instance;
@@ -36,31 +35,53 @@ public class FirebaseDatabaseManager {
         return instance;
     }
 
-
     public void getTasksForDate(String date, DatabaseCallback<List<Task>> callback) {
         String userId = auth.getCurrentUser().getUid();
 
         db.collection("users").document(userId)
                 .collection("tasks")
-                .whereEqualTo("dueDate", date)
                 .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        List<Task> tasks = new ArrayList<>();
-                        for (QueryDocumentSnapshot doc : task.getResult()) {
-                            Task taskObj = doc.toObject(Task.class);
-                            taskObj.setId(doc.getId());
-                            tasks.add(taskObj);
+                .addOnSuccessListener(query -> {
+                    List<Task> tasks = new ArrayList<>();
+                    for (QueryDocumentSnapshot doc : query) {
+                        Task task = doc.toObject(Task.class);
+                        task.setId(doc.getId());
+
+                        if (task.getDeadline().equals(date) ||
+                                (task.isRecurring() && doesRecurOnDate(task, date))) {
+                            tasks.add(task);
                         }
-                        callback.onSuccess(tasks);
-                    } else {
-                        callback.onFailure(task.getException());
                     }
-                });
+                    callback.onSuccess(tasks);
+                })
+                .addOnFailureListener(callback::onFailure);
     }
 
+//    public interface SimpleCallback<T> {
+//        void onComplete(T result);
+//        void onError(Exception e);
+//    }
 
-    public interface DatabaseCallback<T> {
+//    public void getTasksForDate(String date, SimpleCallback<List<Task>> callback) {
+//        String userId = auth.getCurrentUser().getUid();
+//
+//        db.collection("users").document(userId)
+//                .collection("tasks")
+//                .whereEqualTo("deadline", date)
+//                .get()
+//                .addOnSuccessListener(query -> {
+//                    List<Task> tasks = new ArrayList<>();
+//                    for (QueryDocumentSnapshot doc : query) {
+//                        Task task = doc.toObject(Task.class);
+//                        task.setId(doc.getId());
+//                        tasks.add(task);
+//                    }
+//                    callback.onComplete(tasks);
+//                })
+//                .addOnFailureListener(callback::onError);
+//    }
+
+    public static interface DatabaseCallback<T> {
         void onSuccess(T result);
         void onFailure(Exception e);
     }
@@ -211,6 +232,10 @@ public class FirebaseDatabaseManager {
 
     private boolean doesRecurOnDate(Task task, String checkDate) {
         try {
+            if (!task.isRecurring() || task.getStartDate() == null || task.getSchedule() == null) {
+                return false;
+            }
+
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
             Date startDate = sdf.parse(task.getStartDate());
             Date targetDate = sdf.parse(checkDate);
@@ -220,25 +245,22 @@ public class FirebaseDatabaseManager {
                 return false;
             }
 
-            Calendar startCal = Calendar.getInstance();
-            startCal.setTime(startDate);
             Calendar targetCal = Calendar.getInstance();
             targetCal.setTime(targetDate);
+            int dayOfWeek = targetCal.get(Calendar.DAY_OF_WEEK);
 
-            // Check recurrence pattern
             switch (task.getSchedule()) {
-                case "Daily":
+                case "Every day":
                     return true;
-                case "Weekly":
-                    // Check if same day of week
-                    return startCal.get(Calendar.DAY_OF_WEEK) == targetCal.get(Calendar.DAY_OF_WEEK);
-                case "Monthly":
-                    // Check if same day of month
-                    return startCal.get(Calendar.DAY_OF_MONTH) == targetCal.get(Calendar.DAY_OF_MONTH);
+                case "Weekdays only":
+                    return dayOfWeek != Calendar.SATURDAY && dayOfWeek != Calendar.SUNDAY;
+                case "Weekends only":
+                    return dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY;
                 default:
                     return false;
             }
         } catch (ParseException e) {
+            Log.e("DateCheck", "Error parsing dates", e);
             return false;
         }
     }

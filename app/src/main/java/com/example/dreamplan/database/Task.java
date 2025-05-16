@@ -95,7 +95,6 @@ public class Task implements Parcelable {
                 if (TextUtils.isEmpty(deadline)) {
                     return "📅 No date set";
                 }
-
                 try {
                     SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
                     SimpleDateFormat displayFormat = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
@@ -106,8 +105,7 @@ public class Task implements Parcelable {
                 }
             }
         } catch (Exception e) {
-            Log.e("TASK_DISPLAY", "Error formatting task display", e);
-            return isRecurring ? "🔄 Recurring Task" : "📅 Task";
+            return isRecurring ? "🔄 Recurring Task" : "📅 One-time Task";
         }
     }
 
