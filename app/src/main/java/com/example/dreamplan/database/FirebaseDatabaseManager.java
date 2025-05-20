@@ -176,6 +176,7 @@ public class FirebaseDatabaseManager {
         taskData.put("deadline", task.getDeadline());
         taskData.put("colorResId", task.getColorResId());
         taskData.put("iconResId", task.getIconResId());
+        taskData.put("iconResName", task.getIconResName());
         taskData.put("sectionId", task.getSectionId());
         taskData.put("isRecurring", task.isRecurring());
         taskData.put("startDate", task.getStartDate());

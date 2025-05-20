@@ -30,14 +30,20 @@ public class IconSelectionFragment extends Fragment {
     private int currentIconResId;
     private IconSelectionListener listener;
 
-    private WeakReference<IconSelectionListener> listenerRef;
-
-
     private final IconPair[] icons = {
             new IconPair(R.drawable.star, "star"),
             new IconPair(R.drawable.ic_work, "ic_work"),
             new IconPair(R.drawable.ic_study, "ic_study"),
-            new IconPair(R.drawable.ic_shopping, "ic_shopping")
+            new IconPair(R.drawable.ic_shopping, "ic_shopping"),
+            new IconPair(R.drawable.ic_sports, "ic_sports"),
+            new IconPair(R.drawable.clapperboard, "clapperboard"),
+            new IconPair(R.drawable.code, "code"),
+            new IconPair(R.drawable.green_cross, "green_cross"),
+            new IconPair(R.drawable.group, "group"),
+            new IconPair(R.drawable.ic_shopping, "ic_shopping"),
+            new IconPair(R.drawable.laptop, "laptop"),
+            new IconPair(R.drawable.plot, "plot"),
+            new IconPair(R.drawable.time, "time")
     };
 
     private static class IconPair {
@@ -73,23 +79,24 @@ public class IconSelectionFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        GridView gridView = (GridView) view.findViewById(R.id.grid_icons);
 
-        GridView gridView = (GridView) view;
         gridView.setOnItemClickListener((parent, view1, position, id) -> {
-            IconSelectionListener listener = listenerRef != null ? listenerRef.get() : null;
             if (listener != null) {
                 IconPair selected = icons[position];
 
-                // Add debug logging
                 Log.d("ICON_DEBUG", "Icon selected - ID: " + selected.resId +
                         ", Name: " + selected.name);
 
-                // Verify the drawable exists
                 try {
                     Drawable d = ContextCompat.getDrawable(requireContext(), selected.resId);
-                    Log.d("ICON_DEBUG", "Drawable exists: " + (d != null));
+                    if (d == null) {
+                        Log.w("ICON_DEBUG", "Drawable is null for: " + selected.resId);
+                        selected = icons[0];
+                    }
                 } catch (Exception e) {
                     Log.e("ICON_DEBUG", "Drawable error", e);
+                    selected = icons[0];
                 }
 
                 listener.onIconSelected(selected.resId, selected.name);
@@ -97,7 +104,6 @@ public class IconSelectionFragment extends Fragment {
             }
         });
     }
-
 
     @Nullable
     @Override
@@ -132,6 +138,18 @@ public class IconSelectionFragment extends Fragment {
             }
         });
 
+        gridView.post(() -> {
+            if (currentIconResId != 0) {
+                for (int i = 0; i < icons.length; i++) {
+                    if (icons[i].resId == currentIconResId) {
+                        gridView.setItemChecked(i, true);
+                        gridView.smoothScrollToPosition(i);
+                        break;
+                    }
+                }
+            }
+        });
+
         gridView.setOnItemClickListener((parent, view, position, id) -> {
             if (listener != null) {
                 IconPair selected = icons[position];
@@ -146,20 +164,19 @@ public class IconSelectionFragment extends Fragment {
 
 
     public void setIconSelectionListener(IconSelectionListener listener) {
-        this.listenerRef = new WeakReference<>(listener);
+        this.listener = listener;
     }
 
     @Override
     public void onDetach() {
-        listener = null;
         super.onDetach();
+        listener = null;
     }
 
     public void setCurrentIcon(int iconResId) {
         if (iconResId != 0) {
             this.currentIconResId = iconResId;
         }
+        Log.d("ICON_DEBUG", "Setting current icon in selector: " + iconResId);
     }
-
-
 }

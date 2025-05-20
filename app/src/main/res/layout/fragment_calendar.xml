@@ -125,13 +125,13 @@
     <GridView
         android:id="@+id/calendarGrid"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
-    android:numColumns="7"
-    android:verticalSpacing="4dp"
-    android:horizontalSpacing="4dp"
-    android:layout_marginTop="4dp"
-    android:layout_marginBottom="16dp"
-    android:stretchMode="columnWidth"/>
+        android:layout_height="450dp"
+        android:numColumns="7"
+        android:verticalSpacing="4dp"
+        android:horizontalSpacing="4dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="16dp"
+        android:stretchMode="columnWidth"/>
 
     <!-- Selected Date Header -->
     <TextView

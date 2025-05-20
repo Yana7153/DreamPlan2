@@ -34,7 +34,7 @@ public class Task implements Parcelable {
 
     private String taskTypeDisplay;
 
-    @PropertyName("iconResName")  // Store the resource name, not just ID
+    @PropertyName("iconResName")
     private String iconResName;
 
     @PropertyName("iconResId")
@@ -51,7 +51,8 @@ public class Task implements Parcelable {
         this.deadline = dueDate != null ? dueDate : "";
         this.colorResId = colorResId;
         this.iconResId = iconResId;
-        this.iconResName = iconResName != null ? iconResName : "star";
+        this.iconResName = (iconResName != null && !iconResName.isEmpty()) ?
+                iconResName : "ic_default_task";
         this.sectionId = sectionId;
         this.isRecurring = isRecurring;
         this.startDate = startDate != null ? startDate : "";
@@ -231,16 +232,19 @@ public class Task implements Parcelable {
     @Exclude
     public int getIconResId(Context context) {
         try {
-            // First try by name if available
             if (iconResName != null) {
                 int resId = context.getResources()
                         .getIdentifier(iconResName, "drawable", context.getPackageName());
                 if (resId != 0) return resId;
             }
-            // Fallback to stored ID
             return iconResId;
         } catch (Exception e) {
             return R.drawable.ic_default_task;
         }
+    }
+
+    @Exclude
+    public boolean hasValidIcon() {
+        return (iconResId != 0) || (iconResName != null && !iconResName.isEmpty());
     }
 }

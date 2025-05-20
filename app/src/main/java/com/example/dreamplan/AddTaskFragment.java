@@ -334,15 +334,23 @@ public class AddTaskFragment extends Fragment {
         imgTaskIcon.setOnClickListener(v -> {
             IconSelectionFragment fragment = new IconSelectionFragment();
 
-            if (isEditMode && taskToEdit != null) {
-                fragment.setCurrentIcon(taskToEdit.getIconResId());
-            } else {
-                fragment.setCurrentIcon(selectedIconResId);
-            }
+            int currentIcon = isEditMode && taskToEdit != null ?
+                    taskToEdit.getIconResId() : selectedIconResId;
+            fragment.setCurrentIcon(currentIcon);
+
             fragment.setIconSelectionListener((resId, iconName) -> {
                 selectedIconResId = resId;
-                selectedIconName = iconName; // Make sure this matches exactly with your drawable names
+                selectedIconName = iconName;
                 updateIconPreview(resId);
+
+                persistIconSelection(resId, iconName);
+
+                if (isEditMode && taskToEdit != null) {
+                    taskToEdit.setIconResId(resId);
+                    taskToEdit.setIconResName(iconName);
+                }
+
+                Log.d("ICON_DEBUG", "Icon selected: " + resId + ", " + iconName);
             });
 
             getParentFragmentManager()
@@ -354,26 +362,19 @@ public class AddTaskFragment extends Fragment {
     }
 
     private void updateIconPreview(int iconResId) {
-        try {
-            if (getActivity() != null) {
-                getActivity().runOnUiThread(() -> {
-                    if (iconResId != 0) {
-                        imgTaskIcon.setImageResource(iconResId);
-                        imgTaskIcon.setTag(iconResId);
+        if (getActivity() == null || iconResId == 0) return;
 
-                        // Force redraw
-                        imgTaskIcon.invalidate();
-                        imgTaskIcon.requestLayout();
-
-                        Log.d("ICON_DEBUG", "Preview updated to: " + iconResId);
-                    }
-                });
+        getActivity().runOnUiThread(() -> {
+            try {
+                imgTaskIcon.setImageResource(iconResId);
+                imgTaskIcon.setTag(iconResId);
+                imgTaskIcon.invalidate();
+            } catch (Resources.NotFoundException e) {
+                Log.e("ICON_ERROR", "Icon resource not found", e);
+                imgTaskIcon.setImageResource(R.drawable.ic_default_task);
             }
-        } catch (Resources.NotFoundException e) {
-            Log.e("ICON_ERROR", "Icon not found", e);
-        }
+        });
     }
-
 
     private void setupColorSelection(ImageView colorPreview, LinearLayout colorOptions) {
         int[] colorDrawables = {
@@ -749,12 +750,11 @@ public class AddTaskFragment extends Fragment {
             isEditMode = true;
             taskToEdit = task;
 
-            if (!iconSelectionLock && selectedIconResId == R.drawable.star) {
+            if (task.getIconResId() != 0) {
                 selectedIconResId = task.getIconResId();
-                if (selectedIconResId == 0) {
-                    selectedIconResId = R.drawable.star;
-                }
+                selectedIconName = task.getIconResName();
                 updateIconPreview(selectedIconResId);
+                persistIconSelection(selectedIconResId, selectedIconName);
             }
 
             etTaskTitle.setText(task.getTitle());
