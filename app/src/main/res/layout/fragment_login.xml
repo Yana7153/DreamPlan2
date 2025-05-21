@@ -101,6 +101,17 @@
             app:cornerRadius="24dp"
             app:backgroundTint="@color/primary_color"/>
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_test_user"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginHorizontal="40dp"
+            android:layout_marginTop="8dp"
+            android:text="Login as Test User"
+            android:textColor="@color/primary_color"
+            app:backgroundTint="@color/light_gray"
+            app:cornerRadius="24dp"/>
+
         <TextView
             android:id="@+id/tv_forgot_password"
             android:layout_width="wrap_content"

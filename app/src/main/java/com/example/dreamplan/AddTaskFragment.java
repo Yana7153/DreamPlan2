@@ -150,6 +150,7 @@ public class AddTaskFragment extends Fragment {
         LinearLayout colorOptions = view.findViewById(R.id.color_options);
         MaterialButton btnOneTime = view.findViewById(R.id.btn_one_time);
         MaterialButton btnRegular = view.findViewById(R.id.btn_regular);
+        ImageView btnBack = view.findViewById(R.id.btn_back);
 
         // Initialize recurring options views
         recurringOptions = view.findViewById(R.id.recurring_options);
@@ -213,7 +214,6 @@ public class AddTaskFragment extends Fragment {
         setupDatePicker(btnStartDate, isEditMode && taskToEdit != null ? taskToEdit.getStartDate() : null);
         setupImageSelection();
 
-        // Get section from arguments
         if (getArguments() != null) {
             section = (Section) getArguments().getSerializable("section");
         }
@@ -259,9 +259,14 @@ public class AddTaskFragment extends Fragment {
         }
 
 
-        // Set click listeners
-        view.findViewById(R.id.btn_back).setOnClickListener(v -> {
-            navigateBackToSectionDetail();
+        btnBack.setOnClickListener(v -> {
+            if (getParentFragmentManager().getBackStackEntryCount() > 0) {
+                getParentFragmentManager().popBackStack();
+            } else {
+                getParentFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, new HomeFragment())
+                        .commit();
+            }
         });
 
         view.findViewById(R.id.btn_save).setOnClickListener(v -> {
@@ -891,5 +896,4 @@ public class AddTaskFragment extends Fragment {
             updateIconPreview(selectedIconResId);
         }
     }
-
 }

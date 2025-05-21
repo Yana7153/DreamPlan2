@@ -1,16 +1,11 @@
 package com.example.dreamplan;
 
 import android.app.AlertDialog;
-import android.app.Dialog;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.CalendarView;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -21,17 +16,16 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.dreamplan.adapters.TaskAdapter;
 import com.example.dreamplan.database.FirebaseDatabaseManager;
 import com.example.dreamplan.database.Section;
 import com.example.dreamplan.database.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -84,6 +78,7 @@ private static final String ARG_SECTION = "section";
         currentDate = view.findViewById(R.id.tvCurrentDate);
         addTaskButton = view.findViewById(R.id.fab_add_task);
         RecyclerView rvTasks = view.findViewById(R.id.rv_tasks);
+        ImageView btnBack = view.findViewById(R.id.btnBack);
 
         // Get section from arguments
         if (getArguments() != null) {
@@ -105,7 +100,16 @@ private static final String ARG_SECTION = "section";
 
         // Set click listeners
         addTaskButton.setOnClickListener(v -> showAddTaskFragment());
-        view.findViewById(R.id.btnBack).setOnClickListener(v -> getActivity().onBackPressed());
+
+        btnBack.setOnClickListener(v -> {
+            if (getParentFragmentManager().getBackStackEntryCount() > 0) {
+                getParentFragmentManager().popBackStack();
+            } else {
+                getParentFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, new HomeFragment())
+                        .commit();
+            }
+        });
 
 
 //        taskAdapter.setOnTaskClickListener(new TaskAdapter.OnTaskClickListener() {
@@ -180,7 +184,7 @@ private static final String ARG_SECTION = "section";
             @Override
             public void onFailure(Exception e) {
                 Log.e("TASK_ERROR", "Failed to load tasks", e);
-                Toast.makeText(getContext(), "Error loading tasks", Toast.LENGTH_SHORT).show();
+              //  Toast.makeText(getContext(), "Error loading tasks", Toast.LENGTH_SHORT).show();
             }
         });
     }

@@ -22,6 +22,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
@@ -44,6 +45,7 @@ public class LoginFragment extends Fragment {
     private Button btnLogin;
     private TextView tvSignUp, tvForgotPassword;
     private ProgressDialog progressDialog;
+    private MaterialButton btnTestUser;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
@@ -59,6 +61,9 @@ public class LoginFragment extends Fragment {
         tvForgotPassword.setOnClickListener(v -> showForgotPasswordDialog());
         btnLogin.setOnClickListener(v -> attemptLogin());
         tvSignUp.setOnClickListener(v -> goToSignUp());
+
+        btnTestUser = view.findViewById(R.id.btn_test_user);
+        btnTestUser.setOnClickListener(v -> loginAsTestUser());
 
         return view;
     }
@@ -96,23 +101,19 @@ public class LoginFragment extends Fragment {
 
     private void showForgotPasswordDialog() {
         try {
-            // Safely get context
             Context context = getContext();
             if (context == null) {
-                context = requireContext(); // For fragments
+                context = requireContext();
             }
 
-            // Create dialog with proper context
             AlertDialog.Builder builder = new AlertDialog.Builder(
                     context,
                     R.style.ForgotPasswordDialogTheme
             );
 
-            // Inflate view safely
             View dialogView = LayoutInflater.from(context)
                     .inflate(R.layout.dialog_forgot_password, null);
 
-            // Find views with null checks
             TextInputLayout emailLayout = dialogView.findViewById(R.id.email_input_layout);
             EditText emailInput = dialogView.findViewById(R.id.email_input);
             Button btnCancel = dialogView.findViewById(R.id.btn_cancel);
@@ -126,7 +127,6 @@ public class LoginFragment extends Fragment {
             builder.setView(dialogView);
             AlertDialog dialog = builder.create();
 
-            // Set window attributes safely
             Window window = dialog.getWindow();
             if (window != null) {
                 window.setBackgroundDrawableResource(R.drawable.dialog_rounded_background);
@@ -173,11 +173,14 @@ public class LoginFragment extends Fragment {
                 });
     }
 
-
     private void handleSuccessfulLogin() {
         FirebaseUser user = mAuth.getCurrentUser();
         if (user != null) {
-            if (user.isEmailVerified()) {
+            if (user.getEmail().equals("individualproject2025@gmail.com")) {
+                authManager.initializeFirestoreUser(user.getUid(), user.getEmail());
+                ((AuthActivity) requireActivity()).startMainActivity(user);
+            }
+            else if (user.isEmailVerified()) {
                 authManager.initializeFirestoreUser(user.getUid(), user.getEmail());
                 ((AuthActivity) requireActivity()).startMainActivity(user);
             } else {
@@ -214,5 +217,52 @@ public class LoginFragment extends Fragment {
         if (progressDialog != null && progressDialog.isShowing()) {
             progressDialog.dismiss();
         }
+    }
+
+    private void loginAsTestUser() {
+        String testEmail = "individualproject2025@gmail.com";
+        String testPassword = "Samsung2025";
+
+        showProgressDialog("Logging in as test user...");
+
+        mAuth.signInWithEmailAndPassword(testEmail, testPassword)
+                .addOnCompleteListener(task -> {
+                    dismissProgressDialog();
+
+                    if (!isAdded() || requireActivity().isFinishing()) return;
+
+                    if (task.isSuccessful()) {
+                        handleSuccessfulLogin();
+                    } else {
+                        if (task.getException() != null &&
+                                task.getException().getMessage().contains("no user record")) {
+                            createTestUser();
+                        } else {
+                            showError("Test login failed: " + task.getException().getMessage());
+                        }
+                    }
+                });
+    }
+
+    private void createTestUser() {
+        String testEmail = "demo@dreamplan.com";
+        String testPassword = "test1234";
+
+        showProgressDialog("Creating test account...");
+
+        mAuth.createUserWithEmailAndPassword(testEmail, testPassword)
+                .addOnCompleteListener(task -> {
+                    dismissProgressDialog();
+
+                    if (task.isSuccessful()) {
+                        FirebaseUser user = mAuth.getCurrentUser();
+                        if (user != null) {
+                            authManager.initializeFirestoreUser(user.getUid(), user.getEmail());
+                            handleSuccessfulLogin();
+                        }
+                    } else {
+                        showError("Failed to create test user: " + task.getException().getMessage());
+                    }
+                });
     }
 }

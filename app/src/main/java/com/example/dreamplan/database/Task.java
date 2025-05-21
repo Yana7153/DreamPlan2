@@ -40,6 +40,8 @@ public class Task implements Parcelable {
     @PropertyName("iconResId")
     private int iconResId;
 
+    private Date createdAt;
+
     public Task() {}
 
     public Task(String id, String title, String notes, String dueDate, int colorResId, int iconResId,  String iconResName, String sectionId,
@@ -247,4 +249,10 @@ public class Task implements Parcelable {
     public boolean hasValidIcon() {
         return (iconResId != 0) || (iconResName != null && !iconResName.isEmpty());
     }
+
+    @PropertyName("createdAt")
+    public Date getCreatedAt() { return createdAt; }
+
+    @PropertyName("createdAt")
+    public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
 }

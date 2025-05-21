@@ -17,7 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.dreamplan.R;
-import com.example.dreamplan.TaskAdapter;
+import com.example.dreamplan.adapters.TaskAdapter;
 import com.example.dreamplan.database.FirebaseDatabaseManager;
 import com.example.dreamplan.database.Task;
 

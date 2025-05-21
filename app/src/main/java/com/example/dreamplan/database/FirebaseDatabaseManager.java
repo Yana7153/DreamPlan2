@@ -5,6 +5,7 @@ import android.util.Log;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.text.ParseException;
@@ -92,7 +93,7 @@ public class FirebaseDatabaseManager {
 
         db.collection("users").document(userId)
                 .collection("sections")
-                .orderBy("name")
+                .orderBy("createdAt", Query.Direction.DESCENDING)
                 .get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
@@ -120,6 +121,7 @@ public class FirebaseDatabaseManager {
 
         Map<String, Object> sectionData = new HashMap<>();
         sectionData.put("name", section.getName());
+        sectionData.put("createdAt", FieldValue.serverTimestamp());
         sectionData.put("color", section.getColor());
         sectionData.put("notes", section.getNotes());
         sectionData.put("isDefault", section.isDefault());
@@ -147,6 +149,7 @@ public class FirebaseDatabaseManager {
         db.collection("users").document(userId)
                 .collection("tasks")
                 .whereEqualTo("sectionId", sectionId)
+                .orderBy("createdAt", Query.Direction.DESCENDING)
                 .get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {

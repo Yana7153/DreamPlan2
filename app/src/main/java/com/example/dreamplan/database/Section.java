@@ -5,6 +5,7 @@ import android.graphics.Color;
 import com.google.firebase.firestore.PropertyName;
 
 import java.io.Serializable;
+import java.util.Date;
 
 public class Section implements Serializable {
     @PropertyName("id")
@@ -22,6 +23,7 @@ public class Section implements Serializable {
     @PropertyName("isDefault")
     private boolean isDefault;
 
+    private Date createdAt;
 
     public Section() {}
 
@@ -69,5 +71,13 @@ public class Section implements Serializable {
         } catch (Exception e) {
             return Color.parseColor("#D3D3D3");
         }
+    }
+
+    @PropertyName("createdAt")
+    public Date getCreatedAt() { return createdAt; }
+
+    @PropertyName("createdAt")
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
     }
 }
