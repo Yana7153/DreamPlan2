@@ -54,7 +54,8 @@ public class Task implements Parcelable {
         this.colorResId = colorResId;
         this.iconResId = iconResId;
         this.iconResName = (iconResName != null && !iconResName.isEmpty()) ?
-                iconResName : "ic_default_task";
+                iconResName :
+                (iconResId == R.drawable.star ? "star" : "default");
         this.sectionId = sectionId;
         this.isRecurring = isRecurring;
         this.startDate = startDate != null ? startDate : "";
@@ -234,14 +235,15 @@ public class Task implements Parcelable {
     @Exclude
     public int getIconResId(Context context) {
         try {
-            if (iconResName != null) {
+            if (iconResName != null && !iconResName.isEmpty()) {
                 int resId = context.getResources()
                         .getIdentifier(iconResName, "drawable", context.getPackageName());
                 if (resId != 0) return resId;
             }
-            return iconResId;
+
+            return (iconResId != 0) ? iconResId : R.drawable.star;
         } catch (Exception e) {
-            return R.drawable.ic_default_task;
+            return R.drawable.star;
         }
     }
 

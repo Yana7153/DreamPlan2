@@ -2,6 +2,7 @@ package com.example.dreamplan.database;
 
 import android.util.Log;
 
+import com.example.dreamplan.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -186,6 +187,12 @@ public class FirebaseDatabaseManager {
         taskData.put("schedule", task.getSchedule());
         taskData.put("timePreference", task.getTimePreference());
         taskData.put("createdAt", FieldValue.serverTimestamp());
+
+        if (task.getIconResId() == 0) {
+            task.setIconResId(R.drawable.star);
+            task.setIconResName("star");
+            Log.w("ICON_VALIDATION", "Fixing missing icon for task: " + task.getTitle());
+        }
 
         if (task.getSectionId() == null || task.getSectionId().isEmpty()) {
             callback.onFailure(new Exception("Section ID is missing"));

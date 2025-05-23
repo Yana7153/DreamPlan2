@@ -207,8 +207,8 @@ public class HomeFragment extends Fragment implements SectionAdapter.OnSectionAc
                 @Override
                 public void onSuccess(String documentId) {
                     newSection.setId(documentId);
-                    sectionList.add(newSection);
-                    sectionAdapter.notifyItemInserted(sectionList.size() - 1);
+                    sectionList.add(0, newSection);
+                    sectionAdapter.notifyItemInserted(0);
                     dialog.dismiss();
                     Toast.makeText(getContext(), "Section created", Toast.LENGTH_SHORT).show();
                 }

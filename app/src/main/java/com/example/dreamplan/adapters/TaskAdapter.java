@@ -62,6 +62,14 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
         setTaskIcon(holder, task);
 
+        int iconResId = task.getIconResId(holder.itemView.getContext());
+        holder.imgTaskIcon.setImageResource(iconResId);
+
+        // Debug log
+        Log.d("TASK_ICON", "Displaying icon for task: " + task.getTitle() +
+                " | Icon ID: " + iconResId +
+                " | Icon Name: " + task.getIconResName());
+
         holder.tvTaskTitle.setText(task.getTitle());
         holder.tvTaskDescription.setText(TextUtils.isEmpty(task.getNotes()) ? "" : task.getNotes());
 
@@ -86,46 +94,16 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
 
     private void setTaskIcon(@NonNull TaskViewHolder holder, Task task) {
-        int iconResId = R.drawable.ic_default_task;
-
         try {
-            if (!TextUtils.isEmpty(task.getIconResName())) {
-                iconResId = context.getResources().getIdentifier(
-                        task.getIconResName(),
-                        "drawable",
-                        context.getPackageName()
-                );
-
-                if (iconResId != 0) {
-                    Drawable d = ContextCompat.getDrawable(context, iconResId);
-                    if (d == null) {
-                        throw new Resources.NotFoundException();
-                    }
-                }
-            }
-
-            if (iconResId == 0 && task.getIconResId() != 0) {
-                iconResId = task.getIconResId();
-                Drawable d = ContextCompat.getDrawable(context, iconResId);
-                if (d == null) {
-                    throw new Resources.NotFoundException();
-                }
+            int iconResId = task.getIconResId(holder.itemView.getContext());
+            if (iconResId != 0) {
+                holder.imgTaskIcon.setImageResource(iconResId);
+            } else {
+                holder.imgTaskIcon.setImageResource(R.drawable.ic_default_task);
             }
         } catch (Exception e) {
-            Log.e("TASK_ICON", "Error loading icon for task: " + task.getTitle(), e);
-            iconResId = R.drawable.ic_default_task;
+            holder.imgTaskIcon.setImageResource(R.drawable.ic_default_task);
         }
-
-        holder.imgTaskIcon.setImageResource(iconResId);
-        holder.imgTaskIcon.setContentDescription(
-                TextUtils.isEmpty(task.getTitle()) ?
-                        "Task icon" :
-                        task.getTitle() + " icon"
-        );
-
-        Log.d("ICON_DEBUG", "Setting icon for task: " + task.getTitle() +
-                " | ResId: " + iconResId +
-                " | ResName: " + task.getIconResName());
     }
 
     private void setTaskTypeDisplay(@NonNull TaskViewHolder holder, Task task) {

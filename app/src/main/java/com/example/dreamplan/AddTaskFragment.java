@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
@@ -36,6 +37,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.content.res.AppCompatResources;
+import androidx.appcompat.widget.AppCompatImageView;
 import androidx.core.content.ContextCompat;
 import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
@@ -98,6 +101,9 @@ public class AddTaskFragment extends Fragment {
     private String iconResName = "star";
     private String selectedIconName = "star";
     private boolean iconSelectionLock = false;
+
+    private static final String SAVED_ICON_ID = "selected_icon_id";
+    private static final String SAVED_ICON_NAME = "selected_icon_name";
 
     public static AddTaskFragment newInstance(Section section, Task task) {
         AddTaskFragment fragment = new AddTaskFragment();
@@ -163,15 +169,9 @@ public class AddTaskFragment extends Fragment {
         timeSuboptions = view.findViewById(R.id.time_suboptions);
 
         // Set default icon
-        imgTaskIcon.setImageResource(selectedIconResId);
-        imgTaskIcon.setTag(selectedIconResId);
-        imgTaskIcon.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        imgTaskIcon.setAdjustViewBounds(true);
-
-        SharedPreferences prefs = requireContext().getSharedPreferences("icon_prefs", Context.MODE_PRIVATE);
-        selectedIconResId = prefs.getInt("selected_icon_res", R.drawable.star);
-        selectedIconName = prefs.getString("selected_icon_name", "star");
-
+        imgTaskIcon = view.findViewById(R.id.img_task_icon);
+        imgTaskIcon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+        imgTaskIcon.setAdjustViewBounds(false);
 
         btnDelete = view.findViewById(R.id.btnDeleteTask);
         btnDelete.setOnClickListener(v -> deleteTask());
@@ -202,6 +202,10 @@ public class AddTaskFragment extends Fragment {
             }
         }
 
+        if (!isEditMode || taskToEdit == null) {
+            imgTaskIcon.setImageResource(selectedIconResId);
+        }
+
         btnDate = view.findViewById(R.id.btn_date);
         btnStartDate = view.findViewById(R.id.btn_start_date);
 
@@ -219,7 +223,6 @@ public class AddTaskFragment extends Fragment {
         }
 
         // Setup components
-        setupImageSelection();
         setupColorSelection(imgTaskIcon, colorOptions);
         setupDatePicker(btnDate, isEditMode && taskToEdit != null ? taskToEdit.getDeadline() : null);
         setupRecurringOptions();
@@ -228,8 +231,8 @@ public class AddTaskFragment extends Fragment {
         MaterialButtonToggleGroup toggleGroup = view.findViewById(R.id.toggle_recurrence);
 
         // Set initial visibility states
-        oneTimeSection.setVisibility(View.VISIBLE);  // Show one-time by default
-        recurringOptions.setVisibility(View.GONE);   // Hide recurring by default
+        oneTimeSection.setVisibility(View.VISIBLE);
+        recurringOptions.setVisibility(View.GONE);
 
         toggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
             if (isChecked) {
@@ -279,15 +282,13 @@ public class AddTaskFragment extends Fragment {
                         etTaskTitle.getText().toString(),
                         etDescription.getText().toString()
                 );
-             //   navigateBackToSectionDetail();
+
             } catch (Exception e) {
                 Log.e("AddTaskFragment", "Error saving task", e);
                 Toast.makeText(getContext(), "Error saving task", Toast.LENGTH_SHORT).show();
             }
         });
     }
-
-
 
     private void setupTimeOptions() {
         timeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -305,26 +306,20 @@ public class AddTaskFragment extends Fragment {
                 public void onIconSelected(int iconResId, String iconName) {
                     if (!isAdded()) return;
 
-                    // Lock to prevent overwrites
-                    iconSelectionLock = true;
-
-                    // Update state
                     selectedIconResId = iconResId;
                     selectedIconName = iconName;
 
-                    // Update task object if editing
-                    if (taskToEdit != null) {
+                    imgTaskIcon.setImageResource(iconResId);
+
+                    if (isEditMode && taskToEdit != null) {
                         taskToEdit.setIconResId(iconResId);
+                        taskToEdit.setIconResName(iconName);
                     }
 
-                    // Update UI immediately
-                    requireActivity().runOnUiThread(() -> {
-                        imgTaskIcon.setImageResource(iconResId);
-                        imgTaskIcon.invalidate();
-                        Log.d("ICON_FIX", "Icon permanently set to: " + iconResId);
-                    });
+                    Log.d("ICON_DEBUG", "Icon selected - ID: " + iconResId + ", Name: " + iconName);
                 }
             };
+
 
     private void persistIconSelection(int resId, String name) {
         // Store in SharedPreferences as backup
@@ -335,50 +330,45 @@ public class AddTaskFragment extends Fragment {
                 .apply();
     }
 
+    private void resetIconSelection() {
+        selectedIconResId = R.drawable.star;
+        selectedIconName = "star";
+        updateIconPreview(selectedIconResId);
+        persistIconSelection(selectedIconResId, selectedIconName);
+    }
+
     private void setupImageSelection() {
         imgTaskIcon.setOnClickListener(v -> {
-            IconSelectionFragment fragment = new IconSelectionFragment();
+            IconSelectionFragment fragment = IconSelectionFragment.newInstance(selectedIconResId);
 
-            int currentIcon = isEditMode && taskToEdit != null ?
-                    taskToEdit.getIconResId() : selectedIconResId;
-            fragment.setCurrentIcon(currentIcon);
-
-            fragment.setIconSelectionListener((resId, iconName) -> {
-                selectedIconResId = resId;
+            fragment.setIconSelectionListener((iconResId, iconName) -> {
+                selectedIconResId = iconResId;
                 selectedIconName = iconName;
-                updateIconPreview(resId);
-
-                persistIconSelection(resId, iconName);
+                updateIconPreview(iconResId);
 
                 if (isEditMode && taskToEdit != null) {
-                    taskToEdit.setIconResId(resId);
+                    taskToEdit.setIconResId(iconResId);
                     taskToEdit.setIconResName(iconName);
                 }
-
-                Log.d("ICON_DEBUG", "Icon selected: " + resId + ", " + iconName);
             });
 
-            getParentFragmentManager()
-                    .beginTransaction()
+            getParentFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, fragment)
                     .addToBackStack(null)
                     .commit();
         });
     }
 
-    private void updateIconPreview(int iconResId) {
-        if (getActivity() == null || iconResId == 0) return;
-
-        getActivity().runOnUiThread(() -> {
-            try {
-                imgTaskIcon.setImageResource(iconResId);
-                imgTaskIcon.setTag(iconResId);
-                imgTaskIcon.invalidate();
-            } catch (Resources.NotFoundException e) {
-                Log.e("ICON_ERROR", "Icon resource not found", e);
-                imgTaskIcon.setImageResource(R.drawable.ic_default_task);
+    private void updateIconPreview(int resId) {
+        try {
+            if (imgTaskIcon != null) {
+                imgTaskIcon.setImageResource(resId);
+                imgTaskIcon.invalidate(); // Force redraw
             }
-        });
+        } catch (Resources.NotFoundException e) {
+            Log.e("ICON_ERROR", "Icon resource not found", e);
+            imgTaskIcon.setImageResource(R.drawable.star);
+        }
     }
 
     private void setupColorSelection(ImageView colorPreview, LinearLayout colorOptions) {
@@ -394,7 +384,6 @@ public class AddTaskFragment extends Fragment {
 
         colorOptions.removeAllViews();
 
-        // Get the initially selected color (for edit mode)
         int initialSelection = isEditMode && taskToEdit != null ?
                 taskToEdit.getColorResId() : R.drawable.circle_background_1;
 
@@ -404,7 +393,7 @@ public class AddTaskFragment extends Fragment {
             // Create container FrameLayout
             FrameLayout container = new FrameLayout(requireContext());
             FrameLayout.LayoutParams containerParams = new FrameLayout.LayoutParams(
-                    dpToPx(44), // Slightly larger to accommodate border
+                    dpToPx(44),
                     dpToPx(44)
             );
             containerParams.setMargins(dpToPx(8), 0, dpToPx(8), 0);
@@ -428,7 +417,6 @@ public class AddTaskFragment extends Fragment {
             }
 
             colorOption.setOnClickListener(v -> {
-                // Remove all borders first
                 for (int j = 0; j < colorOptions.getChildCount(); j++) {
                     View child = colorOptions.getChildAt(j);
                     if (child instanceof FrameLayout) {
@@ -436,10 +424,8 @@ public class AddTaskFragment extends Fragment {
                     }
                 }
 
-                // Add border to selected container
                 ((ViewGroup)v.getParent()).setBackgroundResource(R.drawable.circle_selected_border);
 
-                // Update selected color
                 selectedColorResId = (int) v.getTag();
             });
 
@@ -448,7 +434,6 @@ public class AddTaskFragment extends Fragment {
         }
     }
 
-    // Helper method to get color resource for each drawable
     private int getColorForDrawable(int drawableId) {
         if (drawableId == R.drawable.circle_background_1) {
             return R.color.task_bg_1;
@@ -542,6 +527,8 @@ public class AddTaskFragment extends Fragment {
         if (isSaving) return;
         isSaving = true;
 
+        Log.d("TASK_DEBUG", "Attempting to save task for section: " + section.getId());
+
         try {
             if (TextUtils.isEmpty(title)) {
                 Toast.makeText(getContext(), "Please enter a task title", Toast.LENGTH_SHORT).show();
@@ -549,10 +536,19 @@ public class AddTaskFragment extends Fragment {
                 return;
             }
 
-            // Get dates safely
             String dueDate = isOneTime ? getSafeDateString(btnDate) : "";
             String startDate = !isOneTime ? getSafeDateString(btnStartDate) : "";
-            String iconResName = getResources().getResourceEntryName(selectedIconResId);
+            String iconResName = this.selectedIconName;
+            int iconResId = this.selectedIconResId;
+
+            Log.d("ICON_DEBUG", "Final icon before save - ID: " + iconResId + ", Name: " + iconResName);
+            Log.d("ICON_DEBUG", "Saving with icon - ID: " + selectedIconResId + ", Name: " + iconResName);
+
+            if (selectedIconResId == 0) {
+                selectedIconResId = R.drawable.star;
+                selectedIconName = "star";
+            }
+            Log.d("ICON_SAVE", "Saving with icon - ID: " + selectedIconResId + ", Name: " + selectedIconName);
 
             if (!isOneTime) {
                 if (TextUtils.isEmpty(startDate)) {
@@ -588,28 +584,47 @@ public class AddTaskFragment extends Fragment {
                     "\nSchedule: " + (!isOneTime ? scheduleSpinner.getSelectedItem().toString() : "N/A"));
 
 
-            // Create task object
-            Task task = new Task(
-                    taskToEdit != null ? taskToEdit.getId() : null,
-                    title,
-                    description,
-                    dueDate,
-                    selectedColorResId,
-                    selectedIconResId,
-                    iconResName,
-                    section.getId(),
-                    !isOneTime,
-                    startDate,
-                    !isOneTime ? scheduleSpinner.getSelectedItem().toString() : "",
-                    !isOneTime ? getSelectedTimePreference() : ""
-            );
+            Task task;
+            if (isEditMode && taskToEdit != null) {
+                task = taskToEdit;
+                task.setTitle(title);
+                task.setNotes(description);
+                task.setDeadline(dueDate);
+                task.setColorResId(selectedColorResId);
+                task.setIconResId(selectedIconResId);
+                task.setIconResName(selectedIconName);
+                task.setRecurring(!isOneTime);
+                task.setStartDate(startDate);
+                task.setSchedule(!isOneTime ? scheduleSpinner.getSelectedItem().toString() : "");
+                task.setTimePreference(!isOneTime ? getSelectedTimePreference() : "");
+
+                if (taskToEdit.getCreatedAt() != null) {
+                    task.setCreatedAt(taskToEdit.getCreatedAt());
+                }
+            } else {
+                // Create new task
+                task = new Task(
+                        null,
+                        title,
+                        description,
+                        dueDate,
+                        selectedColorResId,
+                        selectedIconResId,
+                        selectedIconName,
+                        section.getId(),
+                        !isOneTime,
+                        startDate,
+                        !isOneTime ? scheduleSpinner.getSelectedItem().toString() : "",
+                        !isOneTime ? getSelectedTimePreference() : ""
+                );
+            }
 
             // Save the task
             dbManager.saveTask(task, new FirebaseDatabaseManager.DatabaseCallback<String>() {
                 @Override
                 public void onSuccess(String taskId) {
                     isSaving = false;
-                    Log.d("TASK_SAVE", "Successfully saved task with ID: " + taskId);
+                    Log.d("TASK_DEBUG", "Successfully saved task with ID: " + taskId);
                     getParentFragmentManager().popBackStack();
 
                     Fragment parent = getParentFragment();
@@ -621,7 +636,7 @@ public class AddTaskFragment extends Fragment {
                 @Override
                 public void onFailure(Exception e) {
                     isSaving = false;
-                    Log.e("TASK_SAVE", "Failed to save task", e);
+                    Log.e("TASK_DEBUG", "Failed to save task", e);
                     Toast.makeText(getContext(), "Failed to save: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 }
             });
@@ -755,15 +770,19 @@ public class AddTaskFragment extends Fragment {
             isEditMode = true;
             taskToEdit = task;
 
-            if (task.getIconResId() != 0) {
-                selectedIconResId = task.getIconResId();
-                selectedIconName = task.getIconResName();
-                updateIconPreview(selectedIconResId);
-                persistIconSelection(selectedIconResId, selectedIconName);
-            }
-
             etTaskTitle.setText(task.getTitle());
             etDescription.setText(task.getNotes());
+
+            if (task.hasValidIcon()) {
+                selectedIconResId = task.getIconResId(requireContext());
+                selectedIconName = task.getIconResName();
+                imgTaskIcon.setImageResource(selectedIconResId);
+                Log.d("ICON_DEBUG", "Loaded task icon - ID: " + selectedIconResId + ", Name: " + selectedIconName);
+            } else {
+                selectedIconResId = R.drawable.star;
+                selectedIconName = "star";
+                imgTaskIcon.setImageResource(selectedIconResId);
+            }
 
             if (task.isRecurring()) {
                 toggleGroup.check(R.id.btn_regular);
@@ -882,17 +901,16 @@ public class AddTaskFragment extends Fragment {
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putInt("selected_icon", selectedIconResId);
-        if (taskToEdit != null) {
-            taskToEdit.setIconResId(selectedIconResId);
-        }
+        outState.putInt(SAVED_ICON_ID, selectedIconResId);
+        outState.putString(SAVED_ICON_NAME, selectedIconName);
     }
 
     @Override
     public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
         super.onViewStateRestored(savedInstanceState);
         if (savedInstanceState != null) {
-            selectedIconResId = savedInstanceState.getInt("selected_icon", R.drawable.star);
+            selectedIconResId = savedInstanceState.getInt(SAVED_ICON_ID, R.drawable.star);
+            selectedIconName = savedInstanceState.getString(SAVED_ICON_NAME, "star");
             updateIconPreview(selectedIconResId);
         }
     }

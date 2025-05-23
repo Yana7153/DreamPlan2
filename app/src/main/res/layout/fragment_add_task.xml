@@ -98,16 +98,19 @@
                     android:padding="8dp">
 
                     <!-- Icon centered at the top -->
-                    <ImageView
-                        android:id="@+id/img_task_icon"
+                    <FrameLayout
                         android:layout_width="100dp"
                         android:layout_height="100dp"
-                        android:src="@drawable/star"
-                        android:background="@drawable/circle_with_border"
-                        android:scaleType="centerCrop"
-                        android:padding="4dp"
-                        android:contentDescription="Task icon"
-                        android:layout_gravity="center"/>
+                        android:background="@drawable/circle_with_border">
+
+                        <ImageView
+                            android:id="@+id/img_task_icon"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:src="@drawable/star"
+                            android:scaleType="centerInside"
+                            android:contentDescription="Task icon"/>
+                    </FrameLayout>
 
                     <!-- Space between icon and button -->
                     <Space

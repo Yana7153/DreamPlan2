@@ -1,14 +1,6 @@
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item>
-        <shape android:shape="oval">
-            <solid android:color="@android:color/transparent"/>
-            <stroke
-                android:width="3dp"
-                android:color="#888888"/>
-            <!-- Increased size to match larger ImageView -->
-            <size
-                android:width="120dp"
-                android:height="120dp"/>
-        </shape>
-    </item>
-</layer-list>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="@android:color/transparent"/>
+    <stroke android:width="2dp" android:color="@color/black"/>
+    <size android:width="100dp" android:height="100dp"/>
+</shape>
