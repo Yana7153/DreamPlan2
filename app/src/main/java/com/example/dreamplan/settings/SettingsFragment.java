@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -70,16 +71,28 @@ public class SettingsFragment extends Fragment {
 
     private void setupDarkModeSwitch() {
         SharedPreferences prefs = requireActivity().getSharedPreferences("app_prefs", Context.MODE_PRIVATE);
-        boolean isDarkMode = prefs.getBoolean("dark_mode", false);
-        switchDarkMode.setChecked(isDarkMode);
+
+        int currentMode = prefs.getInt("dark_mode_pref", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+        switchDarkMode.setChecked(isDarkModeEnabled(currentMode));
 
         switchDarkMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            prefs.edit().putBoolean("dark_mode", isChecked).apply();
-            AppCompatDelegate.setDefaultNightMode(
-                    isChecked ? AppCompatDelegate.MODE_NIGHT_YES
-                            : AppCompatDelegate.MODE_NIGHT_NO
-            );
+            int newMode = isChecked ? AppCompatDelegate.MODE_NIGHT_YES
+                    : AppCompatDelegate.MODE_NIGHT_NO;
+
+            prefs.edit().putInt("dark_mode_pref", newMode).apply();
+            AppCompatDelegate.setDefaultNightMode(newMode);
+
+            requireActivity().recreate();
         });
+    }
+
+    private boolean isDarkModeEnabled(int mode) {
+        if (mode == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM) {
+            int currentNightMode = getResources().getConfiguration().uiMode
+                    & Configuration.UI_MODE_NIGHT_MASK;
+            return currentNightMode == Configuration.UI_MODE_NIGHT_YES;
+        }
+        return mode == AppCompatDelegate.MODE_NIGHT_YES;
     }
 
     private void setupVersionInfo() {

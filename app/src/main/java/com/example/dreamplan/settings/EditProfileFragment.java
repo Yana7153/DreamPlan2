@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -37,6 +38,9 @@ public class EditProfileFragment extends Fragment {
         etUsername = view.findViewById(R.id.et_username);
         etEmail = view.findViewById(R.id.et_email);
         Button btnSave = view.findViewById(R.id.btn_save);
+
+        ImageView btnBack = view.findViewById(R.id.btn_back);
+        btnBack.setOnClickListener(v -> requireActivity().onBackPressed());
 
         FirebaseUser user = mAuth.getCurrentUser();
         if (user != null) {

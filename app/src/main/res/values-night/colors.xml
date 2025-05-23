@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark mode specific colors -->
+    <color name="background_color">#121212</color>
+    <color name="primary_color">#BB86FC</color> <!-- Lighter purple for dark mode -->
+    <color name="text_primary">#FFFFFF</color> <!-- White text in dark mode -->
+    <color name="text_secondary">#B3FFFFFF</color> <!-- Semi-transparent white -->
+
+    <!-- Card backgrounds -->
+    <color name="purple_200">#3700B3</color> <!-- Darker in dark mode -->
+    <color name="green_200">#018786</color> <!-- Darker teal -->
+
+    <!-- Text colors -->
+    <color name="black">#FFFFFF</color> <!-- In dark mode, "black" becomes white -->
+    <color name="white">#121212</color> <!-- In dark mode, "white" becomes dark -->
+
+    <!-- Add other dark mode color variants as needed -->
+</resources>

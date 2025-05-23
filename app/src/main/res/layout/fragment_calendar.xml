@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Calendar"
-        android:textSize="24sp"
+        android:textSize="40sp"
         android:textColor="@color/primaryColor"
         android:textStyle="bold"
         android:layout_marginBottom="16dp"/>
@@ -56,6 +56,15 @@
         android:columnCount="7"
         android:rowCount="1"
         android:layout_marginBottom="4dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:gravity="center"
+            android:text="Sun"
+            android:textColor="@color/black"
+            android:textSize="14sp"/>
 
         <TextView
             android:layout_width="0dp"
@@ -111,14 +120,7 @@
             android:textColor="@color/black"
             android:textSize="14sp"/>
 
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_columnWeight="1"
-            android:gravity="center"
-            android:text="Sun"
-            android:textColor="@color/black"
-            android:textSize="14sp"/>
+
     </GridLayout>
 
     <!-- Calendar Dates Grid - Now with fixed height for elongation -->

@@ -10,14 +10,33 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <TextView
-            android:layout_width="wrap_content"
+
+        <RelativeLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Edit Profile"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:textColor="@color/purple_700"
-            android:layout_marginBottom="16dp"/>
+            android:layout_marginBottom="16dp">
+
+            <!-- Back Button -->
+            <ImageView
+                android:id="@+id/btn_back"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_alignParentStart="true"
+                android:contentDescription="Back"
+                android:src="@drawable/left_arrow"
+                android:padding="12dp"/>
+
+            <!-- Title -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_toEndOf="@id/btn_back"
+                android:text="Edit Profile"
+                android:textColor="@color/primary_color"
+                android:textSize="30dp"
+                android:textStyle="bold"/>
+        </RelativeLayout>
 
         <!-- Personal Information Card -->
         <com.google.android.material.card.MaterialCardView
@@ -38,7 +57,7 @@
                     android:layout_height="wrap_content"
                     style="@style/TextAppearance.MaterialComponents.Subtitle1"
                     android:text="Personal Information"
-                    android:layout_marginBottom="16dp"/>
+                    android:layout_marginBottom="20dp"/>
 
                 <!-- Username Field -->
                 <com.google.android.material.textfield.TextInputLayout

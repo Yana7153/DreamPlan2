@@ -18,6 +18,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Section Name"
+        style="@style/WhiteTextCardTitle"
         android:textSize="35sp"
         android:textStyle="bold"
         android:textColor="@android:color/black"/>

@@ -15,9 +15,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Settings"
-            android:textSize="24sp"
+            android:textSize="40sp"
             android:textStyle="bold"
-            android:textColor="@color/purple_700"
+            android:textColor="@color/primary_color"
             android:layout_marginBottom="16dp"/>
 
         <!-- Profile Section Card -->
@@ -38,7 +38,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     style="@style/TextAppearance.MaterialComponents.Subtitle1"
-                    android:text="Account"/>
+                    android:text="Account"
+                    android:textSize="20dp"/>
 
                 <!-- Add layout_width and layout_height to all views -->
                 <LinearLayout
@@ -106,7 +107,8 @@
                     style="@style/TextAppearance.MaterialComponents.Subtitle1"
                     android:text="Preferences"
                     android:layout_marginStart="8dp"
-                    android:layout_marginBottom="8dp"/>
+                    android:layout_marginBottom="8dp"
+                    android:textSize="20dp"/>
 
                 <com.google.android.material.switchmaterial.SwitchMaterial
                     android:id="@+id/switch_dark_mode"
@@ -130,16 +132,16 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/tv_help"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    style="@style/TextAppearance.MaterialComponents.Body1"
-                    android:drawableStart="@drawable/ic_help"
-                    android:drawablePadding="16dp"
-                    android:gravity="center_vertical"
-                    android:padding="16dp"
-                    android:text="Help &amp; Support"/>
+<!--                <TextView-->
+<!--                    android:id="@+id/tv_help"-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    style="@style/TextAppearance.MaterialComponents.Body1"-->
+<!--                    android:drawableStart="@drawable/ic_help"-->
+<!--                    android:drawablePadding="16dp"-->
+<!--                    android:gravity="center_vertical"-->
+<!--                    android:padding="16dp"-->
+<!--                    android:text="Help &amp; Support"/>-->
 
                 <View
                     android:layout_width="match_parent"

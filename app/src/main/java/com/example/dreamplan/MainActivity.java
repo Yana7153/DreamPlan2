@@ -35,6 +35,8 @@ public class MainActivity extends AppCompatActivity {
         btnAddSection = findViewById(R.id.btnAddSection);
         bottomNavigationView = findViewById(R.id.bottom_navigation);
 
+        btnAddSection.setVisibility(View.GONE);
+
         setupFloatingActionButton();
         setupBottomNavigation();
 
@@ -134,11 +136,10 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        FragmentManager fm = getSupportFragmentManager();
-        if (fm.getBackStackEntryCount() > 0) {
-            fm.popBackStack();
-        } else {
-            super.onBackPressed();
+        super.onBackPressed();
+        Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        if (currentFragment != null) {
+            btnAddSection.setVisibility(currentFragment instanceof HomeFragment ? View.VISIBLE : View.GONE);
         }
     }
 }

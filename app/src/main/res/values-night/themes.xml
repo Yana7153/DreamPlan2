@@ -1,7 +1,13 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
     <style name="Base.Theme.DreamPlan" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+        <!-- Dark theme customizations -->
+        <item name="colorSurface">@color/background_dark</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+    </style>
+
+    <style name="WhiteTextCardTitle">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">40sp</item>
+        <item name="android:textStyle">bold</item>
     </style>
 </resources>
