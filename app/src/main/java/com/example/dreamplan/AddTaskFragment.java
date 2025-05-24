@@ -58,6 +58,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.auth.FirebaseAuth;
@@ -126,17 +127,6 @@ public class AddTaskFragment extends Fragment {
         }
     }
 
-//    @Override
-//    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-//        View view = inflater.inflate(R.layout.fragment_add_task, container, false);
-//
-//        btnDelete = view.findViewById(R.id.btnDeleteTask);
-//        btnDelete = view.findViewById(R.id.btnDeleteTask);
-//        btnDelete.setOnClickListener(v -> deleteTask());
-////        btnDelete.setOnClickListener(v -> deleteTask());
-//
-//        return view;
-//    }
 
     @Nullable
     @Override
@@ -174,7 +164,7 @@ public class AddTaskFragment extends Fragment {
         imgTaskIcon.setAdjustViewBounds(false);
 
         btnDelete = view.findViewById(R.id.btnDeleteTask);
-        btnDelete.setOnClickListener(v -> deleteTask());
+        btnDelete.setOnClickListener(v -> showDeleteConfirmation());
 
         toggleGroup = view.findViewById(R.id.toggle_recurrence);
         toggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
@@ -913,5 +903,29 @@ public class AddTaskFragment extends Fragment {
             selectedIconName = savedInstanceState.getString(SAVED_ICON_NAME, "star");
             updateIconPreview(selectedIconResId);
         }
+    }
+
+
+    private void showDeleteConfirmation() {
+        if (taskToEdit == null) return;
+
+        new MaterialAlertDialogBuilder(requireContext(), R.style.LightAlertDialogTheme)
+                .setTitle("Delete Task")
+                .setMessage("Are you sure you want to delete this task?")
+                .setPositiveButton("Delete", (dialog, which) -> {
+                    dbManager.deleteTask(taskToEdit.getId(), new FirebaseDatabaseManager.DatabaseCallback<Void>() {
+                        @Override
+                        public void onSuccess(Void result) {
+                            Toast.makeText(getContext(), "Task deleted", Toast.LENGTH_SHORT).show();
+                            getParentFragmentManager().popBackStack();
+                        }
+                        @Override
+                        public void onFailure(Exception e) {
+                            Toast.makeText(getContext(), "Delete failed", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 }

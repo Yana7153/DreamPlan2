@@ -141,21 +141,6 @@ public class HomeFragment extends Fragment implements SectionAdapter.OnSectionAc
                 btnAddSection.setOnClickListener(v -> showAddSectionDialog());
             }
         }
-
-//        @Override
-//        public void onEditSection(Section section) {
-//            showEditSectionDialog(section);
-//        }
-//
-//        @Override
-//        public void onDeleteSection(Section section) {
-//            showDeleteConfirmationDialog(section);
-//        }
-//
-//        @Override
-//        public void onOpenSection(Section section) {
-//            openSectionDetail(section);
-//        }
     }
 
     private final BroadcastReceiver updateReceiver = new BroadcastReceiver() {
@@ -370,86 +355,6 @@ public class HomeFragment extends Fragment implements SectionAdapter.OnSectionAc
     }
 
 
-//    public void onEditSection(Section section) {
-//        showEditSectionDialog(section);
-//    }
-//
-//
-//    public void onDeleteSection(Section section) {
-//        showDeleteConfirmationDialog(section);
-//    }
-//
-//
-//    public void onOpenSection(Section section) {
-//        openSectionDetail(section);
-//    }
-
-//    private void createDefaultSections() {
-//        String[] defaultSections = {"Work", "Study", "Personal"};
-//        String[] colors = {"#FFB74D", "#81C784", "#64B5F6"};
-//
-//        for (int i = 0; i < defaultSections.length; i++) {
-//            Section section = new Section(null, defaultSections[i], colors[i], "", true);
-//            dbManager.addSection(section, new FirebaseDatabaseManager.DatabaseCallback<String>() {
-//                @Override
-//                public void onSuccess(String sectionId) {
-//                    section.setId(sectionId);
-//                    sectionList.add(section);
-//                    sectionAdapter.notifyItemInserted(sectionList.size() - 1);
-//                }
-//
-//                @Override
-//                public void onFailure(Exception e) {
-//                    Log.e("HomeFragment", "Error creating default section", e);
-//                }
-//            });
-//        }
-//    }
-
-//    private void refreshTaskCounts() {
-//        if (getActivity() == null || !isAdded()) return;
-//
-//        new Thread(() -> {
-//            try {
-//                DatabaseManager db = new DatabaseManager(requireContext());
-//                final int todayCount = db.getTasksDueTodayCount();
-//                final int tomorrowCount = db.getTasksDueTomorrowCount();
-//                final int weekCount = db.getTasksDueInWeekCount();
-//
-//                getActivity().runOnUiThread(() -> {
-//                    if (!tvTasksTodayNumber.getText().equals(String.valueOf(todayCount))) {
-//                        tvTasksTodayNumber.setText(String.valueOf(todayCount));
-//                    }
-//                    if (!tvTasksTomorrowNumber.getText().equals(String.valueOf(tomorrowCount))) {
-//                        tvTasksTomorrowNumber.setText(String.valueOf(tomorrowCount));
-//                    }
-//                    if (!tvTasksWeekNumber.getText().equals(String.valueOf(weekCount))) {
-//                        tvTasksWeekNumber.setText(String.valueOf(weekCount));
-//                    }
-//                });
-//            } catch (Exception e) {
-//                Log.e("REFRESH", "Auto-refresh failed", e);
-//            }
-//        }).start();
-//    }
-
-//    private void showDeleteConfirmationDialog(Section section) {
-//        new AlertDialog.Builder(requireContext())
-//                .setTitle("Delete Section")
-//                .setMessage("Are you sure you want to delete '" + section.getName() + "'?")
-//                .setPositiveButton("Delete", (dialog, which) -> {
-//                    int position = sectionList.indexOf(section);
-//                    if (position != -1) {
-//                        dbManager.deleteSection(section.getId());
-//                        sectionList.remove(position);
-//                        sectionAdapter.notifyItemRemoved(position);
-//                        Toast.makeText(getContext(), "Section deleted", Toast.LENGTH_SHORT).show();
-//                    }
-//                })
-//                .setNegativeButton("Cancel", null)
-//                .show();
-//    }
-
     private void addSection(Section section) {
         Map<String, Object> sectionData = new HashMap<>();
         sectionData.put("name", section.getName());
@@ -464,22 +369,6 @@ public class HomeFragment extends Fragment implements SectionAdapter.OnSectionAc
                     Toast.makeText(getContext(), "Section added", Toast.LENGTH_SHORT).show();
                 });
     }
-
-//    private void setupSectionAdapter() {
-//        sectionAdapter = new SectionAdapter(sectionList, requireContext(), this);
-//        sectionAdapter.setOnSectionActionListener(new SectionAdapter.OnSectionActionListener() {
-//            @Override
-//            public void onEditSection(Section section) {
-//                updateSectionInFirebase(section);
-//            }
-//
-//            @Override
-//            public void onDeleteSection(Section section) {
-//                deleteSectionFromFirebase(section);
-//            }
-//        });
-//        sectionsRecyclerView.setAdapter(sectionAdapter);
-//    }
 
     private void updateSectionInFirebase(Section section) {
         FirebaseDatabaseManager.getInstance().updateSection(section, new FirebaseDatabaseManager.DatabaseCallback<Void>() {
@@ -510,19 +399,6 @@ public class HomeFragment extends Fragment implements SectionAdapter.OnSectionAc
             }
         });
     }
-
-//    private void showDeleteConfirmationDialog(Section section) {
-//        new AlertDialog.Builder(context)
-//                .setTitle("Delete Section")
-//                .setMessage("Are you sure you want to delete this section? All tasks in it will be deleted.")
-//                .setPositiveButton("Delete", (dialog, which) -> {
-//                    if (actionListener != null) {
-//                        actionListener.onDeleteSection(section);
-//                    }
-//                })
-//                .setNegativeButton("Cancel", null)
-//                .show();
-//    }
 
     private void showSectionDialog(@Nullable Section section, boolean isEditMode) {
         Dialog dialog = new Dialog(requireContext());
@@ -604,7 +480,6 @@ public class HomeFragment extends Fragment implements SectionAdapter.OnSectionAc
             dialog.dismiss();
         });
 
-        // Delete button handler (only in edit mode)
         btnDelete.setOnClickListener(v -> {
             dialog.dismiss();
             showDeleteConfirmationDialog(section);
@@ -612,78 +487,17 @@ public class HomeFragment extends Fragment implements SectionAdapter.OnSectionAc
 
         dialog.show();
     }
-
 
     public void onEditSection(Section section) {
         showSectionDialog(section, true);
     }
 
-
     public void onDeleteSection(Section section) {
         showDeleteConfirmationDialog(section);
     }
 
-
     public void onOpenSection(Section section) {
         openSectionDetail(section);
-    }
-
-    private void showEditSectionDialog(Section section) {
-        Dialog dialog = new Dialog(requireContext());
-        dialog.setContentView(R.layout.task_input_dialog);
-        dialog.getWindow().setBackgroundDrawableResource(R.drawable.dialog_background);
-
-        TextView dialogTitle = dialog.findViewById(R.id.dialog_title);
-        dialogTitle.setText("Edit Section");
-
-        EditText etName = dialog.findViewById(R.id.et_section_name);
-        EditText etNotes = dialog.findViewById(R.id.et_notes);
-        Button btnDelete = dialog.findViewById(R.id.btnDeleteTask);
-        Button btnSave = dialog.findViewById(R.id.btn_save_section);
-        LinearLayout colorPicker = dialog.findViewById(R.id.color_picker);
-
-        // Initialize with current section color
-        final int[] selectedColorHolder = {Integer.parseInt(section.getColor())};
-
-        // Set current values
-        etName.setText(section.getName());
-        etNotes.setText(section.getNotes());
-        updateColorSelectionUI(colorPicker, selectedColorHolder[0]);
-
-        btnDelete.setVisibility(View.VISIBLE);
-        // Color selection
-        for (int i = 0; i < colorPicker.getChildCount(); i++) {
-            final int position = i + 1;
-            ImageView colorCircle = (ImageView) colorPicker.getChildAt(i);
-            colorCircle.setOnClickListener(v -> {
-                selectedColorHolder[0] = position; // Now this works
-                updateColorSelectionUI(colorPicker, position);
-            });
-        }
-
-        btnSave.setOnClickListener(v -> {
-            String name = etName.getText().toString().trim();
-            String notes = etNotes.getText().toString().trim();
-
-            if (name.isEmpty()) {
-                Toast.makeText(getContext(), "Section name required", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            section.setName(name);
-            section.setNotes(notes);
-            section.setColor(String.valueOf(selectedColorHolder[0])); // Use the holder here
-
-            updateSectionInFirebase(section);
-            dialog.dismiss();
-        });
-
-        btnDelete.setOnClickListener(v -> {
-            dialog.dismiss();
-            showDeleteConfirmationDialog(section);
-        });
-
-        dialog.show();
     }
 
     private void updateColorSelectionUI(LinearLayout colorPicker, int selectedPosition) {
@@ -695,7 +509,7 @@ public class HomeFragment extends Fragment implements SectionAdapter.OnSectionAc
     }
 
     private void showDeleteConfirmationDialog(Section section) {
-        new MaterialAlertDialogBuilder(requireContext(), R.style.RoundedDialogTheme)
+        new MaterialAlertDialogBuilder(requireContext(), R.style.LightAlertDialogTheme)
                 .setTitle("Delete Section")
                 .setMessage("Are you sure you want to delete this section?")
                 .setPositiveButton("Delete", (dialog, which) -> {

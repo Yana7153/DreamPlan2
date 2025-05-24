@@ -111,39 +111,6 @@ private static final String ARG_SECTION = "section";
             }
         });
 
-
-//        taskAdapter.setOnTaskClickListener(new TaskAdapter.OnTaskClickListener() {
-//            @Override
-//            public void onTaskClick(Task task) {
-//                AddTaskFragment addTaskFragment = AddTaskFragment.newInstance(section, task);
-//                getParentFragmentManager().beginTransaction()
-//                        .replace(R.id.fragment_container, addTaskFragment)
-//                        .addToBackStack("edit_task")
-//                        .commit();
-//            }
-//
-//            @Override
-//            public void onTaskLongClick(Task task) {
-//                // Delete task
-//                int position = taskList.indexOf(task);
-//                if (position != -1) {
-//                    new AlertDialog.Builder(requireContext())
-//                            .setTitle("Delete Task")
-//                            .setMessage("Are you sure you want to delete this task?")
-//                            .setPositiveButton("Delete", (dialog, which) -> {
-//                                if (dbManager.deleteTask(task.getId())) {
-//                                    taskList.remove(position);
-//                                    taskAdapter.notifyItemRemoved(position); // Better than notifyDataSetChanged
-//                                    Toast.makeText(getContext(), "Task deleted", Toast.LENGTH_SHORT).show();
-//                                }
-//                            })
-//                            .setNegativeButton("Cancel", null)
-//                            .show();
-//                }
-//            }
-//        });
-
-
         // Back button
         ImageView backButton = view.findViewById(R.id.btnBack);
         if (backButton != null) {
@@ -189,29 +156,6 @@ private static final String ARG_SECTION = "section";
         });
     }
 
-
-
-
-
-    private void deleteTask(Task task) {
-        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-
-        FirebaseFirestore.getInstance()
-                .collection("users").document(userId)
-                .collection("tasks").document(task.getId())
-                .delete()
-                .addOnSuccessListener(aVoid -> {
-                    int position = taskList.indexOf(task);
-                    if (position != -1) {
-                        taskList.remove(position);
-                        taskAdapter.notifyItemRemoved(position);
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(getContext(), "Delete failed", Toast.LENGTH_SHORT).show();
-                });
-    }
-
     private void hideFabButton() {
         if (getActivity() != null) {
             View fabAddSection = getActivity().findViewById(R.id.btnAddSection);
@@ -250,31 +194,6 @@ private static final String ARG_SECTION = "section";
                         .replace(R.id.fragment_container, fragment)
                         .addToBackStack(null)
                         .commit();
-            }
-
-            @Override
-            public void onTaskLongClick(Task task) {
-                new AlertDialog.Builder(requireContext())
-                        .setTitle("Delete Task")
-                        .setMessage("Are you sure?")
-                        .setPositiveButton("Delete", (dialog, which) -> {
-                            dbManager.deleteTask(task.getId(), new FirebaseDatabaseManager.DatabaseCallback<Void>() {
-                                @Override
-                                public void onSuccess(Void result) {
-                                    int position = taskList.indexOf(task);
-                                    if (position != -1) {
-                                        taskList.remove(position);
-                                        taskAdapter.notifyItemRemoved(position);
-                                    }
-                                }
-                                @Override
-                                public void onFailure(Exception e) {
-                                    Toast.makeText(getContext(), "Delete failed", Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                        })
-                        .setNegativeButton("Cancel", null)
-                        .show();
             }
         });
     }

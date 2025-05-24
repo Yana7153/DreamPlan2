@@ -184,4 +184,26 @@
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">50%</item> <!-- Makes it perfectly circular -->
     </style>
+
+    <!-- Add this to your styles.xml -->
+    <style name="LightAlertDialogTheme" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <!-- Background color -->
+        <item name="android:windowBackground">@android:color/white</item>
+        <item name="colorSurface">@android:color/white</item>
+
+        <!-- Text colors -->
+        <item name="colorOnSurface">@android:color/black</item>
+
+        <!-- Button styles -->
+        <item name="buttonBarPositiveButtonStyle">@style/DialogButton.Positive</item>
+        <item name="buttonBarNegativeButtonStyle">@style/DialogButton.Negative</item>
+
+        <!-- Corner radius -->
+        <item name="shapeAppearanceOverlay">@style/DialogCornerRadius</item>
+    </style>
+
+    <style name="DialogCornerRadius" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
 </resources>

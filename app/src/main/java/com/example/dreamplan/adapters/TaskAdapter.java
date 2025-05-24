@@ -34,7 +34,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
     public interface OnTaskClickListener {
         void onTaskClick(Task task);
-        void onTaskLongClick(Task task);
     }
 
     public void setOnTaskClickListener(OnTaskClickListener listener) {
@@ -85,13 +84,13 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             }
         });
 
-        holder.itemView.setOnLongClickListener(v -> {
-            if (taskClickListener != null) {
-                taskClickListener.onTaskLongClick(task);
-                return true;
-            }
-            return false;
-        });
+//        holder.itemView.setOnLongClickListener(v -> {
+//            if (taskClickListener != null) {
+//                taskClickListener.onTaskLongClick(task);
+//                return true;
+//            }
+//            return false;
+//        });
     }
 
 
