@@ -21,6 +21,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
+import com.google.firebase.storage.FirebaseStorage;
 
 public class MainActivity extends AppCompatActivity {
     private FloatingActionButton btnAddSection;
@@ -40,7 +41,9 @@ public class MainActivity extends AppCompatActivity {
         setupFloatingActionButton();
         setupBottomNavigation();
 
+        FirebaseStorage storage = FirebaseStorage.getInstance();
         FirebaseApp.initializeApp(this);
+        FirebaseStorage.getInstance().setMaxUploadRetryTimeMillis(60000);
         FirebaseFirestore.getInstance().setFirestoreSettings(
                 new FirebaseFirestoreSettings.Builder()
                         .setPersistenceEnabled(true)

@@ -48,13 +48,14 @@
                     android:orientation="horizontal"
                     android:paddingVertical="8dp">
 
-                    <ImageView
+                    <com.google.android.material.imageview.ShapeableImageView
                         android:id="@+id/profile_image"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
                         android:src="@drawable/ic_profile"
-                        android:contentDescription="Profile picture"
-                        android:background="@drawable/circle_bg"/>
+                        app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Circle"
+                        app:strokeColor="?attr/colorOutline"
+                        app:strokeWidth="1dp"/>
 
                     <LinearLayout
                         android:layout_width="match_parent"
