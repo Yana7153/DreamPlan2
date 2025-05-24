@@ -374,4 +374,27 @@ public class FirebaseDatabaseManager {
                 .addOnSuccessListener(aVoid -> callback.onSuccess(null))
                 .addOnFailureListener(callback::onFailure);
     }
+
+    public void getTasksForDateRange(String startDate, String endDate, DatabaseCallback<List<Task>> callback) {
+        String userId = auth.getCurrentUser().getUid();
+
+        db.collection("users").document(userId)
+                .collection("tasks")
+                .whereGreaterThanOrEqualTo("deadline", startDate)
+                .whereLessThanOrEqualTo("deadline", endDate)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        List<Task> tasks = new ArrayList<>();
+                        for (QueryDocumentSnapshot doc : task.getResult()) {
+                            Task taskObj = doc.toObject(Task.class);
+                            taskObj.setId(doc.getId());
+                            tasks.add(taskObj);
+                        }
+                        callback.onSuccess(tasks);
+                    } else {
+                        callback.onFailure(task.getException());
+                    }
+                });
+    }
 }

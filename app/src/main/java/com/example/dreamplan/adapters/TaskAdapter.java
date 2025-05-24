@@ -30,6 +30,8 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     private OnTaskClickListener taskClickListener;
 
 
+
+
     public interface OnTaskClickListener {
         void onTaskClick(Task task);
         void onTaskLongClick(Task task);
@@ -167,7 +169,8 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     }
 
     public void updateTasks(List<Task> newTasks) {
-        taskList = newTasks;
+        this.taskList.clear();
+        this.taskList.addAll(newTasks);
         notifyDataSetChanged();
     }
 

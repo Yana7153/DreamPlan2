@@ -114,6 +114,18 @@ public class HomeFragment extends Fragment implements SectionAdapter.OnSectionAc
         dbManager = FirebaseDatabaseManager.getInstance();
         loadSections();
         loadTaskCounts();
+
+        view.findViewById(R.id.todayCard).setOnClickListener(v -> {
+            navigateToTaskList("today");
+        });
+
+        view.findViewById(R.id.tomorrowCard).setOnClickListener(v -> {
+            navigateToTaskList("tomorrow");
+        });
+
+        view.findViewById(R.id.weekCard).setOnClickListener(v -> {
+            navigateToTaskList("week");
+        });
     }
 
     @Override
@@ -691,5 +703,13 @@ public class HomeFragment extends Fragment implements SectionAdapter.OnSectionAc
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
+    }
+
+    private void navigateToTaskList(String filterType) {
+        TaskListFragment fragment = TaskListFragment.newInstance(filterType);
+        FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
+        transaction.replace(R.id.fragment_container, fragment);
+        transaction.addToBackStack("task_list");
+        transaction.commit();
     }
 }

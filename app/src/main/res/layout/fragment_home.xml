@@ -35,6 +35,7 @@
 
     <!-- Main Card (Today's Tasks) -->
     <androidx.cardview.widget.CardView
+        android:id="@+id/todayCard"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
@@ -79,6 +80,7 @@
 
         <!-- Tomorrow's Tasks Card -->
         <androidx.cardview.widget.CardView
+            android:id="@+id/tomorrowCard"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
@@ -118,6 +120,7 @@
 
         <!-- Weekly Tasks Card -->
         <androidx.cardview.widget.CardView
+            android:id="@+id/weekCard"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
