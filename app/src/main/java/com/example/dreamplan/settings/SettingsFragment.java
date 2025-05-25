@@ -51,7 +51,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class SettingsFragment extends Fragment {
-//    private static final int PICK_IMAGE_REQUEST = 1;
     private SwitchMaterial switchDarkMode;
     private TextView tvUsername, tvEmail, tvVersion;
     private ShapeableImageView profileImage;
@@ -66,7 +65,6 @@ public class SettingsFragment extends Fragment {
         super.onCreate(savedInstanceState);
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
-       // storageRef = FirebaseStorage.getInstance().getReference();
     }
 
     @Override
@@ -74,21 +72,18 @@ public class SettingsFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_settings, container, false);
 
-        // Initialize views
         profileImage = view.findViewById(R.id.profile_image);
         switchDarkMode = view.findViewById(R.id.switch_dark_mode);
         tvUsername = view.findViewById(R.id.tv_username);
         tvEmail = view.findViewById(R.id.tv_email);
         tvVersion = view.findViewById(R.id.tv_version);
 
-        // Setup components
         loadUserProfile();
         setupDarkModeSwitch();
         setupVersionInfo();
         setupLogout(view);
         setupEditProfile(view);
 
-        // Profile image click listener
         profileImage.setOnClickListener(v -> openImagePicker());
         loadLocalProfileImage();
 
@@ -177,102 +172,6 @@ public class SettingsFragment extends Fragment {
             }
         }
     }
-
-//    private void uploadProfilePicture(Uri imageUri) {
-//        if (currentUser == null) return;
-//
-//        ProgressDialog progressDialog = new ProgressDialog(getContext());
-//        progressDialog.setTitle("Uploading...");
-//        progressDialog.setCancelable(false);
-//        progressDialog.show();
-//
-//        // Create storage reference
-//        StorageReference fileRef = storageRef
-//                .child("profile_pictures/" + currentUser.getUid() + ".jpg");
-//
-//        // Upload the file
-//        fileRef.putFile(imageUri)
-//                .addOnProgressListener(taskSnapshot -> {
-//                    double progress = (100.0 * taskSnapshot.getBytesTransferred()) /
-//                            taskSnapshot.getTotalByteCount();
-//                    progressDialog.setMessage("Uploaded " + (int) progress + "%");
-//                })
-//                .addOnSuccessListener(taskSnapshot -> {
-//                    // Get download URL
-//                    fileRef.getDownloadUrl().addOnSuccessListener(uri -> {
-//                        // Update user profile
-//                        UserProfileChangeRequest profileUpdates =
-//                                new UserProfileChangeRequest.Builder()
-//                                        .setPhotoUri(uri)
-//                                        .build();
-//
-//                        currentUser.updateProfile(profileUpdates)
-//                                .addOnCompleteListener(task -> {
-//                                    progressDialog.dismiss();
-//                                    if (task.isSuccessful()) {
-//                                        Glide.with(this)
-//                                                .load(uri)
-//                                                .circleCrop()
-//                                                .into(profileImage);
-//                                        Toast.makeText(getContext(),
-//                                                "Profile updated!",
-//                                                Toast.LENGTH_SHORT).show();
-//                                    } else {
-//                                        showError("Update failed", task.getException());
-//                                    }
-//                                });
-//                    });
-//                })
-//                .addOnFailureListener(e -> {
-//                    progressDialog.dismiss();
-//                    showError("Upload failed", e);
-//                });
-//    }
-
-//    private void showError(String message, Exception e) {
-//        String errorMessage = message;
-//        if (e != null) {
-//            errorMessage += ": " + e.getMessage();
-//            Log.e("SettingsFragment", message, e);
-//        }
-//        Toast.makeText(getContext(), errorMessage, Toast.LENGTH_LONG).show();
-//    }
-//
-//    private void handleProfilePicture(Uri imageUri) {
-//        try {
-//            Bitmap bitmap = MediaStore.Images.Media.getBitmap(requireActivity().getContentResolver(), imageUri);
-//            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//            bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
-//            String encoded = Base64.encodeToString(baos.toByteArray(), Base64.DEFAULT);
-//
-//            SharedPreferences prefs = requireContext().getSharedPreferences("profile", Context.MODE_PRIVATE);
-//            prefs.edit().putString("profile_image", encoded).apply();
-//
-//            profileImage.setImageBitmap(bitmap);
-//
-//        } catch (IOException e) {
-//            Toast.makeText(getContext(), "Failed to load image", Toast.LENGTH_SHORT).show();
-//        }
-//    }
-//
-//    private void loadLocalProfile() {
-//        SharedPreferences prefs = requireContext().getSharedPreferences("profile", Context.MODE_PRIVATE);
-//        String encoded = prefs.getString("profile_image", null);
-//        if (encoded != null) {
-//            byte[] decoded = Base64.decode(encoded, Base64.DEFAULT);
-//            Bitmap bitmap = BitmapFactory.decodeByteArray(decoded, 0, decoded.length);
-//            profileImage.setImageBitmap(bitmap);
-//        }
-//    }
-//
-//
-//    private void handleProfileImageSelection(Uri imageUri) {
-//        // Option 1: Try Firebase Auth profile (works for Google/GitHub accounts)
-//        updateFirebaseAuthProfile(imageUri);
-//
-//        // Option 2: Store locally as fallback
-//        saveImageLocally(imageUri);
-//    }
 
     private void updateFirebaseAuthProfile(Uri imageUri) {
         UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
