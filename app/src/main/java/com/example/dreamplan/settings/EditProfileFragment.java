@@ -64,7 +64,6 @@ public class EditProfileFragment extends Fragment {
 
         FirebaseUser user = mAuth.getCurrentUser();
         if (user != null) {
-            // Update profile name
             UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
                     .setDisplayName(newName)
                     .build();

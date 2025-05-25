@@ -126,13 +126,13 @@
     <!-- Add to colors.xml -->
     <color name="card_stroke">#1E000000</color>
 
-<!--    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight">-->
-<!--    </style>-->
+    <!--    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight">-->
+    <!--    </style>-->
 
-<!--    <style name="RoundedDialogTheme" parent="Theme.MaterialComponents.Dialog.Alert" tools:ignore="DuplicateDefinition">-->
-<!--        <item name="dialogCornerRadius">16dp</item>-->
-<!--        <item name="android:windowBackground">@drawable/dialog_background</item>-->
-<!--    </style>-->
+    <!--    <style name="RoundedDialogTheme" parent="Theme.MaterialComponents.Dialog.Alert" tools:ignore="DuplicateDefinition">-->
+    <!--        <item name="dialogCornerRadius">16dp</item>-->
+    <!--        <item name="android:windowBackground">@drawable/dialog_background</item>-->
+    <!--    </style>-->
 
     <!-- Add this to your styles.xml -->
     <style name="ForgotPasswordDialogTheme" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">

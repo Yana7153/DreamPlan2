@@ -14,5 +14,5 @@
     <color name="black">#FFFFFF</color> <!-- In dark mode, "black" becomes white -->
     <color name="white">#121212</color> <!-- In dark mode, "white" becomes dark -->
 
-    <!-- Add other dark mode color variants as needed -->
+    <color name="image_stroke_color">#AAAAAA</color>
 </resources>

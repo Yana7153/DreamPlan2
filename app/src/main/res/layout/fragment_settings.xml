@@ -39,7 +39,7 @@
                     android:layout_height="wrap_content"
                     style="@style/TextAppearance.MaterialComponents.Subtitle1"
                     android:text="Account"
-                    android:textSize="20dp"/>
+                    android:textSize="22dp"/>
 
                 <!-- Add layout_width and layout_height to all views -->
                 <LinearLayout
@@ -54,7 +54,7 @@
                         android:layout_height="60dp"
                         android:src="@drawable/ic_profile"
                         app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Circle"
-                        app:strokeColor="?attr/colorOutline"
+                        app:strokeColor="@color/image_stroke_color"
                         app:strokeWidth="1dp"/>
 
                     <LinearLayout
@@ -133,16 +133,16 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-<!--                <TextView-->
-<!--                    android:id="@+id/tv_help"-->
-<!--                    android:layout_width="match_parent"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    style="@style/TextAppearance.MaterialComponents.Body1"-->
-<!--                    android:drawableStart="@drawable/ic_help"-->
-<!--                    android:drawablePadding="16dp"-->
-<!--                    android:gravity="center_vertical"-->
-<!--                    android:padding="16dp"-->
-<!--                    android:text="Help &amp; Support"/>-->
+                <!--                <TextView-->
+                <!--                    android:id="@+id/tv_help"-->
+                <!--                    android:layout_width="match_parent"-->
+                <!--                    android:layout_height="wrap_content"-->
+                <!--                    style="@style/TextAppearance.MaterialComponents.Body1"-->
+                <!--                    android:drawableStart="@drawable/ic_help"-->
+                <!--                    android:drawablePadding="16dp"-->
+                <!--                    android:gravity="center_vertical"-->
+                <!--                    android:padding="16dp"-->
+                <!--                    android:text="Help &amp; Support"/>-->
 
                 <View
                     android:layout_width="match_parent"

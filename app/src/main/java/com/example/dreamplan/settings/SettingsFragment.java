@@ -51,10 +51,10 @@ public class SettingsFragment extends Fragment {
     private static final int PICK_IMAGE_REQUEST = 1;
     private SwitchMaterial switchDarkMode;
     private TextView tvUsername, tvEmail, tvVersion;
-    private FirebaseAuth mAuth;
     private ShapeableImageView profileImage;
-    private StorageReference storageRef;
+    private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
+    private StorageReference storageRef;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -69,30 +69,32 @@ public class SettingsFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_settings, container, false);
 
+        // Initialize views
         profileImage = view.findViewById(R.id.profile_image);
         switchDarkMode = view.findViewById(R.id.switch_dark_mode);
         tvUsername = view.findViewById(R.id.tv_username);
         tvEmail = view.findViewById(R.id.tv_email);
         tvVersion = view.findViewById(R.id.tv_version);
 
+        // Setup components
         loadUserProfile();
         setupDarkModeSwitch();
         setupVersionInfo();
         setupLogout(view);
         setupEditProfile(view);
 
-        profileImage.setOnClickListener(v -> showImagePicker());
+        // Profile image click listener
+        profileImage.setOnClickListener(v -> openImagePicker());
 
         return view;
     }
 
     private void loadUserProfile() {
         if (currentUser != null) {
-            String displayName = currentUser.getDisplayName();
-            String email = currentUser.getEmail();
-
-            tvUsername.setText(displayName != null ? displayName : "User");
-            tvEmail.setText(email != null ? email : "No email");
+            tvUsername.setText(currentUser.getDisplayName() != null ?
+                    currentUser.getDisplayName() : "User");
+            tvEmail.setText(currentUser.getEmail() != null ?
+                    currentUser.getEmail() : "No email");
 
             if (currentUser.getPhotoUrl() != null) {
                 Glide.with(this)
@@ -103,62 +105,34 @@ public class SettingsFragment extends Fragment {
         }
     }
 
-    private void showImagePicker() {
-        Intent intent = new Intent();
-        intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
-    }
-
     private void setupDarkModeSwitch() {
-        SharedPreferences prefs = requireActivity().getSharedPreferences("app_prefs", Context.MODE_PRIVATE);
-
-        int currentMode = prefs.getInt("dark_mode_pref", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
-        switchDarkMode.setChecked(isDarkModeEnabled(currentMode));
+        int currentNightMode = getResources().getConfiguration().uiMode
+                & Configuration.UI_MODE_NIGHT_MASK;
+        boolean isDarkMode = currentNightMode == Configuration.UI_MODE_NIGHT_YES;
+        switchDarkMode.setChecked(isDarkMode);
 
         switchDarkMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            int newMode = isChecked ? AppCompatDelegate.MODE_NIGHT_YES
-                    : AppCompatDelegate.MODE_NIGHT_NO;
-
-            prefs.edit().putInt("dark_mode_pref", newMode).apply();
+            int newMode = isChecked ?
+                    AppCompatDelegate.MODE_NIGHT_YES :
+                    AppCompatDelegate.MODE_NIGHT_NO;
             AppCompatDelegate.setDefaultNightMode(newMode);
-
             requireActivity().recreate();
         });
     }
 
-    private boolean isDarkModeEnabled(int mode) {
-        if (mode == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM) {
-            int currentNightMode = getResources().getConfiguration().uiMode
-                    & Configuration.UI_MODE_NIGHT_MASK;
-            return currentNightMode == Configuration.UI_MODE_NIGHT_YES;
-        }
-        return mode == AppCompatDelegate.MODE_NIGHT_YES;
-    }
-
     private void setupVersionInfo() {
         try {
-            PackageInfo pInfo = requireContext().getPackageManager()
-                    .getPackageInfo(requireContext().getPackageName(), 0);
-            tvVersion.setText("Version " + pInfo.versionName);
+            String versionName = requireContext().getPackageManager()
+                    .getPackageInfo(requireContext().getPackageName(), 0).versionName;
+            tvVersion.setText("Version " + versionName);
         } catch (Exception e) {
             tvVersion.setText("Version 1.0.0");
         }
     }
 
-    private void setupEditProfile(View view) {
-        view.findViewById(R.id.btn_edit_profile).setOnClickListener(v -> {
-            EditProfileFragment editProfileFragment = new EditProfileFragment();
-            getParentFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, editProfileFragment)
-                    .addToBackStack(null)
-                    .commit();
-        });
-    }
-
     private void setupLogout(View view) {
         view.findViewById(R.id.tv_logout).setOnClickListener(v -> {
-            new MaterialAlertDialogBuilder(requireContext())
+            new AlertDialog.Builder(requireContext())
                     .setTitle("Log Out")
                     .setMessage("Are you sure you want to log out?")
                     .setPositiveButton("Log Out", (dialog, which) -> {
@@ -171,172 +145,90 @@ public class SettingsFragment extends Fragment {
         });
     }
 
+    private void setupEditProfile(View view) {
+        view.findViewById(R.id.btn_edit_profile).setOnClickListener(v -> {
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new EditProfileFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
+    }
+
+    private void openImagePicker() {
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        intent.setType("image/*");
+        startActivityForResult(intent, PICK_IMAGE_REQUEST);
+    }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null) {
             Uri imageUri = data.getData();
-            try {
-                final InputStream inputStream = requireContext().getContentResolver().openInputStream(imageUri);
-                if (inputStream != null) inputStream.close();
-
-                uploadImageToFirebase(imageUri);
-            } catch (Exception e) {
-                Toast.makeText(getContext(), "Error accessing image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            if (imageUri != null) {
+                uploadProfilePicture(imageUri);
             }
         }
     }
 
-    private void uploadImageToFirebase(Uri imageUri) {
-        if (currentUser == null) {
-            Toast.makeText(getContext(), "User not logged in", Toast.LENGTH_SHORT).show();
-            return;
-        }
+    private void uploadProfilePicture(Uri imageUri) {
+        if (currentUser == null) return;
 
         ProgressDialog progressDialog = new ProgressDialog(getContext());
-        progressDialog.setTitle("Uploading Profile Picture...");
+        progressDialog.setTitle("Uploading...");
         progressDialog.setCancelable(false);
         progressDialog.show();
 
-        try {
-            // Create reference with full path
-            StorageReference fileRef = FirebaseStorage.getInstance()
-                    .getReference()
-                    .child("profile_images")
-                    .child(currentUser.getUid() + ".jpg");
+        // Create storage reference
+        StorageReference fileRef = storageRef
+                .child("profile_pictures/" + currentUser.getUid() + ".jpg");
 
-            // Check if storage bucket exists (debug only)
-            Log.d("StorageDebug", "Bucket: " + fileRef.getBucket());
-            Log.d("StorageDebug", "Path: " + fileRef.getPath());
+        // Upload the file
+        fileRef.putFile(imageUri)
+                .addOnProgressListener(taskSnapshot -> {
+                    double progress = (100.0 * taskSnapshot.getBytesTransferred()) /
+                            taskSnapshot.getTotalByteCount();
+                    progressDialog.setMessage("Uploaded " + (int) progress + "%");
+                })
+                .addOnSuccessListener(taskSnapshot -> {
+                    // Get download URL
+                    fileRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                        // Update user profile
+                        UserProfileChangeRequest profileUpdates =
+                                new UserProfileChangeRequest.Builder()
+                                        .setPhotoUri(uri)
+                                        .build();
 
-            StorageMetadata metadata = new StorageMetadata.Builder()
-                    .setContentType("image/jpeg")
-                    .build();
-
-            UploadTask uploadTask;
-
-            // Handle HEIC/HEIF conversion if needed
-            String mimeType = getContext().getContentResolver().getType(imageUri);
-            if ("image/heic".equalsIgnoreCase(mimeType) || "image/heif".equalsIgnoreCase(mimeType)) {
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContext().getContentResolver(), imageUri);
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos);
-                uploadTask = fileRef.putBytes(baos.toByteArray(), metadata);
-            } else {
-                uploadTask = fileRef.putFile(imageUri, metadata);
-            }
-
-            uploadTask.addOnProgressListener(taskSnapshot -> {
-                double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
-                progressDialog.setMessage("Uploaded " + (int) progress + "%");
-            }).addOnSuccessListener(taskSnapshot -> {
-                fileRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                    UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                            .setPhotoUri(uri)
-                            .build();
-
-                    currentUser.updateProfile(profileUpdates)
-                            .addOnCompleteListener(task -> {
-                                progressDialog.dismiss();
-                                if (task.isSuccessful()) {
-                                    Glide.with(SettingsFragment.this)
-                                            .load(uri)
-                                            .circleCrop()
-                                            .into(profileImage);
-                                    Toast.makeText(getContext(), "Profile updated!", Toast.LENGTH_SHORT).show();
-                                } else {
-                                    Toast.makeText(getContext(),
-                                            "Profile update failed: " + task.getException().getMessage(),
-                                            Toast.LENGTH_LONG).show();
-                                }
-                            });
+                        currentUser.updateProfile(profileUpdates)
+                                .addOnCompleteListener(task -> {
+                                    progressDialog.dismiss();
+                                    if (task.isSuccessful()) {
+                                        Glide.with(this)
+                                                .load(uri)
+                                                .circleCrop()
+                                                .into(profileImage);
+                                        Toast.makeText(getContext(),
+                                                "Profile updated!",
+                                                Toast.LENGTH_SHORT).show();
+                                    } else {
+                                        showError("Update failed", task.getException());
+                                    }
+                                });
+                    });
+                })
+                .addOnFailureListener(e -> {
+                    progressDialog.dismiss();
+                    showError("Upload failed", e);
                 });
-            }).addOnFailureListener(e -> {
-                progressDialog.dismiss();
-                Log.e("UploadError", "Full error: ", e);
-
-                if (e instanceof StorageException) {
-                    StorageException se = (StorageException) e;
-                    Log.e("StorageError", "Error Code: " + se.getErrorCode());
-                    Log.e("StorageError", "HTTP Result: " + se.getHttpResultCode());
-                }
-
-                Toast.makeText(getContext(),
-                        "Upload failed. Please check your internet connection and try again.",
-                        Toast.LENGTH_LONG).show();
-            });
-
-        } catch (IOException e) {
-            progressDialog.dismiss();
-            Toast.makeText(getContext(), "Error processing image", Toast.LENGTH_SHORT).show();
-            Log.e("ImageError", "Error: ", e);
-        }
     }
 
-    private void handleUploadTask(UploadTask uploadTask, ProgressDialog progressDialog) {
-        // Add progress listener
-        uploadTask.addOnProgressListener(taskSnapshot -> {
-            double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
-            progressDialog.setMessage("Uploaded " + (int) progress + "%");
-        });
-
-        uploadTask.addOnSuccessListener(taskSnapshot -> {
-            // Get download URL after successful upload
-            taskSnapshot.getStorage().getDownloadUrl().addOnSuccessListener(uri -> {
-                // Update user profile
-                UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                        .setPhotoUri(uri)
-                        .build();
-
-                currentUser.updateProfile(profileUpdates)
-                        .addOnCompleteListener(task -> {
-                            progressDialog.dismiss();
-                            if (task.isSuccessful()) {
-                                // Update UI
-                                Glide.with(SettingsFragment.this)
-                                        .load(uri)
-                                        .circleCrop()
-                                        .into(profileImage);
-                                Toast.makeText(getContext(), "Profile updated!", Toast.LENGTH_SHORT).show();
-                            } else {
-                                showUploadError("Profile update failed", task.getException());
-                            }
-                        });
-            });
-        }).addOnFailureListener(e -> {
-            progressDialog.dismiss();
-            showUploadError("Upload failed", e);
-        });
-    }
-
-    private void showUploadError(String message, Exception e) {
-        String errorMsg = message;
+    private void showError(String message, Exception e) {
+        String errorMessage = message;
         if (e != null) {
-            errorMsg += ": " + e.getMessage();
+            errorMessage += ": " + e.getMessage();
             Log.e("SettingsFragment", message, e);
-
-            // Special handling for Firebase Storage errors
-            if (e instanceof StorageException) {
-                StorageException se = (StorageException) e;
-                switch (se.getErrorCode()) {
-                    case StorageException.ERROR_OBJECT_NOT_FOUND:
-                        errorMsg = "Storage location not found";
-                        break;
-                    case StorageException.ERROR_QUOTA_EXCEEDED:
-                        errorMsg = "Storage quota exceeded";
-                        break;
-                }
-            }
         }
-        Toast.makeText(getContext(), errorMsg, Toast.LENGTH_LONG).show();
-    }
-
-    private String getErrorMessage(int errorCode) {
-        switch (errorCode) {
-            case StorageException.ERROR_OBJECT_NOT_FOUND: return "Storage path doesn't exist";
-            case StorageException.ERROR_QUOTA_EXCEEDED: return "Storage quota exceeded";
-            default: return "Unknown error";
-        }
+        Toast.makeText(getContext(), errorMessage, Toast.LENGTH_LONG).show();
     }
 }

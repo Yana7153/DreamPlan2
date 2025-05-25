@@ -98,7 +98,7 @@ private static final String ARG_SECTION = "section";
 
         setupTaskClickListeners();
 
-        // Set click listeners
+        // Click listeners
         addTaskButton.setOnClickListener(v -> showAddTaskFragment());
 
         btnBack.setOnClickListener(v -> {
@@ -151,7 +151,6 @@ private static final String ARG_SECTION = "section";
             @Override
             public void onFailure(Exception e) {
                 Log.e("TASK_ERROR", "Failed to load tasks", e);
-              //  Toast.makeText(getContext(), "Error loading tasks", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -167,14 +166,6 @@ private static final String ARG_SECTION = "section";
 
     public void refreshTaskList() {
         loadTasks();
-    }
-
-    public void openSectionDetail(Section section) {
-        SectionDetailFragment fragment = SectionDetailFragment.newInstance(section);
-        getParentFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, fragment)
-                .addToBackStack("section_detail")
-                .commit();
     }
 
     private void showAddTaskFragment() {
