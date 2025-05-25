@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.dreamplan.adapters.TaskAdapter;
 import com.example.dreamplan.database.FirebaseDatabaseManager;
 import com.example.dreamplan.database.Task;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -66,6 +67,17 @@ public class TaskListFragment extends Fragment {
             }
         });
 
+        taskAdapter = new TaskAdapter(new ArrayList<>(), requireContext());
+
+        taskAdapter.setOnTaskClickListener(task -> {
+
+        });
+
+        taskAdapter.setOnTaskDeleteListener(null);
+
+        rvTasks.setLayoutManager(new LinearLayoutManager(getContext()));
+        rvTasks.setAdapter(taskAdapter);
+
         if (getArguments() != null) {
             String filterType = getArguments().getString(ARG_FILTER_TYPE);
             if (filterType != null) {
@@ -73,6 +85,27 @@ public class TaskListFragment extends Fragment {
                 loadTasks(filterType);
             }
         }
+
+        taskAdapter.setOnTaskDeleteListener(task -> {
+            new MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Delete Task")
+                    .setMessage("Delete this task?")
+                    .setPositiveButton("Delete", (dialog, which) -> {
+                        FirebaseDatabaseManager.getInstance().deleteTask(task.getId(),
+                                new FirebaseDatabaseManager.DatabaseCallback<Void>() {
+                                    @Override
+                                    public void onSuccess(Void result) {
+                                        loadTasks(getArguments().getString(ARG_FILTER_TYPE));
+                                    }
+                                    @Override
+                                    public void onFailure(Exception e) {
+                                        Toast.makeText(getContext(), "Delete failed", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+        });
     }
 
     private void updateTitle(String filterType) {

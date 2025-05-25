@@ -245,9 +245,13 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             tvTaskType = itemView.findViewById(R.id.tv_task_type);
 
             itemView.setOnLongClickListener(v -> {
-                if (taskDeleteListener != null) {
-                    taskDeleteListener.onTaskDelete(taskList.get(getAdapterPosition()));
-                    return true;
+                if (taskDeleteListener != null &&
+                        getAdapterPosition() != RecyclerView.NO_POSITION) {
+                    Task task = taskList.get(getAdapterPosition());
+                    if (task != null && task.getId() != null) {
+                        taskDeleteListener.onTaskDelete(task);
+                        return true;
+                    }
                 }
                 return false;
             });
