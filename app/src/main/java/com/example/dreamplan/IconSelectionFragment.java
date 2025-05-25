@@ -43,7 +43,9 @@ public class IconSelectionFragment extends Fragment {
             new IconPair(R.drawable.ic_shopping, "ic_shopping"),
             new IconPair(R.drawable.laptop, "laptop"),
             new IconPair(R.drawable.plot, "plot"),
-            new IconPair(R.drawable.time, "time")
+            new IconPair(R.drawable.time, "time"),
+            new IconPair(R.drawable.music, "music"),
+            new IconPair(R.drawable.crafts, "crafts"),
     };
 
     private static class IconPair {
