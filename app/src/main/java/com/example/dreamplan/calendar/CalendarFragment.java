@@ -38,6 +38,18 @@ public class CalendarFragment extends Fragment {
     private CalendarGridAdapter calendarAdapter;
     private TaskAdapter tasksAdapter;
     private FirebaseDatabaseManager dbManager;
+    private FirebaseDatabaseManager.DatabaseCallback<Void> taskChangeCallback =
+            new FirebaseDatabaseManager.DatabaseCallback<Void>() {
+                @Override
+                public void onSuccess(Void result) {
+                    refreshCalendar();
+                }
+
+                @Override
+                public void onFailure(Exception e) {
+                    Log.e("Calendar", "Error in task change listener", e);
+                }
+            };
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -107,10 +119,8 @@ public class CalendarFragment extends Fragment {
         List<Date> dates = new ArrayList<>();
         Calendar tempCalendar = (Calendar) calendar.clone();
 
-        // Set to first day of month
         tempCalendar.set(Calendar.DAY_OF_MONTH, 1);
 
-        // Add previous month's days if needed
         int firstDayOfWeek = tempCalendar.get(Calendar.DAY_OF_WEEK);
         int daysFromPrevMonth = firstDayOfWeek - Calendar.SUNDAY;
         if (daysFromPrevMonth > 0) {
@@ -121,7 +131,6 @@ public class CalendarFragment extends Fragment {
             }
         }
 
-        // Add current month's days
         tempCalendar.set(Calendar.DAY_OF_MONTH, 1);
         int daysInMonth = tempCalendar.getActualMaximum(Calendar.DAY_OF_MONTH);
         for (int i = 0; i < daysInMonth; i++) {
@@ -129,7 +138,6 @@ public class CalendarFragment extends Fragment {
             tempCalendar.add(Calendar.DAY_OF_MONTH, 1);
         }
 
-        // Add next month's days if needed
         int remainingCells = 42 - dates.size();
         for (int i = 0; i < remainingCells; i++) {
             dates.add(tempCalendar.getTime());
@@ -149,20 +157,16 @@ public class CalendarFragment extends Fragment {
         if (getActivity() == null) return;
 
         try {
-            // Update selected date text
             SimpleDateFormat sdf = new SimpleDateFormat("EEEE, MMMM d", Locale.getDefault());
             selectedDateText.setText(sdf.format(date));
 
-            // Show loading state
             emptyStateText.setVisibility(View.GONE);
             tasksRecyclerView.setVisibility(View.VISIBLE);
             tasksAdapter.updateTasks(new ArrayList<>());
 
-            // Format date for Firebase
             SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
             String dateString = dbFormat.format(date);
 
-            // Load tasks from Firebase
             FirebaseDatabaseManager.getInstance().getTasksForDate(dateString,
                     new FirebaseDatabaseManager.DatabaseCallback<List<Task>>() {
                         @Override
@@ -240,6 +244,24 @@ public class CalendarFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        if (calendarAdapter != null && calendarAdapter.getSelectedDate() != null) {
+            loadTasksForDate(calendarAdapter.getSelectedDate());
+        }
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        dbManager.addTaskChangeListener(taskChangeCallback);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        dbManager.removeTaskChangeListener(taskChangeCallback);
+    }
+
+    private void refreshCalendar() {
         if (calendarAdapter != null && calendarAdapter.getSelectedDate() != null) {
             loadTasksForDate(calendarAdapter.getSelectedDate());
         }

@@ -164,6 +164,12 @@ public class AddTaskFragment extends Fragment {
         imgTaskIcon.setAdjustViewBounds(false);
 
         btnDelete = view.findViewById(R.id.btnDeleteTask);
+        if (taskToEdit != null) {
+            btnDelete.setVisibility(View.VISIBLE);
+        } else {
+            btnDelete.setVisibility(View.GONE);
+        }
+
         btnDelete.setOnClickListener(v -> showDeleteConfirmation());
 
         toggleGroup = view.findViewById(R.id.toggle_recurrence);
@@ -909,19 +915,32 @@ public class AddTaskFragment extends Fragment {
     private void showDeleteConfirmation() {
         if (taskToEdit == null) return;
 
-        new MaterialAlertDialogBuilder(requireContext(), R.style.LightAlertDialogTheme)
+        new MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Delete Task")
                 .setMessage("Are you sure you want to delete this task?")
                 .setPositiveButton("Delete", (dialog, which) -> {
+                    // Get reference to parent before async operations
+                    Fragment parentFragment = getParentFragment();
+
                     dbManager.deleteTask(taskToEdit.getId(), new FirebaseDatabaseManager.DatabaseCallback<Void>() {
                         @Override
                         public void onSuccess(Void result) {
-                            Toast.makeText(getContext(), "Task deleted", Toast.LENGTH_SHORT).show();
-                            getParentFragmentManager().popBackStack();
+                            requireActivity().runOnUiThread(() -> {
+                                // Notify parent fragment to refresh
+                                if (parentFragment instanceof SectionDetailFragment) {
+                                    ((SectionDetailFragment) parentFragment).refreshTaskList();
+                                }
+                                // Close the edit screen
+                                getParentFragmentManager().popBackStack();
+                                Toast.makeText(getContext(), "Task deleted", Toast.LENGTH_SHORT).show();
+                            });
                         }
+
                         @Override
                         public void onFailure(Exception e) {
-                            Toast.makeText(getContext(), "Delete failed", Toast.LENGTH_SHORT).show();
+                            requireActivity().runOnUiThread(() ->
+                                    Toast.makeText(getContext(), "Delete failed", Toast.LENGTH_SHORT).show()
+                            );
                         }
                     });
                 })

@@ -24,6 +24,7 @@ public class FirebaseDatabaseManager {
     private static FirebaseDatabaseManager instance;
     private final FirebaseFirestore db;
     private final FirebaseAuth auth;
+    private List<DatabaseCallback<Void>> taskChangeListeners = new ArrayList<>();
 
     private FirebaseDatabaseManager() {
         db = FirebaseFirestore.getInstance();
@@ -58,30 +59,6 @@ public class FirebaseDatabaseManager {
                 })
                 .addOnFailureListener(callback::onFailure);
     }
-
-//    public interface SimpleCallback<T> {
-//        void onComplete(T result);
-//        void onError(Exception e);
-//    }
-
-//    public void getTasksForDate(String date, SimpleCallback<List<Task>> callback) {
-//        String userId = auth.getCurrentUser().getUid();
-//
-//        db.collection("users").document(userId)
-//                .collection("tasks")
-//                .whereEqualTo("deadline", date)
-//                .get()
-//                .addOnSuccessListener(query -> {
-//                    List<Task> tasks = new ArrayList<>();
-//                    for (QueryDocumentSnapshot doc : query) {
-//                        Task task = doc.toObject(Task.class);
-//                        task.setId(doc.getId());
-//                        tasks.add(task);
-//                    }
-//                    callback.onComplete(tasks);
-//                })
-//                .addOnFailureListener(callback::onError);
-//    }
 
     public static interface DatabaseCallback<T> {
         void onSuccess(T result);
@@ -138,9 +115,20 @@ public class FirebaseDatabaseManager {
         String userId = auth.getCurrentUser().getUid();
 
         db.collection("users").document(userId)
-                .collection("sections").document(sectionId)
-                .delete()
-                .addOnSuccessListener(aVoid -> callback.onSuccess(null))
+                .collection("tasks")
+                .whereEqualTo("sectionId", sectionId)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                        doc.getReference().delete();
+                    }
+
+                    db.collection("users").document(userId)
+                            .collection("sections").document(sectionId)
+                            .delete()
+                            .addOnSuccessListener(aVoid -> callback.onSuccess(null))
+                            .addOnFailureListener(callback::onFailure);
+                })
                 .addOnFailureListener(callback::onFailure);
     }
 
@@ -171,6 +159,7 @@ public class FirebaseDatabaseManager {
                     }
                 });
     }
+
     public void saveTask(Task task, DatabaseCallback<String> callback) {
         String userId = auth.getCurrentUser().getUid();
 
@@ -204,7 +193,10 @@ public class FirebaseDatabaseManager {
             db.collection("users").document(userId)
                     .collection("tasks")
                     .add(taskData)
-                    .addOnSuccessListener(docRef -> callback.onSuccess(docRef.getId()))
+                    .addOnSuccessListener(aVoid -> {
+                        notifyTaskChangeListeners();
+                        callback.onSuccess(task.getId());
+                    })
                     .addOnFailureListener(callback::onFailure);
         } else {
             // Update existing task
@@ -282,66 +274,69 @@ public class FirebaseDatabaseManager {
         db.collection("users").document(userId)
                 .collection("tasks").document(taskId)
                 .delete()
-                .addOnSuccessListener(aVoid -> callback.onSuccess(null))
+                .addOnSuccessListener(aVoid -> {
+                    notifyTaskChangeListeners();
+                    callback.onSuccess(null);
+                })
                 .addOnFailureListener(callback::onFailure);
     }
 
-    private void createDefaultSections(String userId) {
-        FirebaseDatabaseManager dbManager = FirebaseDatabaseManager.getInstance();
-
-        // Check if sections already exist first
-        dbManager.getSections(new FirebaseDatabaseManager.DatabaseCallback<List<Section>>() {
-            @Override
-            public void onSuccess(List<Section> existingSections) {
-                if (existingSections == null || existingSections.isEmpty()) {
-                    // Only create if no sections exist
-                    String[] sectionNames = {"Work", "Personal", "Study"};
-                    String[] sectionColors = {"1", "2", "3"};
-                    String[] sectionNotes = {
-                            "Your professional tasks and projects",
-                            "Personal errands and activities",
-                            "Learning and educational goals"
-                    };
-
-                    for (int i = 0; i < sectionNames.length; i++) {
-                        Section section = new Section("", sectionNames[i], sectionColors[i], sectionNotes[i], true);
-                        dbManager.addSection(section, new FirebaseDatabaseManager.DatabaseCallback<String>() {
-                            @Override
-                            public void onSuccess(String result) {
-                                Log.d("SignUp", "Created: " + section.getName());
-                            }
-                            @Override
-                            public void onFailure(Exception e) {
-                                Log.e("SignUp", "Error creating section", e);
-                            }
-                        });
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(Exception e) {
-                Log.e("SignUp", "Error checking sections", e);
-            }
-        });
-    }
-
-    public void hasTasksForDate(String date, DatabaseCallback<Boolean> callback) {
-        String userId = auth.getCurrentUser().getUid();
-
-        db.collection("users").document(userId)
-                .collection("tasks")
-                .whereEqualTo("deadline", date)
-                .limit(1)
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        callback.onSuccess(!task.getResult().isEmpty());
-                    } else {
-                        callback.onFailure(task.getException());
-                    }
-                });
-    }
+//    private void createDefaultSections(String userId) {
+//        FirebaseDatabaseManager dbManager = FirebaseDatabaseManager.getInstance();
+//
+//        // Check if sections already exist first
+//        dbManager.getSections(new FirebaseDatabaseManager.DatabaseCallback<List<Section>>() {
+//            @Override
+//            public void onSuccess(List<Section> existingSections) {
+//                if (existingSections == null || existingSections.isEmpty()) {
+//                    // Only create if no sections exist
+//                    String[] sectionNames = {"Work", "Personal", "Study"};
+//                    String[] sectionColors = {"1", "2", "3"};
+//                    String[] sectionNotes = {
+//                            "Your professional tasks and projects",
+//                            "Personal errands and activities",
+//                            "Learning and educational goals"
+//                    };
+//
+//                    for (int i = 0; i < sectionNames.length; i++) {
+//                        Section section = new Section("", sectionNames[i], sectionColors[i], sectionNotes[i], true);
+//                        dbManager.addSection(section, new FirebaseDatabaseManager.DatabaseCallback<String>() {
+//                            @Override
+//                            public void onSuccess(String result) {
+//                                Log.d("SignUp", "Created: " + section.getName());
+//                            }
+//                            @Override
+//                            public void onFailure(Exception e) {
+//                                Log.e("SignUp", "Error creating section", e);
+//                            }
+//                        });
+//                    }
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(Exception e) {
+//                Log.e("SignUp", "Error checking sections", e);
+//            }
+//        });
+//    }
+//
+//    public void hasTasksForDate(String date, DatabaseCallback<Boolean> callback) {
+//        String userId = auth.getCurrentUser().getUid();
+//
+//        db.collection("users").document(userId)
+//                .collection("tasks")
+//                .whereEqualTo("deadline", date)
+//                .limit(1)
+//                .get()
+//                .addOnCompleteListener(task -> {
+//                    if (task.isSuccessful()) {
+//                        callback.onSuccess(!task.getResult().isEmpty());
+//                    } else {
+//                        callback.onFailure(task.getException());
+//                    }
+//                });
+//    }
 
     public void getTaskCountForDateRange(String startDate, String endDate, DatabaseCallback<Integer> callback) {
         String userId = auth.getCurrentUser().getUid();
@@ -396,5 +391,19 @@ public class FirebaseDatabaseManager {
                         callback.onFailure(task.getException());
                     }
                 });
+    }
+
+    public void addTaskChangeListener(DatabaseCallback<Void> listener) {
+        taskChangeListeners.add(listener);
+    }
+
+    public void removeTaskChangeListener(DatabaseCallback<Void> listener) {
+        taskChangeListeners.remove(listener);
+    }
+
+    private void notifyTaskChangeListeners() {
+        for (DatabaseCallback<Void> listener : taskChangeListeners) {
+            listener.onSuccess(null);
+        }
     }
 }

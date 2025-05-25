@@ -227,50 +227,51 @@ public class HomeFragment extends Fragment implements SectionAdapter.OnSectionAc
         }
     }
 
-    private Drawable getColorCircleDrawable(String color, boolean isSelected) {
-        GradientDrawable circle = new GradientDrawable();
-        circle.setShape(GradientDrawable.OVAL);
-        circle.setColor(Color.parseColor(color));
-        circle.setSize(40, 40);
-
-        if (isSelected) {
-            GradientDrawable border = new GradientDrawable();
-            border.setShape(GradientDrawable.OVAL);
-            border.setStroke(4, Color.BLACK);
-            border.setSize(40, 40);
-
-            LayerDrawable layerDrawable = new LayerDrawable(new Drawable[]{circle, border});
-            return layerDrawable;
-        } else {
-            return circle;
-        }
-    }
-
-
-    public void deleteSection(Section section) {
-        if (section.isDefault()) {
-            Toast.makeText(getContext(),
-                    "Default sections cannot be deleted",
-                    Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        dbManager.deleteSection(section.getId(), new FirebaseDatabaseManager.DatabaseCallback<Void>() {
-            @Override
-            public void onSuccess(Void result) {
-                int position = sectionList.indexOf(section);
-                if (position != -1) {
-                    sectionList.remove(position);
-                    sectionAdapter.notifyItemRemoved(position);
-                }
-            }
-
-            @Override
-            public void onFailure(Exception e) {
-                Toast.makeText(getContext(), "Delete failed", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
+//    private Drawable getColorCircleDrawable(String color, boolean isSelected) {
+//        GradientDrawable circle = new GradientDrawable();
+//        circle.setShape(GradientDrawable.OVAL);
+//        circle.setColor(Color.parseColor(color));
+//        circle.setSize(40, 40);
+//
+//        if (isSelected) {
+//            GradientDrawable border = new GradientDrawable();
+//            border.setShape(GradientDrawable.OVAL);
+//            border.setStroke(4, Color.BLACK);
+//            border.setSize(40, 40);
+//
+//            LayerDrawable layerDrawable = new LayerDrawable(new Drawable[]{circle, border});
+//            return layerDrawable;
+//        } else {
+//            return circle;
+//        }
+//    }
+//
+//
+//    public void deleteSection(Section section) {
+//        if (section.isDefault()) {
+//            Toast.makeText(getContext(),
+//                    "Default sections cannot be deleted",
+//                    Toast.LENGTH_SHORT).show();
+//            return;
+//        }
+//
+//        dbManager.deleteSection(section.getId(), new FirebaseDatabaseManager.DatabaseCallback<Void>() {
+//            @Override
+//            public void onSuccess(Void result) {
+//                int position = sectionList.indexOf(section);
+//                if (position != -1) {
+//                    sectionList.remove(position);
+//                    sectionAdapter.notifyItemRemoved(position);
+//                    loadTaskCounts();
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(Exception e) {
+//                Toast.makeText(getContext(), "Delete failed", Toast.LENGTH_SHORT).show();
+//            }
+//        });
+//    }
 
     public void openSectionDetail(Section section) {
         SectionDetailFragment fragment = SectionDetailFragment.newInstance(section);
@@ -355,20 +356,20 @@ public class HomeFragment extends Fragment implements SectionAdapter.OnSectionAc
     }
 
 
-    private void addSection(Section section) {
-        Map<String, Object> sectionData = new HashMap<>();
-        sectionData.put("name", section.getName());
-        sectionData.put("color", section.getColor());
-        sectionData.put("notes", section.getNotes());
-        sectionData.put("isDefault", false);
-
-        db.collection("users").document(userId)
-                .collection("sections")
-                .add(sectionData)
-                .addOnSuccessListener(documentReference -> {
-                    Toast.makeText(getContext(), "Section added", Toast.LENGTH_SHORT).show();
-                });
-    }
+//    private void addSection(Section section) {
+//        Map<String, Object> sectionData = new HashMap<>();
+//        sectionData.put("name", section.getName());
+//        sectionData.put("color", section.getColor());
+//        sectionData.put("notes", section.getNotes());
+//        sectionData.put("isDefault", false);
+//
+//        db.collection("users").document(userId)
+//                .collection("sections")
+//                .add(sectionData)
+//                .addOnSuccessListener(documentReference -> {
+//                    Toast.makeText(getContext(), "Section added", Toast.LENGTH_SHORT).show();
+//                });
+//    }
 
     private void updateSectionInFirebase(Section section) {
         FirebaseDatabaseManager.getInstance().updateSection(section, new FirebaseDatabaseManager.DatabaseCallback<Void>() {

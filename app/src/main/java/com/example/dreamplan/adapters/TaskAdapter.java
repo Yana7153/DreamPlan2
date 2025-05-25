@@ -5,7 +5,9 @@ import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
+import android.os.AsyncTask;
 import android.os.Build;
+import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -17,20 +19,33 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.dreamplan.R;
 import com.example.dreamplan.database.Task;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Handler;
 
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder> {
     private List<Task> taskList;
     private Context context;
     private OnTaskClickListener taskClickListener;
+    private static OnTaskDeleteListener taskDeleteListener;
+    private boolean isPendingUpdate = false;
+  //  private List<Task> taskList = new ArrayList<>();
+    private boolean isUpdateInProgress = false;
+  // private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
+    public interface OnTaskDeleteListener {
+        void onTaskDelete(Task task);
+    }
 
-
+    public void setOnTaskDeleteListener(OnTaskDeleteListener listener) {
+        this.taskDeleteListener = listener;
+    }
 
     public interface OnTaskClickListener {
         void onTaskClick(Task task);
@@ -168,9 +183,29 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     }
 
     public void updateTasks(List<Task> newTasks) {
-        this.taskList.clear();
-        this.taskList.addAll(newTasks);
-        notifyDataSetChanged();
+        if (isPendingUpdate) {
+            return;
+        }
+
+        isPendingUpdate = true;
+
+        new AsyncTask<List<Task>, Void, DiffUtil.DiffResult>() {
+            private final List<Task> oldTasks = new ArrayList<>(taskList);
+
+            @SafeVarargs
+            @Override
+            protected final DiffUtil.DiffResult doInBackground(List<Task>... lists) {
+                return DiffUtil.calculateDiff(new TaskDiffCallback(oldTasks, lists[0]));
+            }
+
+            @Override
+            protected void onPostExecute(DiffUtil.DiffResult diffResult) {
+                taskList.clear();
+                taskList.addAll(newTasks);
+                diffResult.dispatchUpdatesTo(TaskAdapter.this);
+                isPendingUpdate = false;
+            }
+        }.execute(newTasks);
     }
 
     private int getBackgroundColor(int colorResId) {
@@ -193,7 +228,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         }
     }
 
-    static class TaskViewHolder extends RecyclerView.ViewHolder {
+    class TaskViewHolder extends RecyclerView.ViewHolder {
         public TextView tvTaskType;
         ImageView imgTaskIcon;
         LinearLayout taskContainer;
@@ -208,9 +243,168 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             tvTaskTitle = itemView.findViewById(R.id.tv_task_title);
             tvTaskDescription = itemView.findViewById(R.id.tv_task_description);
             tvTaskType = itemView.findViewById(R.id.tv_task_type);
+
+            itemView.setOnLongClickListener(v -> {
+                if (taskDeleteListener != null) {
+                    taskDeleteListener.onTaskDelete(taskList.get(getAdapterPosition()));
+                    return true;
+                }
+                return false;
+            });
         }
     }
 
+    private static class TaskDiffCallback extends DiffUtil.Callback {
+        private final List<Task> oldTasks;
+        private final List<Task> newTasks;
 
+        public TaskDiffCallback(List<Task> oldTasks, List<Task> newTasks) {
+            this.oldTasks = oldTasks;
+            this.newTasks = newTasks;
+        }
 
+        @Override
+        public int getOldListSize() {
+            return oldTasks.size();
+        }
+
+        @Override
+        public int getNewListSize() {
+            return newTasks.size();
+        }
+
+        @Override
+        public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
+            return oldTasks.get(oldItemPosition).getId().equals(newTasks.get(newItemPosition).getId());
+        }
+
+        @Override
+        public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+            return oldTasks.get(oldItemPosition).equals(newTasks.get(newItemPosition));
+        }
+    }
+
+    public void removeTaskById(String taskId) {
+        int position = -1;
+        for (int i = 0; i < taskList.size(); i++) {
+            if (taskList.get(i).getId().equals(taskId)) {
+                position = i;
+                break;
+            }
+        }
+
+        if (position != -1) {
+            List<Task> newList = new ArrayList<>(taskList);
+            newList.remove(position);
+            updateTasks(newList);
+        }
+    }
+
+    public void removeTaskImmediately(String taskId) {
+        int position = -1;
+        for (int i = 0; i < taskList.size(); i++) {
+            if (taskList.get(i).getId().equals(taskId)) {
+                position = i;
+                break;
+            }
+        }
+
+        if (position != -1) {
+            taskList.remove(position);
+            notifyItemRemoved(position);
+
+            if (position < taskList.size()) {
+                notifyItemRangeChanged(position, taskList.size() - position);
+            }
+        }
+    }
+
+    public void safeUpdateTasks(List<Task> newTasks) {
+        if (isUpdateInProgress) {
+            return;
+        }
+
+        isUpdateInProgress = true;
+
+        new AsyncTask<List<Task>, Void, DiffUtil.DiffResult>() {
+            private final List<Task> oldTasks = new ArrayList<>(taskList);
+
+            @Override
+            protected DiffUtil.DiffResult doInBackground(List<Task>... lists) {
+                return DiffUtil.calculateDiff(new TaskDiffCallback(oldTasks, lists[0]));
+            }
+
+            @Override
+            protected void onPostExecute(DiffUtil.DiffResult diffResult) {
+                taskList.clear();
+                taskList.addAll(newTasks);
+                diffResult.dispatchUpdatesTo(TaskAdapter.this);
+                isUpdateInProgress = false;
+            }
+        }.execute(newTasks);
+    }
+
+    public void safeRemoveTask(String taskId) {
+        int position = -1;
+        for (int i = 0; i < taskList.size(); i++) {
+            if (taskList.get(i).getId().equals(taskId)) {
+                position = i;
+                break;
+            }
+        }
+
+        if (position != -1) {
+            List<Task> newList = new ArrayList<>(taskList);
+            newList.remove(position);
+            safeUpdateTasks(newList);
+        }
+    }
+
+//    public void removeTaskSafely(String taskId) {
+//        if (isUpdateInProgress) {
+//            mainHandler.postDelayed(() -> removeTaskSafely(taskId), 100);
+//            return;
+//        }
+//
+//        isUpdateInProgress = true;
+//
+//        int position = -1;
+//        for (int i = 0; i < taskList.size(); i++) {
+//            if (taskList.get(i).getId().equals(taskId)) {
+//                position = i;
+//                break;
+//            }
+//        }
+//
+//        if (position != -1) {
+//            List<Task> newList = new ArrayList<>(taskList);
+//            newList.remove(position);
+//            updateWithDiffUtil(newList);
+//        }
+//    }
+
+    private void updateWithDiffUtil(List<Task> newTasks) {
+        new AsyncTask<List<Task>, Void, DiffUtil.DiffResult>() {
+            @Override
+            protected DiffUtil.DiffResult doInBackground(List<Task>... lists) {
+                return DiffUtil.calculateDiff(new TaskDiffCallback(taskList, lists[0]));
+            }
+
+            @Override
+            protected void onPostExecute(DiffUtil.DiffResult diffResult) {
+                taskList.clear();
+                taskList.addAll(newTasks);
+                diffResult.dispatchUpdatesTo(TaskAdapter.this);
+                isUpdateInProgress = false;
+            }
+        }.execute(newTasks);
+    }
+
+    public void removeTask(Task task) {
+        int position = taskList.indexOf(task);
+        if (position != -1) {
+            taskList.remove(position);
+            notifyItemRemoved(position);
+        }
+    }
 }
