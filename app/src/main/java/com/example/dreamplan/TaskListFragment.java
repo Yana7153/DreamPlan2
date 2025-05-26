@@ -89,7 +89,7 @@ public class TaskListFragment extends Fragment {
         taskAdapter.setOnTaskDeleteListener(task -> {
             new MaterialAlertDialogBuilder(requireContext())
                     .setTitle("Delete Task")
-                    .setMessage("Delete this task?")
+                    .setMessage("Are you sure you want to delete this task?")
                     .setPositiveButton("Delete", (dialog, which) -> {
                         FirebaseDatabaseManager.getInstance().deleteTask(task.getId(),
                                 new FirebaseDatabaseManager.DatabaseCallback<Void>() {
