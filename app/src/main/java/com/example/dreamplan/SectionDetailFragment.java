@@ -215,32 +215,32 @@ private static final String ARG_SECTION = "section";
         });
     }
 
-    private void deleteTask(Task task) {
-        getView().setEnabled(false);
-
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - lastOperationTime < MIN_OPERATION_DELAY) {
-            return;
-        }
-        lastOperationTime = currentTime;
-
-        dbManager.deleteTask(task.getId(), new FirebaseDatabaseManager.DatabaseCallback<Void>() {
-            @Override
-            public void onSuccess(Void result) {
-                requireActivity().runOnUiThread(() -> {
-                    taskAdapter.removeTaskById(task.getId());
-                    getView().setEnabled(true);
-                    Toast.makeText(requireContext(), "Task deleted", Toast.LENGTH_SHORT).show();
-                });
-            }
-
-            @Override
-            public void onFailure(Exception e) {
-                requireActivity().runOnUiThread(() -> {
-                    getView().setEnabled(true);
-                    Toast.makeText(requireContext(), "Failed to delete task", Toast.LENGTH_SHORT).show();
-                });
-            }
-        });
-    }
+//    private void deleteTask(Task task) {
+//        getView().setEnabled(false);
+//
+//        long currentTime = System.currentTimeMillis();
+//        if (currentTime - lastOperationTime < MIN_OPERATION_DELAY) {
+//            return;
+//        }
+//        lastOperationTime = currentTime;
+//
+//        dbManager.deleteTask(task.getId(), new FirebaseDatabaseManager.DatabaseCallback<Void>() {
+//            @Override
+//            public void onSuccess(Void result) {
+//                requireActivity().runOnUiThread(() -> {
+//                    taskAdapter.removeTaskById(task.getId());
+//                    getView().setEnabled(true);
+//                    Toast.makeText(requireContext(), "Task deleted", Toast.LENGTH_SHORT).show();
+//                });
+//            }
+//
+//            @Override
+//            public void onFailure(Exception e) {
+//                requireActivity().runOnUiThread(() -> {
+//                    getView().setEnabled(true);
+//                    Toast.makeText(requireContext(), "Failed to delete task", Toast.LENGTH_SHORT).show();
+//                });
+//            }
+//        });
+//    }
 }

@@ -40,7 +40,7 @@ public class IconSelectionFragment extends Fragment {
             new IconPair(R.drawable.code, "code"),
             new IconPair(R.drawable.green_cross, "green_cross"),
             new IconPair(R.drawable.group, "group"),
-            new IconPair(R.drawable.ic_shopping, "ic_shopping"),
+            new IconPair(R.drawable.nature, "nature"),
             new IconPair(R.drawable.laptop, "laptop"),
             new IconPair(R.drawable.plot, "plot"),
             new IconPair(R.drawable.time, "time"),

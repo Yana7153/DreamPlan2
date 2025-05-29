@@ -140,34 +140,6 @@ public class CalendarGridAdapter extends BaseAdapter {
                 cal1.get(Calendar.DAY_OF_MONTH) == cal2.get(Calendar.DAY_OF_MONTH);
     }
 
-    private boolean hasTasks(Date date) {
-        try {
-            SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-            String dateString = dbFormat.format(date);
-
-            // This needs to be implemented in FirebaseDatabaseManager
-            FirebaseDatabaseManager.getInstance().getTaskCountForDate(dateString,
-                    new FirebaseDatabaseManager.DatabaseCallback<Integer>() {
-                        @Override
-                        public void onSuccess(Integer count) {
-                            // You'll need to update the view here if needed
-                            // This is tricky with BaseAdapter - consider switching to RecyclerView
-                        }
-
-                        @Override
-                        public void onFailure(Exception e) {
-                            Log.e("CalendarGrid", "Error checking tasks", e);
-                        }
-                    });
-
-            // Temporary solution - return false and update when data loads
-            return false;
-        } catch (Exception e) {
-            Log.e("CalendarGrid", "Error checking tasks", e);
-            return false;
-        }
-    }
-
     public void setSelectedDate(Date date) {
         this.selectedDate = date;
         notifyDataSetChanged();
@@ -199,10 +171,4 @@ public class CalendarGridAdapter extends BaseAdapter {
                     }
                 });
     }
-
-//    public void setSelectedDate(Date date) {
-//        this.previouslySelectedDate = this.selectedDate;
-//        this.selectedDate = date;
-//        notifyDataSetChanged();
-//    }
 }

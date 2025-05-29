@@ -18,7 +18,6 @@ import javax.inject.Singleton;
 
 @Singleton
 public class AuthManager {
-   // private final FirebaseAuth mAuth = FirebaseAuth.getInstance();
 
     private static AuthManager instance;
     private final FirebaseAuth mAuth;
@@ -28,52 +27,6 @@ public class AuthManager {
     public AuthManager(FirebaseAuth auth, FirebaseFirestore firestore) {
         this.mAuth = auth;
         this.db = firestore;
-    }
-
-//    public static synchronized AuthManager getInstance() {
-//        if (instance == null) {
-//            instance = new AuthManager();
-//        }
-//        return instance;
-//    }
-
-//    public void registerUser(String email, String password, AuthCallback callback) {
-//        mAuth.createUserWithEmailAndPassword(email, password)
-//                .addOnCompleteListener(task -> {
-//                    if (task.isSuccessful()) {
-//                        callback.onSuccess(mAuth.getCurrentUser());
-//                    } else {
-//                        callback.onFailure(task.getException());
-//                    }
-//                });
-//    }
-//
-//    public void loginUser(String email, String password, AuthCallback callback) {
-//        mAuth.signInWithEmailAndPassword(email, password)
-//                .addOnCompleteListener(task -> {
-//                    if (task.isSuccessful()) {
-//                        FirebaseUser user = mAuth.getCurrentUser();
-//                        if (user != null) {
-//                            initializeFirestoreUser(user.getUid(), user.getEmail()); // Add this
-//                        }
-//                        callback.onSuccess(user);
-//                    } else {
-//                        callback.onFailure(task.getException());
-//                    }
-//                });
-//    }
-//
-//    public boolean isUserLoggedIn() {
-//        return mAuth.getCurrentUser() != null;
-//    }
-
-    public void logout() {
-        mAuth.signOut();
-    }
-
-    public interface AuthCallback {
-        void onSuccess(FirebaseUser user);
-        void onFailure(Exception e);
     }
 
     public void initializeFirestoreUser(String userId, String email) {
@@ -131,7 +84,6 @@ public class AuthManager {
     public void initializeFirestoreUser(String userId, String email, InitCallback callback) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-        // Check if user document already exists
         db.collection("users").document(userId).get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (!documentSnapshot.exists()) {

@@ -78,18 +78,6 @@ public class SectionAdapter extends RecyclerView.Adapter<SectionAdapter.SectionV
         });
     }
 
-    private void showSectionOptionsDialog(Section section) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle(section.getName())
-                .setItems(new CharSequence[]{"Edit", "Delete"}, (dialog, which) -> {
-                    if (which == 0) {
-                        ((OnSectionActionListener) context).onEditSection(section);
-                    } else {
-                        ((OnSectionActionListener) context).onDeleteSection(section);
-                    }
-                });
-        builder.show();
-    }
     @Override
     public int getItemCount() {
         return sectionList.size();
@@ -121,18 +109,5 @@ public class SectionAdapter extends RecyclerView.Adapter<SectionAdapter.SectionV
                 Log.e("SectionAdapter", "Error setting color", e);
             }
         }
-    }
-
-    public void updateSections(List<Section> newSections) {
-        // Sort by createdAt (newest first)
-        Collections.sort(newSections, (s1, s2) -> {
-            if (s1.getCreatedAt() == null || s2.getCreatedAt() == null) {
-                return 0; // Handle null cases
-            }
-            return s2.getCreatedAt().compareTo(s1.getCreatedAt()); // Descending
-        });
-
-        this.sections = newSections;
-        notifyDataSetChanged();
     }
 }

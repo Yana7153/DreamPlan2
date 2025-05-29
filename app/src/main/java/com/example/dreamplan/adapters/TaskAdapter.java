@@ -98,14 +98,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                 taskClickListener.onTaskClick(task);
             }
         });
-
-//        holder.itemView.setOnLongClickListener(v -> {
-//            if (taskClickListener != null) {
-//                taskClickListener.onTaskLongClick(task);
-//                return true;
-//            }
-//            return false;
-//        });
     }
 
 
@@ -304,25 +296,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         }
     }
 
-    public void removeTaskImmediately(String taskId) {
-        int position = -1;
-        for (int i = 0; i < taskList.size(); i++) {
-            if (taskList.get(i).getId().equals(taskId)) {
-                position = i;
-                break;
-            }
-        }
-
-        if (position != -1) {
-            taskList.remove(position);
-            notifyItemRemoved(position);
-
-            if (position < taskList.size()) {
-                notifyItemRangeChanged(position, taskList.size() - position);
-            }
-        }
-    }
-
     public void safeUpdateTasks(List<Task> newTasks) {
         if (isUpdateInProgress) {
             return;
@@ -346,69 +319,5 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                 isUpdateInProgress = false;
             }
         }.execute(newTasks);
-    }
-
-    public void safeRemoveTask(String taskId) {
-        int position = -1;
-        for (int i = 0; i < taskList.size(); i++) {
-            if (taskList.get(i).getId().equals(taskId)) {
-                position = i;
-                break;
-            }
-        }
-
-        if (position != -1) {
-            List<Task> newList = new ArrayList<>(taskList);
-            newList.remove(position);
-            safeUpdateTasks(newList);
-        }
-    }
-
-//    public void removeTaskSafely(String taskId) {
-//        if (isUpdateInProgress) {
-//            mainHandler.postDelayed(() -> removeTaskSafely(taskId), 100);
-//            return;
-//        }
-//
-//        isUpdateInProgress = true;
-//
-//        int position = -1;
-//        for (int i = 0; i < taskList.size(); i++) {
-//            if (taskList.get(i).getId().equals(taskId)) {
-//                position = i;
-//                break;
-//            }
-//        }
-//
-//        if (position != -1) {
-//            List<Task> newList = new ArrayList<>(taskList);
-//            newList.remove(position);
-//            updateWithDiffUtil(newList);
-//        }
-//    }
-
-    private void updateWithDiffUtil(List<Task> newTasks) {
-        new AsyncTask<List<Task>, Void, DiffUtil.DiffResult>() {
-            @Override
-            protected DiffUtil.DiffResult doInBackground(List<Task>... lists) {
-                return DiffUtil.calculateDiff(new TaskDiffCallback(taskList, lists[0]));
-            }
-
-            @Override
-            protected void onPostExecute(DiffUtil.DiffResult diffResult) {
-                taskList.clear();
-                taskList.addAll(newTasks);
-                diffResult.dispatchUpdatesTo(TaskAdapter.this);
-                isUpdateInProgress = false;
-            }
-        }.execute(newTasks);
-    }
-
-    public void removeTask(Task task) {
-        int position = taskList.indexOf(task);
-        if (position != -1) {
-            taskList.remove(position);
-            notifyItemRemoved(position);
-        }
     }
 }

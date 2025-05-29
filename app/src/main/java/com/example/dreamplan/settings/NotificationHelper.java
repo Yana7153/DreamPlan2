@@ -15,7 +15,7 @@ import com.example.dreamplan.R;
     public class NotificationHelper {
         private static final String CHANNEL_ID = "dreamplan_channel";
         private static final String CHANNEL_NAME = "DreamPlan Notifications";
-        private static int notificationId = 0; // Use auto-incrementing ID
+        private static int notificationId = 0;
 
         public static void createNotificationChannel(Context context) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

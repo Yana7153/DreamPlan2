@@ -36,13 +36,6 @@ public class AuthActivity extends AppCompatActivity {
         }
     }
 
-//    public AuthManager getAuthManager() {
-//        if (authManager == null) {
-//            authManager = new AuthManager();
-//        }
-//        return authManager;
-//    }
-
     public void loadFragment(Fragment fragment) {
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.replace(R.id.auth_container, fragment);

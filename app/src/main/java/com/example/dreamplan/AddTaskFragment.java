@@ -647,42 +647,6 @@ public class AddTaskFragment extends Fragment {
         }
     }
 
-
-    private String getDateStringFromButton(Button dateButton) {
-        Object tag = dateButton.getTag();
-        if (tag instanceof String) {
-            return (String) tag;
-        } else if (tag instanceof Long) {
-            SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-            return dbFormat.format(new Date((Long) tag));
-        }
-        return "";
-    }
-
-    // Helper methods
-    private boolean isOneTimeTask() {
-        return toggleGroup.getCheckedButtonId() == R.id.btn_one_time;
-    }
-
-    private boolean isDateEmpty(String dateText) {
-        return TextUtils.isEmpty(dateText) || dateText.equals("Select date");
-    }
-
-    private void showDateRequiredToast(String message) {
-        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
-    }
-
-    private String getDateOrOriginal(Button dateButton, String originalDate) {
-        String displayDate = dateButton.getText().toString();
-        if (isDateEmpty(displayDate)) return originalDate;
-        try {
-            return formatDateForDb(displayDate);
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-
     private String getSelectedTimePreference() {
         if (!timeSwitch.isChecked()) {
             return null;
@@ -804,7 +768,7 @@ public class AddTaskFragment extends Fragment {
             Log.d("TASK_EDIT", "Loaded task data for editing");
         } catch (Exception e) {
             Log.e("EditTask", "Error loading task data", e);
-            Toast.makeText(getContext(), "Error loading task", Toast.LENGTH_SHORT).show();
+         //   Toast.makeText(getContext(), "Error loading task", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -827,48 +791,6 @@ public class AddTaskFragment extends Fragment {
                 scheduleSpinner.setSelection(i);
                 break;
             }
-        }
-    }
-
-    private int getSchedulePosition(String schedule) {
-        ArrayAdapter<CharSequence> adapter = (ArrayAdapter<CharSequence>) scheduleSpinner.getAdapter();
-        for (int i = 0; i < adapter.getCount(); i++) {
-            if (adapter.getItem(i).equals(schedule)) {
-                return i;
-            }
-        }
-        return 0;
-    }
-
-    private void deleteTask() {
-        if (taskToEdit == null) return;
-
-        dbManager.deleteTask(taskToEdit.getId(), new FirebaseDatabaseManager.DatabaseCallback<Void>() {
-            @Override
-            public void onSuccess(Void result) {
-                Toast.makeText(getContext(), "Task deleted", Toast.LENGTH_SHORT).show();
-                navigateBackToSectionDetail();
-            }
-
-            @Override
-            public void onFailure(Exception e) {
-                Toast.makeText(getContext(), "Delete failed", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void navigateBack() {
-        getParentFragmentManager().popBackStack();
-    }
-
-    private String formatDate(String dateString) {
-        try {
-            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-            SimpleDateFormat outputFormat = new SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault());
-            Date date = inputFormat.parse(dateString);
-            return outputFormat.format(date);
-        } catch (Exception e) {
-            return dateString; // Return original if formatting fails
         }
     }
 

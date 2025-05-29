@@ -282,63 +282,6 @@ public class FirebaseDatabaseManager {
                 .addOnFailureListener(callback::onFailure);
     }
 
-//    private void createDefaultSections(String userId) {
-//        FirebaseDatabaseManager dbManager = FirebaseDatabaseManager.getInstance();
-//
-//        // Check if sections already exist first
-//        dbManager.getSections(new FirebaseDatabaseManager.DatabaseCallback<List<Section>>() {
-//            @Override
-//            public void onSuccess(List<Section> existingSections) {
-//                if (existingSections == null || existingSections.isEmpty()) {
-//                    // Only create if no sections exist
-//                    String[] sectionNames = {"Work", "Personal", "Study"};
-//                    String[] sectionColors = {"1", "2", "3"};
-//                    String[] sectionNotes = {
-//                            "Your professional tasks and projects",
-//                            "Personal errands and activities",
-//                            "Learning and educational goals"
-//                    };
-//
-//                    for (int i = 0; i < sectionNames.length; i++) {
-//                        Section section = new Section("", sectionNames[i], sectionColors[i], sectionNotes[i], true);
-//                        dbManager.addSection(section, new FirebaseDatabaseManager.DatabaseCallback<String>() {
-//                            @Override
-//                            public void onSuccess(String result) {
-//                                Log.d("SignUp", "Created: " + section.getName());
-//                            }
-//                            @Override
-//                            public void onFailure(Exception e) {
-//                                Log.e("SignUp", "Error creating section", e);
-//                            }
-//                        });
-//                    }
-//                }
-//            }
-//
-//            @Override
-//            public void onFailure(Exception e) {
-//                Log.e("SignUp", "Error checking sections", e);
-//            }
-//        });
-//    }
-//
-//    public void hasTasksForDate(String date, DatabaseCallback<Boolean> callback) {
-//        String userId = auth.getCurrentUser().getUid();
-//
-//        db.collection("users").document(userId)
-//                .collection("tasks")
-//                .whereEqualTo("deadline", date)
-//                .limit(1)
-//                .get()
-//                .addOnCompleteListener(task -> {
-//                    if (task.isSuccessful()) {
-//                        callback.onSuccess(!task.getResult().isEmpty());
-//                    } else {
-//                        callback.onFailure(task.getException());
-//                    }
-//                });
-//    }
-
     public void getTaskCountForDateRange(String startDate, String endDate, DatabaseCallback<Integer> callback) {
         String userId = auth.getCurrentUser().getUid();
 

@@ -84,7 +84,6 @@ public class CalendarFragment extends Fragment {
 
         } catch (Exception e) {
             Log.e("CalendarFragment", "Initialization error", e);
-            // Show a simple error message if in production
             Toast.makeText(getContext(), "Calendar loading failed", Toast.LENGTH_SHORT).show();
         }
 
