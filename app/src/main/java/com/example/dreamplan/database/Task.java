@@ -45,10 +45,12 @@ public class Task implements Parcelable {
     @PropertyName("isCompleted")
     private boolean isCompleted;
 
+    private String endDate;
+
     public Task() {}
 
     public Task(String id, String title, String notes, String dueDate, int colorResId, int iconResId,  String iconResName, String sectionId,
-                boolean isRecurring, String startDate, String schedule, String timePreference) {
+                boolean isRecurring, String startDate, String schedule, String timePreference, String endDate) {
         Log.d("TASK_DEBUG", "Creating task with icon: " + iconResId);
         this.id = id;
         this.title = title != null ? title : "";
@@ -64,6 +66,7 @@ public class Task implements Parcelable {
         this.startDate = startDate != null ? startDate : "";
         this.schedule = schedule != null ? schedule : "";
         this.timePreference = timePreference != null ? timePreference : "";
+        this.endDate = endDate != null ? endDate : "";
 
         if (isRecurring) {
             this.taskTypeDisplay = "🔄 Recurring • " +
@@ -175,6 +178,7 @@ public class Task implements Parcelable {
         schedule = in.readString();
         timePreference = in.readString();
         taskTypeDisplay = in.readString();
+        endDate = in.readString();
     }
 
     public static final Creator<Task> CREATOR = new Creator<Task>() {
@@ -208,6 +212,7 @@ public class Task implements Parcelable {
         dest.writeString(schedule);
         dest.writeString(timePreference);
         dest.writeString(taskTypeDisplay);
+        dest.writeString(endDate);
 
     }
 
@@ -269,5 +274,15 @@ public class Task implements Parcelable {
     @PropertyName("isCompleted")
     public void setCompleted(boolean completed) {
         isCompleted = completed;
+    }
+
+    @PropertyName("endDate")
+    public String getEndDate() {
+        return endDate;
+    }
+
+    @PropertyName("endDate")
+    public void setEndDate(String endDate) {
+        this.endDate = endDate;
     }
 }

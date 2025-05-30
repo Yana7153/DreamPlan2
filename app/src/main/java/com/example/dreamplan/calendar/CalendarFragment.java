@@ -22,6 +22,7 @@ import com.example.dreamplan.adapters.TaskAdapter;
 import com.example.dreamplan.database.FirebaseDatabaseManager;
 import com.example.dreamplan.database.Task;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -227,14 +228,33 @@ public class CalendarFragment extends Fragment {
     }
 
     private void updateTaskList(List<Task> tasks) {
-        if (tasks.isEmpty()) {
+        List<Task> filteredTasks = new ArrayList<>();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String currentDateStr = sdf.format(calendarAdapter.getSelectedDate());
+
+        for (Task task : tasks) {
+            if (task.getEndDate() != null && !task.getEndDate().isEmpty()) {
+                try {
+                    Date endDate = sdf.parse(task.getEndDate());
+                    Date currentDate = sdf.parse(currentDateStr);
+                    if (currentDate.after(endDate)) {
+                        continue;
+                    }
+                } catch (ParseException e) {
+                    Log.e("Calendar", "Error parsing end date", e);
+                }
+            }
+            filteredTasks.add(task);
+        }
+
+        if (filteredTasks.isEmpty()) {
             tasksRecyclerView.setVisibility(View.GONE);
             emptyStateText.setVisibility(View.VISIBLE);
             emptyStateText.setText("No tasks for this day");
         } else {
             emptyStateText.setVisibility(View.GONE);
             tasksRecyclerView.setVisibility(View.VISIBLE);
-            tasksAdapter.updateTasks(tasks);
+            tasksAdapter.updateTasks(filteredTasks);
         }
     }
 

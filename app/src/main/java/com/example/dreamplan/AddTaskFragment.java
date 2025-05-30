@@ -59,6 +59,8 @@ import java.util.Date;
 import java.util.Locale;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.timepicker.MaterialTimePicker;
+import com.google.android.material.timepicker.TimeFormat;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.auth.FirebaseAuth;
@@ -105,6 +107,9 @@ public class AddTaskFragment extends Fragment {
 
     private static final String SAVED_ICON_ID = "selected_icon_id";
     private static final String SAVED_ICON_NAME = "selected_icon_name";
+
+    private Button btnEndDate;
+    private String selectedEndDate = "";
 
     public static AddTaskFragment newInstance(Section section, Task task) {
         AddTaskFragment fragment = new AddTaskFragment();
@@ -158,6 +163,8 @@ public class AddTaskFragment extends Fragment {
         oneTimeSection = view.findViewById(R.id.one_time_section);
         timeSuboptions = view.findViewById(R.id.time_suboptions);
 
+        btnEndDate = view.findViewById(R.id.btn_end_date); // Changed from btnEndTime
+        setupDatePicker(btnEndDate, isEditMode && taskToEdit != null ? taskToEdit.getEndDate() : null);
         // Set default icon
         imgTaskIcon = view.findViewById(R.id.img_task_icon);
         imgTaskIcon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
@@ -293,6 +300,17 @@ public class AddTaskFragment extends Fragment {
 
         timeOptionsGroup.setOnCheckedChangeListener((group, checkedId) -> {
             timePicker.setVisibility(checkedId == R.id.radio_custom ? View.VISIBLE : View.GONE);
+
+            if (checkedId == R.id.radio_morning) {
+                timePicker.setHour(9);  // 9 AM
+                timePicker.setMinute(0);
+            } else if (checkedId == R.id.radio_noon) {
+                timePicker.setHour(13); // 1 PM
+                timePicker.setMinute(0);
+            } else if (checkedId == R.id.radio_evening) {
+                timePicker.setHour(18);  // 6 PM
+                timePicker.setMinute(0);
+            }
         });
     }
 
@@ -540,6 +558,11 @@ public class AddTaskFragment extends Fragment {
             Log.d("ICON_DEBUG", "Final icon before save - ID: " + iconResId + ", Name: " + iconResName);
             Log.d("ICON_DEBUG", "Saving with icon - ID: " + selectedIconResId + ", Name: " + iconResName);
 
+            if (!validateDates()) {
+                isSaving = false;
+                return;
+            }
+
             if (selectedIconResId == 0) {
                 selectedIconResId = R.drawable.star;
                 selectedIconName = "star";
@@ -611,7 +634,8 @@ public class AddTaskFragment extends Fragment {
                         !isOneTime,
                         startDate,
                         !isOneTime ? scheduleSpinner.getSelectedItem().toString() : "",
-                        !isOneTime ? getSelectedTimePreference() : ""
+                        !isOneTime ? getSelectedTimePreference() : "",
+                        !isOneTime ? getSafeDateString(btnEndDate) : ""
                 );
             }
 
@@ -765,6 +789,12 @@ public class AddTaskFragment extends Fragment {
                 timeSwitch.setChecked(true);
             }
 
+            if (!TextUtils.isEmpty(task.getEndDate())) {
+                selectedEndDate = task.getEndDate();
+                btnEndDate.setText(formatDateForDisplay(task.getEndDate()));
+                btnEndDate.setTag(task.getEndDate());
+            }
+
             Log.d("TASK_EDIT", "Loaded task data for editing");
         } catch (Exception e) {
             Log.e("EditTask", "Error loading task data", e);
@@ -868,5 +898,31 @@ public class AddTaskFragment extends Fragment {
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
+    }
+
+    private boolean validateDates() {
+        if (!isOneTime) {
+            String startDateStr = getSafeDateString(btnStartDate);
+            String endDateStr = getSafeDateString(btnEndDate);
+
+            if (!TextUtils.isEmpty(startDateStr) && !TextUtils.isEmpty(endDateStr)) {
+                try {
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                    Date startDate = sdf.parse(startDateStr);
+                    Date endDate = sdf.parse(endDateStr);
+
+                    if (endDate.before(startDate)) {
+                        Toast.makeText(getContext(),
+                                "End date must be after start date",
+                                Toast.LENGTH_SHORT).show();
+                        return false;
+                    }
+                } catch (ParseException e) {
+                    Log.e("DateValidation", "Error parsing dates", e);
+                    return true; 
+                }
+            }
+        }
+        return true;
     }
 }

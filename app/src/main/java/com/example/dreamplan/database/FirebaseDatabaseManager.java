@@ -177,6 +177,7 @@ public class FirebaseDatabaseManager {
         taskData.put("timePreference", task.getTimePreference());
         taskData.put("createdAt", FieldValue.serverTimestamp());
         taskData.put("isCompleted", task.isCompleted());
+        taskData.put("endDate", task.getEndDate());
 
         if (task.getIconResId() == 0) {
             task.setIconResId(R.drawable.star);
@@ -244,6 +245,13 @@ public class FirebaseDatabaseManager {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
             Date startDate = sdf.parse(task.getStartDate());
             Date targetDate = sdf.parse(checkDate);
+
+            if (task.getEndDate() != null && !task.getEndDate().isEmpty()) {
+                Date endDate = sdf.parse(task.getEndDate());
+                if (targetDate.after(endDate)) {
+                    return false;
+                }
+            }
 
             if (targetDate.before(startDate)) {
                 return false;

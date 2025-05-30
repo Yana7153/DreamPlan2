@@ -25,6 +25,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -161,13 +162,31 @@ private static final String ARG_SECTION = "section";
         dbManager.getTasksForSection(section.getId(), new FirebaseDatabaseManager.DatabaseCallback<List<Task>>() {
             @Override
             public void onSuccess(List<Task> tasks) {
+                List<Task> filteredTasks = new ArrayList<>();
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                String currentDate = sdf.format(new Date());
+
+                for (Task task : tasks) {
+                    if (task.isRecurring() && task.getEndDate() != null && !task.getEndDate().isEmpty()) {
+                        try {
+                            Date endDate = sdf.parse(task.getEndDate());
+                            Date today = sdf.parse(currentDate);
+                            if (today.after(endDate)) {
+                                continue;
+                            }
+                        } catch (ParseException e) {
+                            Log.e("SectionDetail", "Error parsing dates", e);
+                        }
+                    }
+                    filteredTasks.add(task);
+                }
+
                 requireActivity().runOnUiThread(() -> {
                     taskList.clear();
-                    taskList.addAll(tasks);
+                    taskList.addAll(filteredTasks);
                     taskAdapter.notifyDataSetChanged();
                 });
             }
-
             @Override
             public void onFailure(Exception e) {
                 requireActivity().runOnUiThread(() ->
