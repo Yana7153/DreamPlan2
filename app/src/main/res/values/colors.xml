@@ -162,5 +162,6 @@
         <color name="semi_transparent_white">#80FFFFFF</color>
         <color name="semi_transparent_black">#80000000</color>
 
-        <color name="image_stroke_color">#808080</color> <!-- Gray color -->
+        <color name="image_stroke_color">#808080</color>
+        <color name="yellow">#FFC107</color>
 </resources>

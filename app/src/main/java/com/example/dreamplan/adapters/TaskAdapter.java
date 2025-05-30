@@ -3,6 +3,7 @@ package com.example.dreamplan.adapters;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.AsyncTask;
@@ -13,6 +14,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -23,6 +25,7 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.dreamplan.R;
+import com.example.dreamplan.database.FirebaseDatabaseManager;
 import com.example.dreamplan.database.Task;
 
 import java.util.ArrayList;
@@ -41,6 +44,11 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
     public interface OnTaskDeleteListener {
         void onTaskDelete(Task task);
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return taskList.get(position).getId().hashCode();
     }
 
     public void setOnTaskDeleteListener(OnTaskDeleteListener listener) {
@@ -92,6 +100,26 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         setTaskTypeDisplay(holder, task);
 
         setTaskBackground(holder, task);
+
+
+        // Set strikethrough based on completion status
+        if(task.isCompleted()) {
+            holder.tvTaskTitle.setPaintFlags(holder.tvTaskTitle.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+            holder.tvTaskDescription.setPaintFlags(holder.tvTaskDescription.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+        } else {
+            holder.tvTaskTitle.setPaintFlags(holder.tvTaskTitle.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
+            holder.tvTaskDescription.setPaintFlags(holder.tvTaskDescription.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
+        }
+
+        holder.checkBoxCompleted.setOnCheckedChangeListener(null);
+        holder.checkBoxCompleted.setChecked(task.isCompleted());
+
+        holder.checkBoxCompleted.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            task.setCompleted(isChecked);
+            updateTextStrikethrough(holder, isChecked);
+
+            FirebaseDatabaseManager.getInstance().updateTask(task);
+        });
 
         holder.itemView.setOnClickListener(v -> {
             if (taskClickListener != null) {
@@ -226,9 +254,11 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         LinearLayout taskContainer;
         ImageView imgTaskColor;
         TextView tvTaskTitle, tvTaskDescription, tvTaskDeadline;
+        CheckBox checkBoxCompleted;
 
         public TaskViewHolder(@NonNull View itemView) {
             super(itemView);
+            checkBoxCompleted = itemView.findViewById(R.id.checkBoxCompleted);
             taskContainer = itemView.findViewById(R.id.task_container);
             imgTaskIcon = itemView.findViewById(R.id.img_task_icon);
             //     imgTaskColor = itemView.findViewById(R.id.img_task_color);
@@ -319,5 +349,15 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                 isUpdateInProgress = false;
             }
         }.execute(newTasks);
+    }
+
+    private void updateTextStrikethrough(TaskViewHolder holder, boolean isCompleted) {
+        if (isCompleted) {
+            holder.tvTaskTitle.setPaintFlags(holder.tvTaskTitle.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+            holder.tvTaskDescription.setPaintFlags(holder.tvTaskDescription.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+        } else {
+            holder.tvTaskTitle.setPaintFlags(holder.tvTaskTitle.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
+            holder.tvTaskDescription.setPaintFlags(holder.tvTaskDescription.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
+        }
     }
 }

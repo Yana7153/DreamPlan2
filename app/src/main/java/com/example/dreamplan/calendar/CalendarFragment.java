@@ -2,6 +2,7 @@ package com.example.dreamplan.calendar;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,6 +28,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.logging.Handler;
 
 public class CalendarFragment extends Fragment {
     private GridView calendarGrid;
@@ -38,16 +40,21 @@ public class CalendarFragment extends Fragment {
     private CalendarGridAdapter calendarAdapter;
     private TaskAdapter tasksAdapter;
     private FirebaseDatabaseManager dbManager;
-    private FirebaseDatabaseManager.DatabaseCallback<Void> taskChangeCallback =
+
+    private final FirebaseDatabaseManager.DatabaseCallback<Void> taskChangeCallback =
             new FirebaseDatabaseManager.DatabaseCallback<Void>() {
                 @Override
                 public void onSuccess(Void result) {
-                    refreshCalendar();
+                    if (isVisible() && calendarAdapter != null) {
+                        getView().postDelayed(() -> {
+                            loadTasksForDate(calendarAdapter.getSelectedDate());
+                        }, 300);
+                    }
                 }
 
                 @Override
                 public void onFailure(Exception e) {
-                    Log.e("Calendar", "Error in task change listener", e);
+                    Log.e("Calendar", "Refresh error", e);
                 }
             };
 
@@ -149,6 +156,9 @@ public class CalendarFragment extends Fragment {
     private void setupTasksList() {
         tasksRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         tasksAdapter = new TaskAdapter(new ArrayList<>(), requireContext());
+        tasksAdapter.setHasStableIds(true);
+        tasksRecyclerView.setItemAnimator(null);
+
         tasksRecyclerView.setAdapter(tasksAdapter);
     }
 
@@ -251,17 +261,25 @@ public class CalendarFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        dbManager.addTaskChangeListener(taskChangeCallback);
+        FirebaseDatabaseManager.getInstance().addTaskChangeListener(taskChangeCallback);
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        dbManager.removeTaskChangeListener(taskChangeCallback);
+        FirebaseDatabaseManager.getInstance().removeTaskChangeListener(taskChangeCallback);
     }
 
     private void refreshCalendar() {
         if (calendarAdapter != null && calendarAdapter.getSelectedDate() != null) {
+            loadTasksForDate(calendarAdapter.getSelectedDate());
+        }
+    }
+
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+        if (isVisibleToUser && calendarAdapter != null) {
             loadTasksForDate(calendarAdapter.getSelectedDate());
         }
     }

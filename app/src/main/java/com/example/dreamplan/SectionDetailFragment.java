@@ -66,6 +66,28 @@ private static final String ARG_SECTION = "section";
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        FirebaseDatabaseManager.getInstance().addTaskChangeListener(taskChangeCallback);
+    }
+
+
+    private final FirebaseDatabaseManager.DatabaseCallback<Void> taskChangeCallback =
+            new FirebaseDatabaseManager.DatabaseCallback<Void>() {
+                @Override
+                public void onSuccess(Void result) {
+                    if (isAdded() && !isDetached()) {
+                        loadTasks();
+                    }
+                }
+
+                @Override
+                public void onFailure(Exception e) {
+                    Log.e("Fragment", "Task update failed", e);
+                }
+            };
+
+    @Override
     public void onResume() {
         super.onResume();
         loadTasks();

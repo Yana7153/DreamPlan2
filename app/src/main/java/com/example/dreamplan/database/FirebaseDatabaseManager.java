@@ -1,6 +1,5 @@
 package com.example.dreamplan.database;
 
-import android.net.Uri;
 import android.util.Log;
 
 import com.example.dreamplan.R;
@@ -177,6 +176,7 @@ public class FirebaseDatabaseManager {
         taskData.put("schedule", task.getSchedule());
         taskData.put("timePreference", task.getTimePreference());
         taskData.put("createdAt", FieldValue.serverTimestamp());
+        taskData.put("isCompleted", task.isCompleted());
 
         if (task.getIconResId() == 0) {
             task.setIconResId(R.drawable.star);
@@ -236,7 +236,8 @@ public class FirebaseDatabaseManager {
 
     private boolean doesRecurOnDate(Task task, String checkDate) {
         try {
-            if (!task.isRecurring() || task.getStartDate() == null || task.getSchedule() == null) {
+            if (!task.isRecurring() || task.getStartDate() == null ||
+                    task.getSchedule() == null || task.isCompleted()) {
                 return false;
             }
 
@@ -244,7 +245,6 @@ public class FirebaseDatabaseManager {
             Date startDate = sdf.parse(task.getStartDate());
             Date targetDate = sdf.parse(checkDate);
 
-            // Check if target date is before start date
             if (targetDate.before(startDate)) {
                 return false;
             }
@@ -348,6 +348,62 @@ public class FirebaseDatabaseManager {
     private void notifyTaskChangeListeners() {
         for (DatabaseCallback<Void> listener : taskChangeListeners) {
             listener.onSuccess(null);
+        }
+    }
+
+    public void updateTask(Task task) {
+        String userId = auth.getCurrentUser().getUid();
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("isCompleted", task.isCompleted());
+        updates.put("title", task.getTitle());
+        updates.put("deadline", task.getDeadline());
+
+        db.collection("users").document(userId)
+                .collection("tasks")
+                .document(task.getId())
+                .update(updates)
+                .addOnSuccessListener(aVoid -> notifyTaskChangeListeners())
+                .addOnFailureListener(e -> Log.e("Firebase", "Update failed", e));
+    }
+
+    private String getNextOccurrenceDate(Task task) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        try {
+            Date currentDate = sdf.parse(task.getStartDate());
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(currentDate);
+
+            switch (task.getSchedule()) {
+                case "Every day":
+                    cal.add(Calendar.DAY_OF_MONTH, 1);
+                    break;
+                case "Weekdays only":
+                    do {
+                        cal.add(Calendar.DAY_OF_MONTH, 1);
+                    } while (cal.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY ||
+                            cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY);
+                    break;
+                case "Weekends only":
+                    do {
+                        cal.add(Calendar.DAY_OF_MONTH, 1);
+                    } while (cal.get(Calendar.DAY_OF_WEEK) != Calendar.SATURDAY &&
+                            cal.get(Calendar.DAY_OF_WEEK) != Calendar.SUNDAY);
+                    break;
+                case "Weekly":
+                    cal.add(Calendar.WEEK_OF_YEAR, 1);
+                    break;
+                case "Monthly":
+                    cal.add(Calendar.MONTH, 1);
+                    break;
+                default:
+                    cal.add(Calendar.DAY_OF_MONTH, 1);
+            }
+
+            return sdf.format(cal.getTime());
+        } catch (ParseException e) {
+            Log.e("RecurringTask", "Error parsing date", e);
+            return task.getStartDate(); // Fallback to original date
         }
     }
 }

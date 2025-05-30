@@ -18,7 +18,7 @@ import androidx.core.content.ContextCompat;
 
 import com.example.dreamplan.R;
 import com.example.dreamplan.database.FirebaseDatabaseManager;
-import com.google.android.gms.tasks.Task;
+//import com.google.android.gms.tasks.Task;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -26,6 +26,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import android.os.Handler;
+import com.example.dreamplan.database.Task;
 
 
 public class CalendarGridAdapter extends BaseAdapter {
@@ -150,12 +151,34 @@ public class CalendarGridAdapter extends BaseAdapter {
         String dateStr = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(date);
 
         FirebaseDatabaseManager.getInstance().getTasksForDate(dateStr,
-                new FirebaseDatabaseManager.DatabaseCallback<List<com.example.dreamplan.database.Task>>() {
+                new FirebaseDatabaseManager.DatabaseCallback<List<Task>>() {
                     @Override
-                    public void onSuccess(List<com.example.dreamplan.database.Task> tasks) {
+                    public void onSuccess(List<Task> tasks) {
                         if (context instanceof Activity) {
                             ((Activity)context).runOnUiThread(() -> {
-                                indicator.setVisibility(!tasks.isEmpty() ? View.VISIBLE : View.GONE);
+                                boolean hasTasks = !tasks.isEmpty();
+                                boolean hasCompletedTasks = false;
+                                boolean allCompleted = true;
+
+                                if (hasTasks) {
+                                    for (Task task : tasks) {
+                                        if (task.isCompleted()) {
+                                            hasCompletedTasks = true;
+                                        } else {
+                                            allCompleted = false;
+                                        }
+                                    }
+                                }
+
+                                indicator.setVisibility(hasTasks ? View.VISIBLE : View.GONE);
+
+                                if (allCompleted) {
+                                    indicator.setBackgroundResource(R.drawable.circle_completed);
+                                } else if (hasCompletedTasks) {
+                                    indicator.setBackgroundResource(R.drawable.circle_partial_completed);
+                                } else if (hasTasks) {
+                                    indicator.setBackgroundResource(R.drawable.circle_indicator);
+                                }
                             });
                         }
                     }
@@ -171,4 +194,6 @@ public class CalendarGridAdapter extends BaseAdapter {
                     }
                 });
     }
+
+
 }

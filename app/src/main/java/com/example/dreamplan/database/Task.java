@@ -42,6 +42,9 @@ public class Task implements Parcelable {
 
     private Date createdAt;
 
+    @PropertyName("isCompleted")
+    private boolean isCompleted;
+
     public Task() {}
 
     public Task(String id, String title, String notes, String dueDate, int colorResId, int iconResId,  String iconResName, String sectionId,
@@ -257,4 +260,14 @@ public class Task implements Parcelable {
 
     @PropertyName("createdAt")
     public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
+
+    @PropertyName("isCompleted")
+    public boolean isCompleted() {
+        return isCompleted;
+    }
+
+    @PropertyName("isCompleted")
+    public void setCompleted(boolean completed) {
+        isCompleted = completed;
+    }
 }
