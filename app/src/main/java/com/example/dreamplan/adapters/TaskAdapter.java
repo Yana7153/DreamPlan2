@@ -115,8 +115,21 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         holder.checkBoxCompleted.setChecked(task.isCompleted());
 
         holder.checkBoxCompleted.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            // Animate the change
+            buttonView.animate()
+                    .scaleX(1.2f)
+                    .scaleY(1.2f)
+                    .setDuration(100)
+                    .withEndAction(() -> buttonView.animate()
+                            .scaleX(1f)
+                            .scaleY(1f)
+                            .setDuration(100)
+                            .start())
+                    .start();
+
             task.setCompleted(isChecked);
             updateTextStrikethrough(holder, isChecked);
+            setTaskBackground(holder, task);
 
             FirebaseDatabaseManager.getInstance().updateTask(task);
         });
@@ -180,11 +193,18 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         try {
             int backgroundColor = getBackgroundColor(task.getColorResId());
 
+            if (task.isCompleted()) {
+                float[] hsv = new float[3];
+                Color.colorToHSV(backgroundColor, hsv);
+                hsv[2] *= 1.3f;
+                backgroundColor = Color.HSVToColor(hsv);
+            }
+
             GradientDrawable background = new GradientDrawable();
             background.setShape(GradientDrawable.RECTANGLE);
             background.setCornerRadius(12f);
             background.setColor(backgroundColor);
-            background.setStroke(1, Color.argb(30, 0, 0, 0)); // subtle border
+            background.setStroke(1, Color.argb(30, 0, 0, 0));
 
             holder.taskContainer.setBackground(background);
 

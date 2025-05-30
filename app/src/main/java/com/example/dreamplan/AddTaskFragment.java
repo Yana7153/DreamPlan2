@@ -919,7 +919,7 @@ public class AddTaskFragment extends Fragment {
                     }
                 } catch (ParseException e) {
                     Log.e("DateValidation", "Error parsing dates", e);
-                    return true; 
+                    return true;
                 }
             }
         }
